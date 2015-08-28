@@ -1,7 +1,6 @@
 /*
  *
  * TODO:
- * 3. fix elastic colisions for friendly colisions
  *
  */
 
@@ -25,21 +24,18 @@ int main(int argc, char *argv[])
   const char* data_visGL="vcontrol.ini";
 #endif
 
-#ifdef PUSH_MSD
-  const char* msdcsv="msd.csv";
-  FILE *g;
-#endif
-
   FILE *f;
-
-  Walker *walkers, *johnn, *martin, *searcher, *target;
+  
+  SPH *spheres;
 
   char *f_ini = NULL;
   char t_out[15];
 
   int exit_status;
-  int N;
+  int Ns, Nd;
+  
   int i, m, n;
+  /*
   int h, v, a;
   int next, ngb, master;
   int c=0, exp_c=0;
@@ -63,7 +59,7 @@ int main(int argc, char *argv[])
   double rho = zero;
   double tvx, tvy;
   double pmarker = zero;
-
+*/
   // Extract program name from the path.
   prog_name = basename(argv[0]);
 
@@ -81,8 +77,29 @@ int main(int argc, char *argv[])
   }
   parse_config(f);
   fclose(f);
-
-
+  
+  // Set the number of spheres and dimres
+  Ns = 4 * i_edge_fcc_N * i_edge_fcc_N * i_edge_fcc_N;
+  Nd = Ns / 2;
+  
+  // Allocate memory for wolkers
+  spheres = malloc( Ns * sizeof(SPH));
+  
+  // < DEBUG
+  printf("Config variables:\n");
+  printf("edge cells: %d\n",i_edge_fcc_N);
+  printf("chanel %d %d %d\n", i_chanel[0], i_chanel[1], i_chanel[2]);
+  printf("chanel radius %.16le\n",i_chanel_R);
+  
+  printf("Ns = %d, Nd = %d\n",Ns, Nd);
+  // DEBUG >
+  
+  // Set fcc structure of spheres
+  sph_set_fcc( spheres, Ns, i_edge_fcc_N);
+  
+  for(i=0;i<Ns;i++){
+  printf("%lf %lf %lf\t %4d\n",spheres[i].r[0],spheres[i].r[1],spheres[i].r[2],i);
+  }
 
 
 cleanup:
@@ -98,7 +115,7 @@ cleanup:
   fclose(g);
 #endif
 
-//  free(walkers);
+  free(spheres);
   return exit_status;
 }
 

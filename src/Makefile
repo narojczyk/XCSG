@@ -25,6 +25,7 @@ $(binary): $(objfiles)
 
 # Rules for compiling obj. files, with implicit recepies `$(CC) -o $@` omitted.
 initials.o  : initials.h
+utils.o     : utils.h 
 fccdcgen.o  : data.h globals.h initials.h 
 
 # PHONY - targets that are only actions.
