@@ -15,6 +15,10 @@
 
 extern char *prog_name;
 
+extern int i_edge_fcc_N;
+extern int i_chanel[3];
+extern double i_chanel_R;
+
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
   {"help",     no_argument,       NULL, 'h'},
@@ -71,28 +75,28 @@ void print_version(int status)
 
   fprintf(stdout, "  Program build-in features:\n");
   fprintf(stdout, "  * use 64bit MT19937 random num. gen.: ");
-#ifdef USE_64BIT_MT19937
-  fprintf(stdout, "Yes\n");
-#else
-  fprintf(stdout, "No\n");
-#endif
+  #ifdef USE_64BIT_MT19937
+    fprintf(stdout, "Yes\n");
+  #else
+    fprintf(stdout, "No\n");
+  #endif
+    
   fprintf(stdout, "  * verbose output for debugging      : ");
-#ifdef DEBUG_MODE
-  fprintf(stdout, "Yes\n");
-#else
-  fprintf(stdout, "No\n");
-#endif
-  fprintf(stdout, "\n");
-
+  #ifdef DEBUG_MODE
+    fprintf(stdout, "Yes\n");
+  #else
+    fprintf(stdout, "No\n");
+  #endif
+    fprintf(stdout, "\n");
 
   fprintf(stdout, "  Version control:\t");
   fprintf(stdout, "  sources checksum's (SHA1)\n");
-  //fprintf(stdout, "  %s  %s\n", rl_walkers_c_SHA1, "rl_walkers.c");
-#ifdef USE_64BIT_MT19937
-  fprintf(stdout, "  %s  %s\n", mt19937_64_h_SHA1, "mt19937_64.h");
-#else
-  fprintf(stdout, "  %s  %s\n", mt19937_h_SHA1, "mt19937.h");
-#endif
+  fprintf(stdout, "  %s  %s\n", fccdcgen_c_SHA1, "fccdcgen.c");
+  #ifdef USE_64BIT_MT19937
+    fprintf(stdout, "  %s  %s\n", mt19937_64_h_SHA1, "mt19937_64.h");
+  #else
+    fprintf(stdout, "  %s  %s\n", mt19937_h_SHA1, "mt19937.h");
+  #endif
   fprintf(stdout, "  %s  %s\n", config_h_SHA1, "config.h");
   fprintf(stdout, "  %s  %s\n", data_h_SHA1, "data.h");
   fprintf(stdout, "  %s  %s\n", globals_h_SHA1, "globals.h");
@@ -121,7 +125,9 @@ void generate_template_config(int status)
     exit(1);
   }
 
-//  fprintf(f, "Simulation box          : DOUBLE_X DOUBLE_Y\n");
+  fprintf(f, "Number of edge fcc cells: INT\n");
+  fprintf(f, "Nano-chanel direction   : INT_h INT_k INT_l\n");
+  fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
 
   if(fclose(f)==0) {
     fprintf(stdout,"  Template config file written to:\n%s\n",template);
@@ -140,8 +146,9 @@ void generate_template_config(int status)
  */
 void parse_config(FILE *file)
 {
-//  fscanf(file, "%*26c %lf %lf\n", &box[0], &box[1]);
-//  fscanf(file, "%*26c %d\n",      &Ns);
+  fscanf(file, "%*26c %d\n", &i_edge_fcc_N);
+  fscanf(file, "%*26c %d %d %d\n", &i_chanel[0], &i_chanel[1], &i_chanel[2]);
+  fscanf(file, "%*26c %lf\n",&i_chanel_R);
 
 }
 
