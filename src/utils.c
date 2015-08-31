@@ -10,6 +10,7 @@
 // #include <string.h>
 // #include "config.h"
 #include "data.h"
+#include "utils.h"
 
 extern const double zero;
 extern const double one;
@@ -24,24 +25,25 @@ extern const double pi;
 int sph_set_fcc( SPH *sp_tab, int ns, int fcc_x)
 {
   int i, x=0, y=0, z=0;
-  double kr = sqrt(two);
+  double box_edge = sqrt(two);
+  double box_edge_half = box_edge/two;
 
   for(i=0; i<ns; i+=4){
-    sp_tab[i  ].r[0] = x * kr;
-    sp_tab[i  ].r[1] = y * kr;
-    sp_tab[i  ].r[2] = z * kr;
+    sp_tab[i  ].r[0] = - fcc_x * box_edge_half + x * box_edge;
+    sp_tab[i  ].r[1] = - fcc_x * box_edge_half + y * box_edge;
+    sp_tab[i  ].r[2] = - fcc_x * box_edge_half + z * box_edge;
     
-    sp_tab[i+1].r[0] = x * kr +  kr/2;
-    sp_tab[i+1].r[1] = y * kr;
-    sp_tab[i+1].r[2] = z * kr +  kr/2;
+    sp_tab[i+1].r[0] = - fcc_x * box_edge_half + x * box_edge + box_edge_half;
+    sp_tab[i+1].r[1] = - fcc_x * box_edge_half + y * box_edge;
+    sp_tab[i+1].r[2] = - fcc_x * box_edge_half + z * box_edge + box_edge_half;
     
-    sp_tab[i+2].r[0] = x * kr;
-    sp_tab[i+2].r[1] = y * kr +  kr/2;
-    sp_tab[i+2].r[2] = z * kr +  kr/2;
+    sp_tab[i+2].r[0] = - fcc_x * box_edge_half + x * box_edge;
+    sp_tab[i+2].r[1] = - fcc_x * box_edge_half + y * box_edge + box_edge_half;
+    sp_tab[i+2].r[2] = - fcc_x * box_edge_half + z * box_edge + box_edge_half;
     
-    sp_tab[i+3].r[0] = x * kr +  kr/2;
-    sp_tab[i+3].r[1] = y * kr +  kr/2;
-    sp_tab[i+3].r[2] = z * kr;
+    sp_tab[i+3].r[0] = - fcc_x * box_edge_half + x * box_edge + box_edge_half;
+    sp_tab[i+3].r[1] = - fcc_x * box_edge_half + y * box_edge + box_edge_half;
+    sp_tab[i+3].r[2] = - fcc_x * box_edge_half + z * box_edge;
 
     // Increment cell in x direction
     x++;
