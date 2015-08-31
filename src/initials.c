@@ -100,8 +100,10 @@ void print_version(int status)
   fprintf(stdout, "  %s  %s\n", config_h_SHA1, "config.h");
   fprintf(stdout, "  %s  %s\n", data_h_SHA1, "data.h");
   fprintf(stdout, "  %s  %s\n", globals_h_SHA1, "globals.h");
-  fprintf(stdout, "  %s  %s\n", initials_h_SHA1, "parameters.h");
-  fprintf(stdout, "  %s  %s\n", initials_c_SHA1, "parameters.c");
+  fprintf(stdout, "  %s  %s\n", initials_h_SHA1, "initials.h");
+  fprintf(stdout, "  %s  %s\n", initials_c_SHA1, "initials.c");
+  fprintf(stdout, "  %s  %s\n", io_h_SHA1, "io.h");
+  fprintf(stdout, "  %s  %s\n", io_c_SHA1, "io.c");
 
   exit(status);
 }

@@ -14,14 +14,16 @@
 #include "data.h"
 
 #include "initials.h"
+#include "io.h"
 
 char *prog_name;
 
 int main(int argc, char *argv[])
 {
-#ifdef PUSH_TRAJECTORIES
-  FILE **t;
+#ifdef DATA_VISGL_OUTPUT
+//   FILE **t;
   const char* data_visGL="vcontrol.ini";
+  const char* data_spheresGL="gl_spheres.csv";
 #endif
 
   FILE *f;
@@ -60,6 +62,8 @@ int main(int argc, char *argv[])
   double tvx, tvy;
   double pmarker = zero;
 */
+  double cube_edge;
+  
   // Extract program name from the path.
   prog_name = basename(argv[0]);
 
@@ -82,10 +86,10 @@ int main(int argc, char *argv[])
   Ns = 4 * i_edge_fcc_N * i_edge_fcc_N * i_edge_fcc_N;
   Nd = Ns / 2;
   
-  // Allocate memory for wolkers
-  spheres = malloc( Ns * sizeof(SPH));
+  // Calculate cube edge
+  cube_edge = i_edge_fcc_N * sqrt(two);
   
-  // < DEBUG
+    // < DEBUG
   printf("Config variables:\n");
   printf("edge cells: %d\n",i_edge_fcc_N);
   printf("chanel %d %d %d\n", i_chanel[0], i_chanel[1], i_chanel[2]);
@@ -94,21 +98,58 @@ int main(int argc, char *argv[])
   printf("Ns = %d, Nd = %d\n",Ns, Nd);
   // DEBUG >
   
+  // Allocate memory for wolkers
+  spheres = malloc( Ns * sizeof(SPH));
+  
   // Set fcc structure of spheres
   sph_set_fcc( spheres, Ns, i_edge_fcc_N);
   
   for(i=0;i<Ns;i++){
-  printf("%lf %lf %lf\t %4d\n",spheres[i].r[0],spheres[i].r[1],spheres[i].r[2],i);
+  printf("% lf % lf % lf\t %4d\n",spheres[i].r[0],spheres[i].r[1],spheres[i].r[2],i);
   }
 
 
+#ifdef DATA_VISGL_OUTPUT
+  // Prepare control file for data_visGL program
+  if((f = fopen(data_visGL, "w")) == NULL) {
+    fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+            prog_name,data_visGL);
+    exit_status=EXIT_FAILURE;
+    goto cleanup;
+  }
+
+  fprintf(f, "Type of data            : dimers3d\n");
+  fprintf(f, "Number of input files   : %d\n", 1);
+  fprintf(f, "Input lines per file    : %d\n", Ns);
+  fprintf(f, "Number of searchers     : %d\n", 0);
+  fprintf(f, "Number of targets       : %d\n", 0);
+  fprintf(f, "Box dimensions          : %.16le %.16le\n", cube_edge, cube_edge);
+  fprintf(f, "Searcher radius         : %.16le\n", 0e0);
+  fprintf(f, "Target radius           : %.16le\n", 0e0);
+
+  fclose(f);
+  
+  // Open file for spheres data
+  if((f = fopen(data_spheresGL, "w")) == NULL){
+    fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+            prog_name, data_spheresGL);
+    exit_status=EXIT_FAILURE;
+    goto cleanup;
+  }
+  if( export_spheres(f, spheres, Ns) != 0 ){
+    exit_status=EXIT_FAILURE;
+    goto cleanup;    
+  }
+#endif
+  
 cleanup:
   // Free resources
-#ifdef PUSH_TRAJECTORIES
+#ifdef DATA_VISGL_OUTPUT
+/*
   for(i=0; i<initial_N; i++){
     fclose(t[i]);
   }
-  free(t);
+  free(t);*/
 #endif
 
 #ifdef PUSH_MSD
