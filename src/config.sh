@@ -3,6 +3,12 @@
 source config.ini
 cfile="config.h"
 
+if [ $data_visGL_output -eq 1 ]; then
+  sed -i 's/\/\/\ \(#define\ DATA_VISGL_OUTPUT.*$\)/\1/' $cfile
+else
+  sed -i 's/^.*\(#define\ DATA_VISGL_OUTPUT.*$\)/\/\/\ \1/' $cfile
+fi
+
 if [ $use64MT19937 -eq 1 ]; then
   sed -i 's/\/\/\ \(#define\ USE_64BIT_MT19937.*$\)/\1/' $cfile
 else
