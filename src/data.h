@@ -3,10 +3,10 @@
 
 typedef struct 
 {
-  int type;       // Walker type [1|2] (searcher|target)
-  int ngb[12];
-  double r[3];   // Initial position vector (for <R^2>)
-  double d;
+  int type;         // Sphere type
+  int ngb[12];      // Neighbors list
+  double r[3];      // Position vector
+  double d;         // Sphere diameter
 } SPH;
 
 
