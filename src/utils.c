@@ -25,37 +25,37 @@ extern const double two;
 extern const double pi;
 
 /*
- * sph_set_fcc(sp_tab, ns, fcc_x)
+ * sph_set_fcc(sph, ns, fcc_x)
  * Set fcc structure of ns spheres in a cubic system of fcc_x cells at the
  * edge. The edge length is assumed sqrt(2)
  */
-int sph_set_fcc( SPH *sp_tab, int ns, int fcc_x)
+int sph_set_fcc( SPH *sph, int ns, int fcc_x)
 {
   int i, x=0, y=0, z=0;
   double box_edge = sqrt(two);
   double box_edge_half = box_edge/two;
 
   for(i=0; i<ns; i+=4){
-    sp_tab[i  ].r[0] = - fcc_x * box_edge_half + x * box_edge;
-    sp_tab[i  ].r[1] = - fcc_x * box_edge_half + y * box_edge;
-    sp_tab[i  ].r[2] = - fcc_x * box_edge_half + z * box_edge;
+    sph[i  ].r[0] = - fcc_x * box_edge_half + x * box_edge;
+    sph[i  ].r[1] = - fcc_x * box_edge_half + y * box_edge;
+    sph[i  ].r[2] = - fcc_x * box_edge_half + z * box_edge;
     
-    sp_tab[i+1].r[0] = - fcc_x * box_edge_half + x * box_edge + box_edge_half;
-    sp_tab[i+1].r[1] = - fcc_x * box_edge_half + y * box_edge;
-    sp_tab[i+1].r[2] = - fcc_x * box_edge_half + z * box_edge + box_edge_half;
+    sph[i+1].r[0] = - fcc_x * box_edge_half + x * box_edge + box_edge_half;
+    sph[i+1].r[1] = - fcc_x * box_edge_half + y * box_edge;
+    sph[i+1].r[2] = - fcc_x * box_edge_half + z * box_edge + box_edge_half;
     
-    sp_tab[i+2].r[0] = - fcc_x * box_edge_half + x * box_edge;
-    sp_tab[i+2].r[1] = - fcc_x * box_edge_half + y * box_edge + box_edge_half;
-    sp_tab[i+2].r[2] = - fcc_x * box_edge_half + z * box_edge + box_edge_half;
+    sph[i+2].r[0] = - fcc_x * box_edge_half + x * box_edge;
+    sph[i+2].r[1] = - fcc_x * box_edge_half + y * box_edge + box_edge_half;
+    sph[i+2].r[2] = - fcc_x * box_edge_half + z * box_edge + box_edge_half;
     
-    sp_tab[i+3].r[0] = - fcc_x * box_edge_half + x * box_edge + box_edge_half;
-    sp_tab[i+3].r[1] = - fcc_x * box_edge_half + y * box_edge + box_edge_half;
-    sp_tab[i+3].r[2] = - fcc_x * box_edge_half + z * box_edge;
+    sph[i+3].r[0] = - fcc_x * box_edge_half + x * box_edge + box_edge_half;
+    sph[i+3].r[1] = - fcc_x * box_edge_half + y * box_edge + box_edge_half;
+    sph[i+3].r[2] = - fcc_x * box_edge_half + z * box_edge;
     
-    sp_tab[i  ].d = one;
-    sp_tab[i+1].d = one;
-    sp_tab[i+2].d = one;
-    sp_tab[i+3].d = one;
+    sph[i  ].d = one;
+    sph[i+1].d = one;
+    sph[i+2].d = one;
+    sph[i+3].d = one;
 
     // Increment cell in x direction
     x++;
