@@ -66,15 +66,15 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd_max)
  * export_spheres(f,sp,ns)
  * Export positions and other data for spheres
  */
-int export_spheres(FILE *file, SPH *sp_tab, int ns)
+int export_spheres(FILE *file, SPH *sph, int ns)
 {
   const char *exp_form = "%5d % .16le % .16le % .16le %.16le %d\n";
   int i;
 
   for(i=0; i<ns; i++){
     if(fprintf(file, exp_form, i, 
-        sp_tab[i].r[0], sp_tab[i].r[1], sp_tab[i].r[2], 
-        sp_tab[i].d, sp_tab[i].type ) == EOF){
+        sph[i].r[0], sph[i].r[1], sph[i].r[2], 
+        sph[i].d, sph[i].type ) == EOF){
       fprintf(stderr,"  [%s]: error: exporting positions failed\n", __func__);
       return EXIT_FAILURE;
     }
@@ -86,7 +86,7 @@ int export_spheres(FILE *file, SPH *sp_tab, int ns)
  * export_to_GLviewer()
  * Export required data for viewing the structure by data_visGL
  */
-int export_to_GLviewer(SPH *sp_tab, double box_x, int ns)
+int export_to_GLviewer(SPH *sph, double box_x, int ns)
 {
   FILE *f;
   const char* data_visGL="vcontrol.ini";
@@ -120,7 +120,7 @@ int export_to_GLviewer(SPH *sp_tab, double box_x, int ns)
   }
   
   // Export structure data to data_spheresGL
-  if( export_spheres(f, sp_tab, ns) != 0 ){
+  if( export_spheres(f, sph, ns) != 0 ){
     return EXIT_FAILURE;
   }
 
