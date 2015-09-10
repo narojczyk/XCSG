@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 // #include <string.h>
-// #include "config.h"
+#include "config.h"
 #include "data.h"
 #include "utils.h"
 
@@ -44,6 +44,11 @@ int sph_set_fcc( SPH *sp_tab, int ns, int fcc_x)
     sp_tab[i+3].r[0] = - fcc_x * box_edge_half + x * box_edge + box_edge_half;
     sp_tab[i+3].r[1] = - fcc_x * box_edge_half + y * box_edge + box_edge_half;
     sp_tab[i+3].r[2] = - fcc_x * box_edge_half + z * box_edge;
+    
+    sp_tab[i  ].d = one;
+    sp_tab[i+1].d = one;
+    sp_tab[i+2].d = one;
+    sp_tab[i+3].d = one;
 
     // Increment cell in x direction
     x++;
@@ -66,6 +71,21 @@ int sph_set_fcc( SPH *sp_tab, int ns, int fcc_x)
   }
   
   return 0;
+}
+
+/*
+ * init_MT19937( s )
+ *
+ * This function initiates MT19937 rng (either 32 or 64bit, as selected
+ * with includes) with a unsigned long int 's' seed.
+ */
+void init_MT19937(unsigned long int s)
+{
+  #ifdef USE_64BIT_MT19937
+    init_genrand64( s );
+  #else
+    init_genrand( s );
+  #endif
 }
 
 /* vim: set tw=80 ts=2 sw=2 et: */

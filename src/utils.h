@@ -3,4 +3,6 @@
 
 int sph_set_fcc( SPH *sp_tab, int ns, int fcc_x);
 
+void init_MT19937(unsigned long int s);
+
 #endif
