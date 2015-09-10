@@ -9,6 +9,13 @@
 #include <math.h>
 // #include <string.h>
 #include "config.h"
+
+#ifdef USE_64BIT_MT19937
+  #include "mt19937_64.h"
+#else
+  #include "mt19937.h"
+#endif
+
 #include "data.h"
 #include "utils.h"
 

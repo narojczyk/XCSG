@@ -25,9 +25,8 @@
 #include <math.h>
 
 #include "config.h"
-#include "globals.h"
 #include "data.h"
-
+#include "globals.h"
 #include "initials.h"
 #include "io.h"
 
@@ -40,13 +39,16 @@ int main(int argc, char *argv[])
   DIM3D *dimers;
 
   char *f_ini = NULL;
-  char t_out[15];
-  char t_inp[15];
+  char f_out[15];
+  char f_inp[15];
+  
+  const char *fo_iDC = "initdc3d.%03d";
 
   int exit_status;
   int Ns, Nd;
   
   int i, m, n;
+  int s;
   /*
   int h, v, a;
   int next, ngb, master;
@@ -117,35 +119,39 @@ int main(int argc, char *argv[])
   spheres = malloc( Ns * sizeof(SPH));
   dimers  = malloc( Nd * sizeof(DIM3D));
   
-  // Regarding the ini settings, load input structure or grnerate a new one
-  if(i_iDCfrom >= 0 && i_iDCto >= i_iDCfrom){
-    // Load existing DC structure
-    if((f = fopen(dd, "r")) == NULL) {
-      fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
-              prog_name, dd);
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
+  for(s=i_iDCfrom; s<=i_iDCto; s++){
+    fprintf(stdout," Processing structure %d\n",s);
+    // Regarding the ini settings, load input structure or grnerate a new one
+    if(i_iDCfrom >= 0 && i_iDCto >= i_iDCfrom){
+      sprintf(f_inp, fo_iDC, s);
+      fprintf(stdout," Reading file %s\n",f_inp);
+      // Load existing DC structure
+      if((f = fopen(f_inp, "r")) == NULL) {
+        fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+                prog_name, f_inp);
+        exit_status = EXIT_FAILURE;
+        goto cleanup;
+      }
+      if(load_dcsgen(f, dimers, cube_edge, Nd) != Nd){
+        exit_status = EXIT_FAILURE;
+        goto cleanup;   
+      }
+    }else{
+      fprintf(stdout," Generating new structure\n");
+      // Set fcc structure of spheres
+      sph_set_fcc( spheres, Ns, i_edge_fcc_N);
+      // TODO: Set initial arrangemente into dimers      
     }
-    if(load_dcsgen(f, dimers, cube_edge, Nd) != Nd){
-      exit_status = EXIT_FAILURE;
-      goto cleanup;   
-    }
-  }else{
-    // Set fcc structure of spheres
-    sph_set_fcc( spheres, Ns, i_edge_fcc_N);
-    // TODO: Set initial arrangemente into dimers
+    
+    
     
   }
-
-
-  
-  
-  
-  
+ /*
+  * obsolete debug code
   for(i=0;i<Ns;i++){
-//   printf("% lf % lf % lf\t %4d\n",spheres[i].r[0],spheres[i].r[1],spheres[i].r[2],i);
+   printf("% lf % lf % lf\t %4d\n",spheres[i].r[0],spheres[i].r[1],spheres[i].r[2],i);
   }
-
+*/
 #ifdef DATA_VISGL_OUTPUT
   // Export data in data_visGL format 
   if( export_to_GLviewer(spheres, cube_edge, Ns) != 0 ){
