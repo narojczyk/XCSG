@@ -16,14 +16,14 @@
  * load_dcsgen()
  * Load initial DC configuration from dcsgen, program by Mikolaj Kowalik
  */
-int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd_max)
+int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd)
 {
   // Template structure instance for data input
   DIM3D tm; 
   int i, j;
   
   // Initiate fields not read from file with defaults
-  tm.sph[0] = tm.sph[1] = -1;
+  tm.sph_ind[0] = tm.sph_ind[1] = -1;
   for(i=0; i<22; i++){
     tm.ngb[i][0] = -1;
     tm.ngb[i][1] = -1;
@@ -33,7 +33,7 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd_max)
   while(fscanf(file, "%d %*d %*d %lf %lf %lf %lf %lf %lf",
                &i, tm.R, tm.R + 1, tm.R + 2, tm.O, tm.O + 1, tm.O + 2) != EOF) {
     // Decrement 'i' to count from 0
-    if(--i < nd_max){
+    if(--i < nd){
       for(j=0; j<3; j++){
         // Scale molecule positions to cube dimensions
         tm.R[j] *= box_x;
@@ -44,18 +44,18 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd_max)
   }
 
   // Print errors when input structure size is different than ini parameters
-  if(++i != nd_max) {
+  if(++i != nd) {
     fprintf(stderr, "  [%s]: error: input structure ", __func__);
-    if(i > nd_max) {
+    if(i > nd) {
       fprintf(stderr, "too large;\n");
-    } else if(i < nd_max) {
+    } else if(i < nd) {
     fprintf(stderr, "too small;\n");
     }
 
     fprintf(stderr,
       "  [%s]: error: input file contains %d molecules,\n", __func__, i);
     fprintf(stderr,
-      "  [%s]: error: allocated memory for %d molecules\n", __func__, nd_max);
+      "  [%s]: error: allocated memory for %d molecules\n", __func__, nd);
   }
   
   // Return the number of data lines imported

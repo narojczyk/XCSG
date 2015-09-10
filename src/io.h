@@ -4,6 +4,6 @@
 int export_spheres(FILE *file, SPH *sph, int ns);
 int export_to_GLviewer(SPH *sph, double box_x, int ns);
 
-int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int Nmax);
+int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd);
 
 #endif

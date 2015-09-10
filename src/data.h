@@ -13,7 +13,7 @@ typedef struct
 {
   int type;         // Dimer type
 //   TODO: possibly change the following to array of pointers to SPH array
-  int sph[2];       // Indexes of spheres forming dimer
+  int sph_ind[2];   // Indexes of spheres forming dimer
   int ngb[22][2];   // Neighbors list
   double R[3];      // Dimer position
   double O[3];      // Dimer orientation (unit vector)
