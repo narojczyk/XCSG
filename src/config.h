@@ -8,7 +8,7 @@
 #define _CONFIG_H
 
 // Uncoment the following to save the system's evolution to trajectory files
-// #define DATA_VISGL_OUTPUT
+#define DATA_VISGL_OUTPUT
 
 // Uncoment the following to export mean square displacement for particles
 // #define PUSH_MSD

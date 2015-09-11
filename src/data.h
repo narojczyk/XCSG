@@ -5,6 +5,8 @@ typedef struct
 {
   int type;         // Sphere type
   int ngb[12];      // Neighbors list
+//   TODO: possibly change the following to pointer to DIM array element
+  int dim_ind;      // Index of dimer the sphere belongs to
   double r[3];      // Position vector
   double d;         // Sphere diameter
 } SPH;
@@ -12,7 +14,7 @@ typedef struct
 typedef struct
 {
   int type;         // Dimer type
-//   TODO: possibly change the following to array of pointers to SPH array
+//   TODO: possibly change the following to array of pointers to SPH array elem.
   int sph_ind[2];   // Indexes of spheres forming dimer
   int ngb[22][2];   // Neighbors list
   double R[3];      // Dimer position

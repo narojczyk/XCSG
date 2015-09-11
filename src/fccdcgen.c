@@ -119,7 +119,9 @@ int main(int argc, char *argv[])
   spheres = malloc( Ns * sizeof(SPH));
   dimers  = malloc( Nd * sizeof(DIM3D));
   
+  // Loop over selected set of structures
   for(s=i_iDCfrom; s<=i_iDCto; s++){
+    
     fprintf(stdout," Processing structure %d\n",s);
     // Regarding the ini settings, load input structure or grnerate a new one
     if(i_iDCfrom >= 0 && i_iDCto >= i_iDCfrom){
@@ -143,7 +145,19 @@ int main(int argc, char *argv[])
       // TODO: Set initial arrangemente into dimers      
     }
     
+    // Bind dimers to spheres and vice versa
+    bind_spheres_to_dimers(dimers, spheres, Nd);
     
+    // Generate sphere positions for all dimers
+    for(i=0; i<Nd; i++){
+      update_sphere_positions(dimers, spheres, cube_edge, i);
+    }
+
+    
+    
+//     for(i=0;i<Nd;i++){
+//    printf("%3d (%4d %4d)\n",i,dimers[i].sph_ind[0], dimers[i].sph_ind[1]);
+//   }
     
   }
  /*
