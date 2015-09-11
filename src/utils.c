@@ -18,11 +18,86 @@
 
 #include "data.h"
 #include "utils.h"
+#include "algebra.h"
 
 extern const double zero;
 extern const double one;
 extern const double two;
 extern const double pi;
+
+/*
+ * make_chanel()
+ * 
+ */
+void make_chanel(DIM3D *dim, SPH *sph, int c[3], double box_x, int nd)
+{
+  int i;
+  int is=-1;
+  double chan[3] = {one*c[0], one*c[1], one*c[2]};
+  double llc[3]={zero,zero,zero}, llc_r = -box_x/two + one;
+  double p[3], pc[3], dist;
+  
+  /*llc[0] = llc_r+1e-15;
+  llc[1] = llc_r+1e-15;
+  llc[2] = llc_r+1e-15;*/
+  
+  printf("\n\t[%s]\n",__func__);
+  printf("make channel in direction: %d %d %d\n",c[0], c[1], c[2]);
+  
+  for(i=1;i<2*nd;i++){
+    if(sph[i].r[0]<llc_r && sph[i].r[1]<llc_r && sph[i].r[2]< llc_r){
+      is=i; // obsolete
+      llc[0] = sph[i].r[0];
+      llc[1] = sph[i].r[1];
+      llc[2] = sph[i].r[2];
+    }
+  }
+  if(is != -1){
+    printf("lowe left corner: (%d) %lf %lf %lf\n",is, 
+           sph[is].r[0], sph[is].r[1], sph[is].r[2]);
+    printf("shift by: %lf %lf %lf\n", llc[0], llc[1], llc[2]);
+  }
+  
+  for(i=0;i<2*nd;i++){
+    // Determine vector from point 'i' to lowe-left-corner atom of the cube
+    p[0] = llc[0] - sph[i].r[0];
+    p[1] = llc[1] - sph[i].r[1];
+    p[2] = llc[2] - sph[i].r[2];
+    
+    if(sph[i].r[2]<-3.8){
+      printf("\n%3d % .6lf % .6lf\t(r)\n",i,sph[i].r[0],sph[i].r[1]);
+      printf("%3d % .6lf % .6lf\t(p)\n",i,p[0],p[1]);
+    }
+    
+    // Boundary conditions
+    
+    p[0] = p[0] - box_x * round( p[0]/box_x );
+    p[1] = p[1] - box_x * round( p[1]/box_x );
+    p[2] = p[2] - box_x * round( p[2]/box_x );
+
+    if(sph[i].r[2]<-3.8){
+      printf("%3d % .6lf % .6lf\t(p-pbc)\n",i,p[0],p[1]);
+    }
+    
+    pc[0]=zero; pc[1]=zero; pc[2]=zero;
+    vcrossu(p, chan, pc);
+    
+//     printf("%4d p : % .6lf % .6lf % .6lf\n",i,p[0],p[1],p[2]);
+//     printf("%4d pc: % .6lf % .6lf % .6lf\n",i,pc[0],pc[1],pc[2]);
+    
+    dist = vmodule(pc) / vmodule(chan);
+    if(sph[i].r[2]<-3.8){
+      printf("%3d % .6lf\t\t(dist)\n",i,dist);
+    }
+    if(dist<1.65){
+      sph[i].type=1;
+    }
+  }
+  
+  
+  
+  
+}
 
 /*
  * update_sphere_positions(dim, sph, d)
@@ -71,6 +146,9 @@ void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd)
     // Assign dimer index to spheres array
     sph[j  ].dim_ind = i;
     sph[j+1].dim_ind = i;
+    
+    sph[j  ].d = one;
+    sph[j+1].d = one;
 //     printf("%3d (%3d)\n",j,sph[j].dim_ind);
 //     printf("%3d (%3d)\n",j+1,sph[j+1].dim_ind);
     // Incremend counters
