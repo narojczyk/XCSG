@@ -24,10 +24,11 @@ $(binary): $(objfiles)
 	$(CC) $(CFLAGS) $(objfiles) -o $@ $(LDFLAGS)
 
 # Rules for compiling obj. files, with implicit recepies `$(CC) -o $@` omitted.
+algebra.o   : algebra.h
 initials.o  : config.h initials.h
-utils.o     : config.h data.h mt19937.h mt19937_64.h utils.h
+utils.o     : config.h data.h mt19937.h mt19937_64.h algebra.h utils.h 
 io.o        : data.h io.h 
-fccdcgen.o  : config.h data.h globals.h initials.h io.h
+fccdcgen.o  : config.h data.h globals.h initials.h io.h utils.h
 
 # PHONY - targets that are only actions.
 .PHONY: all clean debug mark
