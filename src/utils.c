@@ -26,77 +26,76 @@ extern const double two;
 extern const double pi;
 
 /*
- * make_chanel()
+ * make_channel()
+ * Calculates the distance of the sphere 'i' from the line given by vector 'c',
+ * with respect to two points on the line: lower left corner and center point
+ * of the channel axis (this is required because periodic boundaries may select
+ * periodic image that is not the nearest to the channel axis)
  * 
  */
-void make_chanel(DIM3D *dim, SPH *sph, int c[3], double box_x, int nd)
+void make_channel(
+  DIM3D *dim, SPH *sph, int c[3], double cr, double box_x, int nd)
 {
   int i;
-  int is=-1;
-  double chan[3] = {one*c[0], one*c[1], one*c[2]};
-  double llc[3]={zero,zero,zero}, llc_r = -box_x/two + one;
-  double p[3], pc[3], dist;
+  double cd[3] = {one*c[0], one*c[1], one*c[2]};
+  double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
+  double llc_r = -box_x/two + one;
+  double p1[3], p2[3], pxcd[3], dist0, dist1;
   
-  /*llc[0] = llc_r+1e-15;
-  llc[1] = llc_r+1e-15;
-  llc[2] = llc_r+1e-15;*/
-  
-  printf("\n\t[%s]\n",__func__);
-  printf("make channel in direction: %d %d %d\n",c[0], c[1], c[2]);
-  
-  for(i=1;i<2*nd;i++){
+  // Find coordinates of the sphere in lower-left-corner of the cube
+  for(i=1; i<2*nd; i++){
     if(sph[i].r[0]<llc_r && sph[i].r[1]<llc_r && sph[i].r[2]< llc_r){
-      is=i; // obsolete
       llc[0] = sph[i].r[0];
       llc[1] = sph[i].r[1];
       llc[2] = sph[i].r[2];
     }
   }
-  if(is != -1){
-    printf("lowe left corner: (%d) %lf %lf %lf\n",is, 
-           sph[is].r[0], sph[is].r[1], sph[is].r[2]);
-    printf("shift by: %lf %lf %lf\n", llc[0], llc[1], llc[2]);
-  }
   
-  for(i=0;i<2*nd;i++){
+  // Find the coordinates of the center point on the channel axis
+  ccp[0] = llc[0] * (one - cd[0]);
+  ccp[1] = llc[1] * (one - cd[1]);
+  ccp[2] = llc[2] * (one - cd[2]);
+  
+  for(i=0; i<2*nd; i++){
     // Determine vector from point 'i' to lowe-left-corner atom of the cube
-    p[0] = llc[0] - sph[i].r[0];
-    p[1] = llc[1] - sph[i].r[1];
-    p[2] = llc[2] - sph[i].r[2];
+    p1[0] = llc[0] - sph[i].r[0];
+    p1[1] = llc[1] - sph[i].r[1];
+    p1[2] = llc[2] - sph[i].r[2];
     
-    if(sph[i].r[2]<-3.8){
-      printf("\n%3d % .6lf % .6lf\t(r)\n",i,sph[i].r[0],sph[i].r[1]);
-      printf("%3d % .6lf % .6lf\t(p)\n",i,p[0],p[1]);
-    }
-    
-    // Boundary conditions
-    
-    p[0] = p[0] - box_x * round( p[0]/box_x );
-    p[1] = p[1] - box_x * round( p[1]/box_x );
-    p[2] = p[2] - box_x * round( p[2]/box_x );
+    // Determine vector from point 'i' to channel-center-point of the cube
+    p2[0] = ccp[0] - sph[i].r[0];
+    p2[1] = ccp[1] - sph[i].r[1];
+    p2[2] = ccp[2] - sph[i].r[2];
 
-    if(sph[i].r[2]<-3.8){
-      printf("%3d % .6lf % .6lf\t(p-pbc)\n",i,p[0],p[1]);
-    }
+    // Apply boundary conditions    
+    p1[0] = p1[0] - box_x * round( p1[0]/box_x );
+    p1[1] = p1[1] - box_x * round( p1[1]/box_x );
+    p1[2] = p1[2] - box_x * round( p1[2]/box_x );
     
-    pc[0]=zero; pc[1]=zero; pc[2]=zero;
-    vcrossu(p, chan, pc);
+    p2[0] = p2[0] - box_x * round( p2[0]/box_x );
+    p2[1] = p2[1] - box_x * round( p2[1]/box_x );
+    p2[2] = p2[2] - box_x * round( p2[2]/box_x );
     
-//     printf("%4d p : % .6lf % .6lf % .6lf\n",i,p[0],p[1],p[2]);
-//     printf("%4d pc: % .6lf % .6lf % .6lf\n",i,pc[0],pc[1],pc[2]);
+    // Calculate the cross product pxcd = p x cd
+    vcrossu(p1, cd, pxcd);
     
-    dist = vmodule(pc) / vmodule(chan);
-    if(sph[i].r[2]<-3.8){
-      printf("%3d % .6lf\t\t(dist)\n",i,dist);
-    }
-    if(dist<1.65){
+    // Calculate the shortest distance of the sphere center from the line
+    // with reference to p1 (lower left atom)
+    dist0 = vmodule(pxcd) / vmodule(cd);
+    
+    // Calculate the cross product pxcd = p x cd
+    vcrossu(p2, cd, pxcd);
+    
+    // Calculate the shortest distance of the sphere center from the line
+    // with reference to p2 (center point on the channel axis)
+    dist1 = vmodule(pxcd) / vmodule(cd);
+    
+    // If the sphere lies within the channel radius include the former into
+    // channel and continue to the next sphere
+    if(dist0 < cr || dist1 < cr){
       sph[i].type=1;
     }
   }
-  
-  
-  
-  
 }
 
 /*

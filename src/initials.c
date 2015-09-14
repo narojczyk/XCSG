@@ -17,10 +17,10 @@ extern char *prog_name;
 
 extern unsigned long int i_seed;
 extern int i_edge_fcc_N;
-extern int i_chanel[3];
+extern int i_channel[3];
 extern int i_iDCfrom;
 extern int i_iDCto;
-extern double i_chanel_R;
+extern double i_channel_R;
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -38,7 +38,7 @@ static struct option long_opts[] = {
 void print_greetings()
 {
   fputs("\n\
-  Generate a D.C. phase of dimers on the f.c.c. lattice with nano-chanels\n\
+  Generate a D.C. phase of dimers on the f.c.c. lattice with nano-channels\n\
   Institute of Molecular Physics, Polish Academy of Sciences\n\n", stdout);
 }
 
@@ -136,7 +136,7 @@ void generate_template_config(int status)
 
   fprintf(f, "MT19937 seed            : LUINT\n");
   fprintf(f, "Number of edge fcc cells: INT\n");
-  fprintf(f, "Nano-chanel direction   : INT_h INT_k INT_l\n");
+  fprintf(f, "Nano-channel direction   : INT_h INT_k INT_l\n");
   fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
   fprintf(f, "Load initial DC struct. : INT INT\n");
 
@@ -159,8 +159,8 @@ void parse_config(FILE *file)
 {
   fscanf(file, "%*26c %lu\n", &i_seed);
   fscanf(file, "%*26c %d\n", &i_edge_fcc_N);
-  fscanf(file, "%*26c %d %d %d\n", &i_chanel[0], &i_chanel[1], &i_chanel[2]);
-  fscanf(file, "%*26c %lf\n",&i_chanel_R);
+  fscanf(file, "%*26c %d %d %d\n", &i_channel[0], &i_channel[1], &i_channel[2]);
+  fscanf(file, "%*26c %lf\n",&i_channel_R);
   fscanf(file, "%*26c %d %d\n", &i_iDCfrom, &i_iDCto);
 
 }

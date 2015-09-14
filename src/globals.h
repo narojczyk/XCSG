@@ -14,10 +14,10 @@ const double pi = 4e0 * atan(1e0);
 // config file variables
 unsigned long int i_seed;       // Seed for MT19937 r.n.g.
 int i_edge_fcc_N = 0;           // Number of f.c.c. cells on edge of the box
-int i_chanel[3] = {0, 0, 0};    // Nano-chanel direction, all zeros - no chanel
+int i_channel[3] = {0, 0, 0};   // Nano-channel direction, all zeros-no channel
 int i_iDCfrom = -1;             // Index of input DC structure (if <0,no input)
 int i_iDCto = -1;               // Index of last DC structure
-double i_chanel_R = 0e0;       // Nano-chanel radius in sigma units
+double i_channel_R = 0e0;       // Nano-channel radius in sigma units
 
 // general purpose global variables
 char *prog_name;
