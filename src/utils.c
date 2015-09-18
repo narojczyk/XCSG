@@ -26,6 +26,50 @@ extern const double two;
 extern const double pi;
 
 /*
+ * brake_dimers(dim, sph, nd)
+ * Check all dimers and brake bonds in case at least one of spheres belong
+ * to channel.
+ */
+int brake_dimers(DIM3D *dim, SPH *sph, int nd)
+{
+  int i;
+  int atom0, atom1;
+  int broken_dimers = 0;
+  for(i=0; i<nd; i++){
+    
+    // Check for type set by make_channel()
+    if(dim[i].type == 2){
+      // Get atom indexes
+      atom0 = dim[i].sph_ind[0];
+      atom1 = dim[i].sph_ind[1];
+      
+      // Delete indexes of spheres forming a dimer
+//       dim[i].type = 2;
+      dim[i].sph_ind[0] = -1;
+      dim[i].sph_ind[1] = -1;
+      
+      // Set the free (non-channel) sphere (if any) to type '3'
+      if(sph[atom0].type == 1){
+        sph[atom0].type = 3;
+      }
+      if(sph[atom1].type == 1){
+        sph[atom1].type = 3;
+      }
+      
+      // Remove dimer index from the sphere data
+      sph[atom0].dim_ind = -1;
+      sph[atom1].dim_ind = -1;
+      
+      // Count broken dimers
+      broken_dimers++;
+      
+//       printf("Dimer %4d has been destroyed\n",i);   
+    }  
+  }
+  return broken_dimers;
+}
+
+/*
  * make_channel()
  * Calculates the distance of the sphere 'i' from the line given by vector 'c',
  * with respect to two points on the line: lower left corner and center point
@@ -93,7 +137,10 @@ void make_channel(
     // If the sphere lies within the channel radius include the former into
     // channel and continue to the next sphere
     if(dist0 < cr || dist1 < cr){
-      sph[i].type=1;
+      // Mark sphere as 'channel-sphere' (type '2')
+      sph[i].type = 2;
+      // Mark dimers that cross the channel as type '2'
+      dim[ sph[i].dim_ind ].type = 2;
     }
   }
 }
@@ -141,15 +188,11 @@ void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd)
     // Assign sphere indexes to dimers array
     dim[i].sph_ind[0] = j;
     dim[i].sph_ind[1] = j+1;
-//     printf("%3d (%3d %3d)\n",i,dim[i].sph_ind[0], dim[i].sph_ind[1]);
+
     // Assign dimer index to spheres array
     sph[j  ].dim_ind = i;
     sph[j+1].dim_ind = i;
-    
-    sph[j  ].d = one;
-    sph[j+1].d = one;
-//     printf("%3d (%3d)\n",j,sph[j].dim_ind);
-//     printf("%3d (%3d)\n",j+1,sph[j+1].dim_ind);
+
     // Incremend counters
     i++;
     j=j+2;
@@ -210,6 +253,65 @@ int sph_set_fcc( SPH *sph, int ns, int fcc_x)
   }
   
   return 0;
+}
+
+/*
+ * memory_clean_spheres(sph, ns)
+ * memory_clean_dimers(dim, nd)
+ * 
+ * Assign default values to data structures' arrays
+ */
+void memory_clean_spheres(SPH *sph, int ns)
+{
+  SPH template;
+  int i;
+
+  // Default values for initial array of spheres
+  template.type = 1;    // regular spheres (forming dimers)
+  template.dim_ind = -1;
+  template.r[0] = zero;
+  template.r[1] = zero;
+  template.r[2] = zero;
+  template.d = one;
+  
+  for(i=0; i<12; i++){
+    template.ngb[i] = -1;
+  }
+  
+  // Copy default values to the array
+  for(i=0; i<ns; i++){
+    sph[i] = template;
+  }
+  
+}
+
+void memory_clean_dimers(DIM3D *dim, int nd)
+{
+  DIM3D template;
+  int i;
+  
+  // Default values for initial array of dimers
+  template.type = 1;    // regular dimers
+  template.sph_ind[0] = -1;
+  template.sph_ind[1] = -1;
+  template.R[0] = zero;
+  template.R[1] = zero;
+  template.R[2] = zero;
+  template.O[0] = zero;
+  template.O[1] = zero;
+  template.O[2] = zero;
+  template.L = one;
+  
+  for(i=0; i<22; i++){
+    template.ngb[i][0] = -1;
+    template.ngb[i][1] = -1;
+  }
+  
+  // Copy default values to the array
+  for(i=0; i<nd; i++){
+    dim[i] = template;
+  }
+
 }
 
 /*

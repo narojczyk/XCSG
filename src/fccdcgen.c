@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 
   int exit_status;
   int Ns, Nd;
+  int bd;
   
   int i, m, n;
   int s;
@@ -123,6 +124,10 @@ int main(int argc, char *argv[])
   spheres = malloc( Ns * sizeof(SPH));
   dimers  = malloc( Nd * sizeof(DIM3D));
   
+  // Clean allocated memory
+  memory_clean_spheres(spheres, Ns);
+  memory_clean_dimers(dimers, Nd);
+  
   // Loop over selected set of structures
   for(s=i_iDCfrom; s<=i_iDCto; s++){
     
@@ -152,7 +157,7 @@ int main(int argc, char *argv[])
     
     // Bind dimers to spheres and vice versa
     bind_spheres_to_dimers(dimers, spheres, Nd);
-    
+        
     // Generate sphere positions for all dimers
     for(i=0; i<Nd; i++){
       update_sphere_positions(dimers, spheres, cube_edge, i);
@@ -160,8 +165,19 @@ int main(int argc, char *argv[])
     
     // Make channel 
     if(i_channel[0]+i_channel[1]+i_channel[2] > 0){
+      fprintf(stdout, " Creating channel in the direction: %d %d %d\n",
+        i_channel[0],i_channel[1],i_channel[2]);    
       make_channel(dimers, spheres, i_channel, i_channel_R, cube_edge, Nd);
     } 
+    
+    /* TODO: 
+     * Brake dimers with spheres of type != 1
+     * Set broken dimers as type '2'
+     * set free (non-channel) spheres as type '3'
+     */
+    bd = brake_dimers(dimers, spheres, Nd);
+    fprintf(stdout, " Dimers broken due to channel (if any): %d\n", bd);
+    
     
 //     for(i=0;i<Nd;i++){
 //    printf("%3d (%4d %4d)\n",i,dimers[i].sph_ind[0], dimers[i].sph_ind[1]);
