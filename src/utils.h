@@ -1,6 +1,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+int find_ngb_spheres(SPH sph[], int ns, double box_x);
 int brake_dimers(DIM3D *dim, SPH *sph, int nd);
 int sph_set_fcc( SPH *sph, int ns, int fcc_x);
 

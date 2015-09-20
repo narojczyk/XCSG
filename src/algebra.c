@@ -44,34 +44,25 @@ void vector(double p[3], double q[3], double v[3], double B_cub[3][3])
 }
 
 /*
- * distance(p, q, B_cub)
+ * distance(p, q, box_x)
  *
- * Computes the distance between points p and q in real cubic box described by
- * B_cub.
- * Takes into account periodic boundary conditions (returns the distance of
+ * Computes the distance between points p and q in real cubic box with
+ * edge lenght equal to box_x
+  * Takes into account periodic boundary conditions (returns the distance of
  * q with reference to p -- not that the order makes any difference :D )
- * NOTE: Works ONLY for cubic boxes (B is assumed to be a diagonal matrix)
+ * NOTE: Works ONLY for cubic boxes centered around the axes origin.
  */
-double distance(double p[3], double q[3], double B_cub[3][3])
+double distance(double p[3], double q[3], double box_x)
 {
-  int i, f[3] = {0,0,0};
+  int i;
   double pq[3];
-
-
+    
   for (i=0; i<3; i++){
-    // Calculat distance between p and q
+    // Calculat absolute distance between p and q
     pq[i] = q[i] - p[i];
 
-    // Check if periodic boundaryies apply
-    if (pq[i] != 0){
-      f[i] = pq[i] / fabs(pq[i]);
-    }
-
-    // Apply periodic boundaries if necessary
-    //   pq[i] = q[i] - p[i] - f[i] * B_cub[i][i]
-    if (fabs (pq[i]) > B_cub[i][i]/2e0){
-      pq[i] -= f[i] * B_cub[i][i];
-    }
+    // Apply periodic boundaries
+    pq[i] = pq[i] - box_x * round( pq[i]/box_x );
   }
 
   return sqrt(pq[0]*pq[0] + pq[1]*pq[1] + pq[2]*pq[2]);

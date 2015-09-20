@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
   char f_inp[15];
   
   const char *fo_iDC = "initdc3d.%03d";
-  const char *fo_expDC = "d3d%05d.csv";
+  const char *fo_exp_dim = "d3d%05d.csv";
+  const char *fo_exp_sph = "s3d%05d.csv";
 
   int exit_status;
   int Ns, Nd;
@@ -166,6 +167,12 @@ int main(int argc, char *argv[])
       update_sphere_positions(dimers, spheres, cube_edge, i);
     }
     
+    // Find neighbors for spheres
+    if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
+      exit_status = EXIT_FAILURE;
+      goto cleanup;   
+    }
+    
     // Make channel 
     if(i_channel[0]+i_channel[1]+i_channel[2] > 0){
       fprintf(stdout, " Creating channel in the direction: %d %d %d\n",
@@ -181,9 +188,9 @@ int main(int argc, char *argv[])
     bd = brake_dimers(dimers, spheres, Nd);
     fprintf(stdout, " Dimers broken due to channel (if any): %d\n", bd);
     
-    // Set the file name andopen the file for write
-    sprintf(f_out, fo_expDC, s);
-    fprintf(stdout," Writting to file %s\n",f_out);
+    // Set the file name for dimer data and open the file for write
+    sprintf(f_out, fo_exp_dim, s);
+    fprintf(stdout," Writting dimer  data to file %s\n",f_out);
     
     if((f = fopen(f_out, "w")) == NULL) {
       fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
@@ -191,24 +198,37 @@ int main(int argc, char *argv[])
       exit_status = EXIT_FAILURE;
       goto cleanup;
     }
-    // Export structure to file
-    export_structure(f, dimers, spheres, Nd);
-    
+    // Export dimer datat to file
+    export_dimers(f, dimers, Nd);
     fclose(f);
     
+    // Set the file name for dimer data and open the file for write
+    sprintf(f_out, fo_exp_sph, s);
+    fprintf(stdout," Writting sphere data to file %s\n",f_out);
+        
+    if((f = fopen(f_out, "w")) == NULL) {
+      fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+              prog_name, f_out);
+      exit_status = EXIT_FAILURE;
+      goto cleanup;
+    }
+    // Export sphere datat to file
+    export_spheres(f, spheres, Ns);
+    fclose(f);
 
+  #ifdef DATA_VISGL_OUTPUT
+    // Export data in data_visGL format 
+    if( export_to_GLviewer(spheres, cube_edge, s, Ns) != 0 ){
+      exit_status=EXIT_FAILURE;
+      goto cleanup;    
+    }
+  #endif
     
-  }
+  } // End structure loop
  
 
 
-#ifdef DATA_VISGL_OUTPUT
-  // Export data in data_visGL format 
-  if( export_to_GLviewer(spheres, cube_edge, Ns) != 0 ){
-    exit_status=EXIT_FAILURE;
-    goto cleanup;    
-  }
-#endif
+
   
 cleanup:
   // Free resources

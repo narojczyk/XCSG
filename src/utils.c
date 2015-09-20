@@ -26,6 +26,37 @@ extern const double two;
 extern const double pi;
 
 /*
+ * find_ngb_spheres(sph,ns,box_x)
+ * Build neighburs data for spheres.
+ */
+int find_ngb_spheres(SPH sph[], int ns, double box_x)
+{
+  int i,j,cni;
+  const double lim = 5e-14;
+  
+  // Loop over all spheres
+  for(i=0; i<ns; i++){
+    // current neighbor index
+    cni = 0;
+    
+    // Loop over all spheres other than 'i'
+    for(j=0; j<ns; j++){
+      if(j!=i && fabs(distance(sph[i].r,sph[j].r, box_x) - one) < lim ){
+        sph[i].ngb[cni++] = j;
+      }
+    }   
+    
+    // Sanity check
+    if(cni != 12){
+      fprintf(stderr,
+              " [ %s ]: error: wrong cni value (%d != 12)\n", __func__, cni);
+      return EXIT_FAILURE;
+    }
+  }
+  return 0;
+}
+
+/*
  * brake_dimers(dim, sph, nd)
  * Check all dimers and brake bonds in case at least one of spheres belong
  * to channel.
