@@ -72,7 +72,8 @@ void print_version(int status)
 {
   print_greetings();
 
-  fprintf(stdout, "  Created by:\t%s\n\t\t%s\n", author0, author1);
+//   fprintf(stdout, "  Created by:\t%s\n\t\t%s\n", author0, author1);
+  fprintf(stdout, "  Created by:\t%s\n", author0);
   fprintf(stdout, "  Build by:\t%s\n", builder);
   fprintf(stdout, "  Build date:\t%s\n\n", build);
 

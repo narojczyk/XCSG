@@ -51,33 +51,8 @@ int main(int argc, char *argv[])
   int Ns, Nd;
   int bd;
   
-  int i, m, n;
-  int s;
-  /*
-  int h, v, a;
-  int next, ngb, master;
-  int c=0, exp_c=0;
-  int pc_of = -1, pc_with = -1;
-  int target_index, initial_N;
-  int terminate_simulation = 0;
-  int cwd = 0;  //colliding walker deleted [0|1]
-  int survivors = 0, surv_n = 0;
+  int i, s;
 
-//   int shits;
-
-  double pc_time;
-  double sum_R = zero;
-  double v1_x, v1_y, v2_x, v2_y;
-  double x1, y1, x2, y2;
-  double R1, R2;
-  double del_vx, del_vy, del_x, del_y, relativeV_SQ, toSQRT;
-  double tau = zero, d_tau = zero, ts1, ts2;
-
-  double rr, vr;
-  double rho = zero;
-  double tvx, tvy;
-  double pmarker = zero;
-*/
   double cube_edge;
   
   // Extract program name from the path.
@@ -108,19 +83,23 @@ int main(int argc, char *argv[])
   // Calculate cube edge
   cube_edge = i_edge_fcc_N * sqrt(two);
   
-    // < DEBUG
-  printf("Config variables:\n");
-  printf("edge cells: %d\n",i_edge_fcc_N);
-  printf("box edge:  %.16le\n",cube_edge);
-  printf("half edge: %.16le\n",cube_edge/two);
-  printf("coordinates range: %.16le %.16le\n",-cube_edge/two,cube_edge/two);
-  printf("channel %d %d %d\n", i_channel[0], i_channel[1], i_channel[2]);
-  printf("channel radius %.16le\n",i_channel_R);
-  printf("Load initial DC from index: %d to index: %d (total %d files)\n",
+  // Summary of configuration variables
+  fprintf(stdout,"\tConfig summary\n");
+  fprintf(stdout," System size (cells)  : %d\n",i_edge_fcc_N);
+  fprintf(stdout," MT19937 seed         : %8lu\n", i_seed);
+  fprintf(stdout," Nano-channel         : [%1d %1d %1d] radius %.3le\n", 
+            i_channel[0], i_channel[1], i_channel[2], i_channel_R);
+  fprintf(stdout," Str. index range     : %d to %d (total %d files)\n",
           i_iDCfrom, i_iDCto, i_iDCto-i_iDCfrom+1);
   
-  printf("Ns = %d, Nd = %d\n",Ns, Nd);
-  // DEBUG >
+  fprintf(stdout,"\n\tOther parameters\n");
+  fprintf(stdout," Coordinates range    : %.16le %.16le\n",
+          -cube_edge/two,cube_edge/two);
+  fprintf(stdout," Box edge length      : %.16le\n",cube_edge);
+  fprintf(stdout," Number of dimers     : %d\n",Nd);
+  fprintf(stdout," Number of spheres    : %d\n",Ns);
+  fprintf(stdout,"\n");
+  
   
   // Allocate memory for spheres and dimers
   spheres = malloc( Ns * sizeof(SPH));
@@ -135,11 +114,11 @@ int main(int argc, char *argv[])
   // Loop over selected set of structures
   for(s=i_iDCfrom; s<=i_iDCto; s++){
     
-    fprintf(stdout," Processing structure %d\n",s);
+    fprintf(stdout," ***\tProcessing structure %d\n",s);
     // Regarding the ini settings, load input structure or grnerate a new one
     if(i_iDCfrom >= 0 && i_iDCto >= i_iDCfrom){
       sprintf(f_inp, fo_iDC, s);
-      fprintf(stdout," Reading file %s\n",f_inp);
+      fprintf(stdout," Reading structure from file %s\n",f_inp);
       // Load existing DC structure
       if((f = fopen(f_inp, "r")) == NULL) {
         fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
@@ -174,13 +153,11 @@ int main(int argc, char *argv[])
     }
     
     // Make channel 
-    if(i_channel[0]+i_channel[1]+i_channel[2] > 0){
-      fprintf(stdout, " Creating channel in the direction: %d %d %d\n",
-        i_channel[0],i_channel[1],i_channel[2]);    
+    if(i_channel[0]+i_channel[1]+i_channel[2] > 0){   
       make_channel(dimers, spheres, i_channel, i_channel_R, cube_edge, Nd);
     } 
     
-    /* TODO: 
+    /* NOTE: 
      * Brake dimers with spheres of type != 1
      * Set broken dimers as type '2'
      * set free (non-channel) spheres as type '3'
