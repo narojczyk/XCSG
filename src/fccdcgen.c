@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
   char f_inp[15];
   
   const char *fo_iDC = "initdc3d.%03d";
+  const char *fo_expDC = "d3d%05d.csv";
 
   int exit_status;
   int Ns, Nd;
@@ -128,6 +129,8 @@ int main(int argc, char *argv[])
   memory_clean_spheres(spheres, Ns);
   memory_clean_dimers(dimers, Nd);
   
+  
+  
   // Loop over selected set of structures
   for(s=i_iDCfrom; s<=i_iDCto; s++){
     
@@ -178,18 +181,26 @@ int main(int argc, char *argv[])
     bd = brake_dimers(dimers, spheres, Nd);
     fprintf(stdout, " Dimers broken due to channel (if any): %d\n", bd);
     
+    // Set the file name andopen the file for write
+    sprintf(f_out, fo_expDC, s);
+    fprintf(stdout," Writting to file %s\n",f_out);
     
-//     for(i=0;i<Nd;i++){
-//    printf("%3d (%4d %4d)\n",i,dimers[i].sph_ind[0], dimers[i].sph_ind[1]);
-//   }
+    if((f = fopen(f_out, "w")) == NULL) {
+      fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+              prog_name, f_out);
+      exit_status = EXIT_FAILURE;
+      goto cleanup;
+    }
+    // Export structure to file
+    export_structure(f, dimers, spheres, Nd);
+    
+    fclose(f);
+    
+
     
   }
  
-//   // obsolete debug code
-//   for(i=0;i<Ns;i++){
-//    fprintf(stderr,"sphere{<% lf, % lf, % lf>, 0.5 texture{t%d}}\t //%4d\n",
-//           spheres[i].r[0],spheres[i].r[1],spheres[i].r[2],spheres[i].type,i);
-//   }
+
 
 #ifdef DATA_VISGL_OUTPUT
   // Export data in data_visGL format 

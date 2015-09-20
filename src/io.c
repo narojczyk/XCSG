@@ -13,6 +13,42 @@
 #include "io.h"
 
 /*
+ * expot_structure()
+ * Writes complete information about the structure to a file.
+ */
+int export_structure(FILE *file, DIM3D *dim, SPH *sph, int nd)
+{
+  const char *exp_f_dim = 
+  "%5d  %2d % .16le % .16le % .16le % .16le % .16le % .16le %.16le, %5d %5d\n";
+//   const char *exp_f_dim_ngb = 
+  const char *exp_f_sph = "%5d % .16le % .16le % .16le %.16le %d\n";
+  int i, atom0, atom1;
+
+  for(i=0; i<nd; i++){
+    // Export information about molecule
+    atom0 = dim[i].sph_ind[0];
+    atom1 = dim[i].sph_ind[1];
+    if(fprintf(file, exp_f_dim, 
+        i, dim[i].type,
+        dim[i].R[0], dim[i].R[1], dim[i].R[2], 
+        dim[i].O[0], dim[i].O[1], dim[i].O[2],
+        dim[i].L,
+        atom0, atom1) == EOF){
+      fprintf(stderr,"  [%s]: error: exporting positions failed\n", __func__);
+      return EXIT_FAILURE;
+    }
+    /*
+    if(fprintf(file, exp_f_dim, i, 
+        sph[i].r[0], sph[i].r[1], sph[i].r[2], 
+        sph[i].d, sph[i].type ) == EOF){
+      fprintf(stderr,"  [%s]: error: exporting positions failed\n", __func__);
+      return EXIT_FAILURE;
+    }*/
+  }
+  return 0;
+}
+
+/*
  * load_dcsgen()
  * Load initial DC configuration from dcsgen, program by Mikolaj Kowalik
  */
@@ -23,6 +59,7 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd)
   int i, j;
   
   // Initiate fields not read from file with defaults
+  tm.type = 1;
   tm.sph_ind[0] = tm.sph_ind[1] = -1;
   for(i=0; i<22; i++){
     tm.ngb[i][0] = -1;

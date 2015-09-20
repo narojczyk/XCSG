@@ -64,7 +64,7 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
       broken_dimers++;
       
 //       printf("Dimer %4d has been destroyed\n",i);   
-    }  
+    }
   }
   return broken_dimers;
 }
