@@ -32,7 +32,7 @@ extern const double pi;
 int find_ngb_spheres(SPH sph[], int ns, double box_x)
 {
   int i,j,cni;
-  const double lim = 5e-14;
+  const double lim = 5e-11;
   
   // Loop over all spheres
   for(i=0; i<ns; i++){
