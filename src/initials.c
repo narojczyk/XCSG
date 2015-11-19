@@ -137,7 +137,7 @@ void generate_template_config(int status)
 
   fprintf(f, "MT19937 seed            : LUINT\n");
   fprintf(f, "Number of edge fcc cells: INT\n");
-  fprintf(f, "Nano-channel direction   : INT_h INT_k INT_l\n");
+  fprintf(f, "Nano-channel direction  : INT_h INT_k INT_l\n");
   fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
   fprintf(f, "Load initial DC struct. : INT INT\n");
 

@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   char f_out[15];
   char f_inp[15];
   
-  const char *fo_iDC = "initdc3d.%03d";
+  const char *fo_iDC = "initdc3d.%04d";
   const char *fo_exp_dim = "d3d%05d.csv";
   const char *fo_exp_sph = "s3d%05d.csv";
 
@@ -103,16 +103,14 @@ int main(int argc, char *argv[])
   
   // Allocate memory for spheres and dimers
   spheres = malloc( Ns * sizeof(SPH));
-  dimers  = malloc( Nd * sizeof(DIM3D));
-  
-  // Clean allocated memory
-  memory_clean_spheres(spheres, Ns);
-  memory_clean_dimers(dimers, Nd);
-  
-  
+  dimers  = malloc( Nd * sizeof(DIM3D)); 
   
   // Loop over selected set of structures
-  for(s=i_iDCfrom; s<=i_iDCto; s++){
+  for(s=i_iDCfrom; s<=i_iDCto; s++){    
+      
+    // Clean allocated memory
+    memory_clean_spheres(spheres, Ns);
+    memory_clean_dimers(dimers, Nd);
     
     fprintf(stdout," ***\tProcessing structure %d\n",s);
     // Regarding the ini settings, load input structure or grnerate a new one
