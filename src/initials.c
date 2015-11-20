@@ -23,6 +23,7 @@ extern int i_iDCto;
 extern int i_make_channel;
 extern int i_make_slit;
 extern double i_channel_R;
+extern double i_slit_Th;
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -169,6 +170,7 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %d %d\n", &i_iDCfrom, &i_iDCto);
   fscanf(file, "%*26c %d\n", &i_make_channel);
   fscanf(file, "%*26c %d\n", &i_make_slit);
+  fscanf(file, "%*26c %lf\n", &i_slit_Th);
 
 }
 

@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     
     // Make slit
     if(i_make_slit && i_normal[0]+i_normal[1]+i_normal[2] > 0){   
-      make_slit(dimers, spheres, i_normal, Nd);
+      make_slit(dimers, spheres, i_slit_Th, i_normal, Nd);
     }
     
     /* NOTE: 

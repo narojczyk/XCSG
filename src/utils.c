@@ -32,13 +32,12 @@ extern const double pi;
  * atoms belong to the plane, are flagged for braking.
  * NOTE: periodic boundaries are not taken into account here
  */
-void make_slit(DIM3D *dim, SPH *sph, int c[3], int nd)
+void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int nd)
 {
   int i;
   double cd[3] = {one*c[0], one*c[1], one*c[2]};
   double p[3];
   double dist0;
-  double sthicknes = 5e-1;
   
   // Transform the plane vector to unit vector;
   vnorm(cd);
@@ -62,7 +61,7 @@ void make_slit(DIM3D *dim, SPH *sph, int c[3], int nd)
     
     // If the sphere lies within the plane, include the sphere into
     // plane and continue to the next sphere
-    if(fabs(dist0) < sthicknes ){
+    if(fabs(dist0) < sth ){
       // Mark sphere as 'channel-sphere' (type '2')
       sph[i].type = 2;
       // Mark dimers that cross the channel as type '2'
