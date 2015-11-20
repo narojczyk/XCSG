@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   fprintf(stdout," System size (cells)  : %d\n",i_edge_fcc_N);
   fprintf(stdout," MT19937 seed         : %8lu\n", i_seed);
   fprintf(stdout," Nano-channel         : [%1d %1d %1d] radius %.3le\n", 
-            i_channel[0], i_channel[1], i_channel[2], i_channel_R);
+            i_normal[0], i_normal[1], i_normal[2], i_channel_R);
   fprintf(stdout," Str. index range     : %d to %d (total %d files)\n",
           i_iDCfrom, i_iDCto, i_iDCto-i_iDCfrom+1);
   
@@ -151,8 +151,8 @@ int main(int argc, char *argv[])
     }
     
     // Make channel 
-    if(i_channel[0]+i_channel[1]+i_channel[2] > 0){   
-      make_channel(dimers, spheres, i_channel, i_channel_R, cube_edge, Nd);
+    if(i_normal[0]+i_normal[1]+i_normal[2] > 0){   
+      make_channel(dimers, spheres, i_normal, i_channel_R, cube_edge, Nd);
     } 
     
     /* NOTE: 

@@ -17,9 +17,11 @@ extern char *prog_name;
 
 extern unsigned long int i_seed;
 extern int i_edge_fcc_N;
-extern int i_channel[3];
+extern int i_normal[3];
 extern int i_iDCfrom;
 extern int i_iDCto;
+extern int i_make_channel;
+extern int i_make_slit;
 extern double i_channel_R;
 
 static struct option long_opts[] = {
@@ -137,10 +139,12 @@ void generate_template_config(int status)
 
   fprintf(f, "MT19937 seed            : LUINT\n");
   fprintf(f, "Number of edge fcc cells: INT\n");
-  fprintf(f, "Nano-channel direction  : INT_h INT_k INT_l\n");
+  fprintf(f, "Normal vector (slit/ch.): INT_h INT_k INT_l\n");
   fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
   fprintf(f, "Load initial DC struct. : INT INT\n");
-
+  fprintf(f, "Make nano-channel (bool): INT\n");
+  fprintf(f, "Make nano-slit (bool)   : INT\n");
+  
   if(fclose(f)==0) {
     fprintf(stdout,"  Template config file written to:\n%s\n",template);
     exit(status);
@@ -160,9 +164,11 @@ void parse_config(FILE *file)
 {
   fscanf(file, "%*26c %lu\n", &i_seed);
   fscanf(file, "%*26c %d\n", &i_edge_fcc_N);
-  fscanf(file, "%*26c %d %d %d\n", &i_channel[0], &i_channel[1], &i_channel[2]);
+  fscanf(file, "%*26c %d %d %d\n", &i_normal[0], &i_normal[1], &i_normal[2]);
   fscanf(file, "%*26c %lf\n",&i_channel_R);
   fscanf(file, "%*26c %d %d\n", &i_iDCfrom, &i_iDCto);
+  fscanf(file, "%*26c %d\n", &i_make_channel);
+  fscanf(file, "%*26c %d\n", &i_make_slit);
 
 }
 
