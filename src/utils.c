@@ -26,6 +26,52 @@ extern const double two;
 extern const double pi;
 
 /*
+ * make_slit(dim.sph,c,nd)
+ * Introduces a plane (single atomic layer) into dimer structure. The plane
+ * is described by coordinate axis origin and normal vector 'c'. Dimers who's
+ * atoms belong to the plane, are flagged for braking.
+ * NOTE: periodic boundaries are not taken into account here
+ */
+void make_slit(DIM3D *dim, SPH *sph, int c[3], int nd)
+{
+  int i;
+  double cd[3] = {one*c[0], one*c[1], one*c[2]};
+  double p[3];
+  double dist0;
+  double sthicknes = 5e-1;
+  
+  // Transform the plane vector to unit vector;
+  vnorm(cd);
+  
+  // Loop over all spheres in the structure
+  for(i=0; i<2*nd; i++){    
+    // Get the i'th sphere position
+    p[0] = sph[i].r[0];
+    p[1] = sph[i].r[1];
+    p[2] = sph[i].r[2];
+    
+    // Calculate the dot product of the normal to the plane located at
+    // axes origin and a position vector of i'th sphere
+    dist0 = zero - cd[0]*p[0] - cd[1]*p[1] - cd[2]*p[2];
+    
+    // To get the distance of a sphere's center from the plane one should
+    // (in principle) divide the above by the length of the plane's normal.
+    // This is not done here, as the normal is unit-normed.
+
+    printf(" %3d %16.12lf\n",i,dist0);
+    
+    // If the sphere lies within the plane, include the sphere into
+    // plane and continue to the next sphere
+    if(fabs(dist0) < sthicknes ){
+      // Mark sphere as 'channel-sphere' (type '2')
+      sph[i].type = 2;
+      // Mark dimers that cross the channel as type '2'
+      dim[ sph[i].dim_ind ].type = 2;
+    }
+  }
+}
+
+/*
  * find_ngb_spheres(sph,ns,box_x)
  * Build neighburs data for spheres.
  */

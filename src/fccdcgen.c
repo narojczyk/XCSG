@@ -151,9 +151,14 @@ int main(int argc, char *argv[])
     }
     
     // Make channel 
-    if(i_normal[0]+i_normal[1]+i_normal[2] > 0){   
+    if(i_make_channel && i_normal[0]+i_normal[1]+i_normal[2] > 0){   
       make_channel(dimers, spheres, i_normal, i_channel_R, cube_edge, Nd);
     } 
+    
+    // Make slit
+    if(i_make_slit && i_normal[0]+i_normal[1]+i_normal[2] > 0){   
+      make_slit(dimers, spheres, i_normal, Nd);
+    }
     
     /* NOTE: 
      * Brake dimers with spheres of type != 1
@@ -161,7 +166,7 @@ int main(int argc, char *argv[])
      * set free (non-channel) spheres as type '3'
      */
     bd = brake_dimers(dimers, spheres, Nd);
-    fprintf(stdout, " Dimers broken due to channel (if any): %d\n", bd);
+    fprintf(stdout, " Dimers broken (if any): %d\n", bd);
     
     // Set the file name for dimer data and open the file for write
     sprintf(f_out, fo_exp_dim, s);
