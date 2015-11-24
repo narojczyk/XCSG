@@ -172,6 +172,11 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %d\n", &i_make_channel);
   fscanf(file, "%*26c %d\n", &i_make_slit);
   fscanf(file, "%*26c %lf\n", &i_slit_Th);
+  
+  // Parameters sanity check
+  if(i_make_slit != 0){
+    i_make_channel = 0;
+  }
 
 }
 
