@@ -145,6 +145,7 @@ void generate_template_config(int status)
   fprintf(f, "Load initial DC struct. : INT INT\n");
   fprintf(f, "Make nano-channel (bool): INT\n");
   fprintf(f, "Make nano-slit (bool)   : INT\n");
+  fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
   
   if(fclose(f)==0) {
     fprintf(stdout,"  Template config file written to:\n%s\n",template);

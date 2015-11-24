@@ -57,7 +57,7 @@ void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int nd)
     // (in principle) divide the above by the length of the plane's normal.
     // This is not done here, as the normal is unit-normed.
 
-    printf(" %3d %16.12lf\n",i,dist0);
+// printf(" %3d %16.12lf\n",i,dist0);
     
     // If the sphere lies within the plane, include the sphere into
     // plane and continue to the next sphere
