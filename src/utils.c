@@ -71,10 +71,10 @@ void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int nd)
 }
 
 /*
- * find_ngb_spheres(sph,ns,box_x)
+ * find_ngb_spheres(sph,ns,box)
  * Build neighburs data for spheres.
  */
-int find_ngb_spheres(SPH sph[], int ns, double box_x)
+int find_ngb_spheres(SPH sph[], int ns, double box[3])
 {
   int i,j,cni;
   const double lim = 5e-11;
@@ -86,7 +86,7 @@ int find_ngb_spheres(SPH sph[], int ns, double box_x)
     
     // Loop over all spheres other than 'i'
     for(j=0; j<ns; j++){
-      if(j!=i && fabs(distance(sph[i].r,sph[j].r, box_x) - one) < lim ){
+      if(j!=i && fabs(distance(sph[i].r,sph[j].r, box) - one) < lim ){
         sph[i].ngb[cni++] = j;
       }
     }   
@@ -154,17 +154,17 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
  * 
  */
 void make_channel(
-  DIM3D *dim, SPH *sph, int c[3], double cr, double box_x, int nd)
+  DIM3D *dim, SPH *sph, int c[3], double cr, double box[3], int nd)
 {
   int i;
   double cd[3] = {one*c[0], one*c[1], one*c[2]};
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
-  double llc_r = -box_x/two + one;
+  double llc_r[3] = {-box[0]/two + one, -box[1]/two + one, -box[2]/two + one};
   double p1[3], p2[3], pxcd[3], dist0, dist1;
   
   // Find coordinates of the sphere in lower-left-corner of the cube
   for(i=1; i<2*nd; i++){
-    if(sph[i].r[0]<llc_r && sph[i].r[1]<llc_r && sph[i].r[2]< llc_r){
+    if(sph[i].r[0]<llc_r[0] && sph[i].r[1]<llc_r[1] && sph[i].r[2]< llc_r[2]){
       llc[0] = sph[i].r[0];
       llc[1] = sph[i].r[1];
       llc[2] = sph[i].r[2];
@@ -188,13 +188,13 @@ void make_channel(
     p2[2] = ccp[2] - sph[i].r[2];
 
     // Apply boundary conditions    
-    p1[0] = p1[0] - box_x * round( p1[0]/box_x );
-    p1[1] = p1[1] - box_x * round( p1[1]/box_x );
-    p1[2] = p1[2] - box_x * round( p1[2]/box_x );
+    p1[0] = p1[0] - box[0] * round( p1[0]/box[0] );
+    p1[1] = p1[1] - box[1] * round( p1[1]/box[1] );
+    p1[2] = p1[2] - box[2] * round( p1[2]/box[2] );
     
-    p2[0] = p2[0] - box_x * round( p2[0]/box_x );
-    p2[1] = p2[1] - box_x * round( p2[1]/box_x );
-    p2[2] = p2[2] - box_x * round( p2[2]/box_x );
+    p2[0] = p2[0] - box[0] * round( p2[0]/box[0] );
+    p2[1] = p2[1] - box[1] * round( p2[1]/box[1] );
+    p2[2] = p2[2] - box[2] * round( p2[2]/box[2] );
     
     // Calculate the cross product pxcd = p x cd
     vcrossu(p1, cd, pxcd);
@@ -226,7 +226,7 @@ void make_channel(
  * Updates positions of spheres for the dimer 'd' with regard to the periodic 
  * boundaries (the simulation box is assumed to be -L/2;L/2)
  */
-void update_sphere_positions(DIM3D *dim, SPH *sph, double box_x, int d)
+void update_sphere_positions(DIM3D *dim, SPH *sph, double box[3], int d)
 {
   int j;
   int atom0 = dim[d].sph_ind[0];
@@ -241,8 +241,8 @@ void update_sphere_positions(DIM3D *dim, SPH *sph, double box_x, int d)
     sp_r1[j] = dim[d].R[j] - dim[d].O[j] * dim[d].L / two;
     
     // Apply paeriodic boundaries
-    sp_r0[j] = sp_r0[j] - box_x * round( sp_r0[j]/box_x );
-    sp_r1[j] = sp_r1[j] - box_x * round( sp_r1[j]/box_x );
+    sp_r0[j] = sp_r0[j] - box[j] * round( sp_r0[j]/box[j] );
+    sp_r1[j] = sp_r1[j] - box[j] * round( sp_r1[j]/box[j] );
     
     // Assign values to sphere array
     sph[atom0].r[j] = sp_r0[j];
@@ -276,32 +276,32 @@ void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd)
 }
 
 /*
- * sph_set_fcc(sph, ns, fcc_x)
- * Set fcc structure of ns spheres in a cubic system of fcc_x cells at the
+ * sph_set_fcc(sph, ns, fcc)
+ * Set fcc structure of ns spheres in a cubic system of fcc cells at the
  * edge. The edge length is assumed sqrt(2)
  */
-int sph_set_fcc( SPH *sph, int ns, int fcc_x)
+int sph_set_fcc( SPH *sph, int ns, int fcc[3])
 {
   int i, x=0, y=0, z=0;
   double cell_edge = sqrt(two);
   double cell_edge_half = cell_edge/two;
 
   for(i=0; i<ns; i+=4){
-    sph[i  ].r[0] = - fcc_x * cell_edge_half + x * cell_edge;
-    sph[i  ].r[1] = - fcc_x * cell_edge_half + y * cell_edge;
-    sph[i  ].r[2] = - fcc_x * cell_edge_half + z * cell_edge;
+    sph[i  ].r[0] = - fcc[0] * cell_edge_half + x * cell_edge;
+    sph[i  ].r[1] = - fcc[1] * cell_edge_half + y * cell_edge;
+    sph[i  ].r[2] = - fcc[2] * cell_edge_half + z * cell_edge;
     
-    sph[i+1].r[0] = - fcc_x * cell_edge_half + x * cell_edge + cell_edge_half;
-    sph[i+1].r[1] = - fcc_x * cell_edge_half + y * cell_edge;
-    sph[i+1].r[2] = - fcc_x * cell_edge_half + z * cell_edge + cell_edge_half;
+    sph[i+1].r[0] = - fcc[0] * cell_edge_half + x * cell_edge + cell_edge_half;
+    sph[i+1].r[1] = - fcc[1] * cell_edge_half + y * cell_edge;
+    sph[i+1].r[2] = - fcc[2] * cell_edge_half + z * cell_edge + cell_edge_half;
     
-    sph[i+2].r[0] = - fcc_x * cell_edge_half + x * cell_edge;
-    sph[i+2].r[1] = - fcc_x * cell_edge_half + y * cell_edge + cell_edge_half;
-    sph[i+2].r[2] = - fcc_x * cell_edge_half + z * cell_edge + cell_edge_half;
+    sph[i+2].r[0] = - fcc[0] * cell_edge_half + x * cell_edge;
+    sph[i+2].r[1] = - fcc[1] * cell_edge_half + y * cell_edge + cell_edge_half;
+    sph[i+2].r[2] = - fcc[2] * cell_edge_half + z * cell_edge + cell_edge_half;
     
-    sph[i+3].r[0] = - fcc_x * cell_edge_half + x * cell_edge + cell_edge_half;
-    sph[i+3].r[1] = - fcc_x * cell_edge_half + y * cell_edge + cell_edge_half;
-    sph[i+3].r[2] = - fcc_x * cell_edge_half + z * cell_edge;
+    sph[i+3].r[0] = - fcc[0] * cell_edge_half + x * cell_edge + cell_edge_half;
+    sph[i+3].r[1] = - fcc[1] * cell_edge_half + y * cell_edge + cell_edge_half;
+    sph[i+3].r[2] = - fcc[2] * cell_edge_half + z * cell_edge;
     
     sph[i  ].d = one;
     sph[i+1].d = one;
@@ -311,12 +311,12 @@ int sph_set_fcc( SPH *sph, int ns, int fcc_x)
     // Increment cell in x direction
     x++;
     // Increment cell in y direction
-    if( x == fcc_x){
+    if( x == fcc[0]){
       x = 0;
       y++;
     };
     // increment cell in z direction
-    if( y == fcc_x){
+    if( y == fcc[1]){
       y = 0;
       z++;
     };

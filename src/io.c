@@ -94,7 +94,7 @@ int export_spheres(FILE *file, SPH *sph, int ns)
  * load_dcsgen()
  * Load initial DC configuration from dcsgen, program by Mikolaj Kowalik
  */
-int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd)
+int load_dcsgen(FILE *file, DIM3D *dim, double box[3], int nd)
 {
   // Template structure instance for data input
   DIM3D tm; 
@@ -114,8 +114,8 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd)
     // Decrement 'i' to count from 0
     if(--i < nd){
       for(j=0; j<3; j++){
-        // Scale molecule positions to cube dimensions
-        tm.R[j] *= box_x;
+        // Scale molecule positions to box dimensions
+        tm.R[j] *= box[j];
       }
       // Copy data from template to data structure
       dim[i] = tm;
@@ -145,7 +145,7 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box_x, int nd)
  * export_to_GLviewer()
  * Export required data for viewing the structure by data_visGL
  */
-int export_to_GLviewer(SPH *sph, double box_x, int sn, int ns)
+int export_to_GLviewer(SPH *sph, double box[3], int sn, int ns)
 {
   FILE *f;
   int i;
@@ -167,7 +167,8 @@ int export_to_GLviewer(SPH *sph, double box_x, int sn, int ns)
   fprintf(f, "Input lines per file    : %d\n", ns);
   fprintf(f, "Structure index         : %d\n", sn);
   fprintf(f, "(# not used          #) : %d\n", 0);
-  fprintf(f, "Box dimensions          : %.16le %.16le\n", box_x, box_x);
+  fprintf(f, "Box dimensions          : %.16le %.16le %.16le\n", 
+          box[0], box[1], box[2]);
   fprintf(f, "(# not used          #) : %.16le\n", 0e0);
   fprintf(f, "(# not used          #) : %.16le\n", 0e0);
   

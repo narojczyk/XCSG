@@ -16,7 +16,7 @@
 extern char *prog_name;
 
 extern unsigned long int i_seed;
-extern int i_edge_fcc_N;
+extern int i_edge_fcc_N[3];
 extern int i_normal[3];
 extern int i_iDCfrom;
 extern int i_iDCto;
@@ -139,7 +139,7 @@ void generate_template_config(int status)
   }
 
   fprintf(f, "MT19937 seed            : LUINT\n");
-  fprintf(f, "Number of edge fcc cells: INT\n");
+  fprintf(f, "Number of edge fcc cells: INT_x INT_y INT_z\n");
   fprintf(f, "Normal vector (slit/ch.): INT_h INT_k INT_l\n");
   fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
   fprintf(f, "Load initial DC struct. : INT INT\n");
@@ -165,7 +165,8 @@ void generate_template_config(int status)
 void parse_config(FILE *file)
 {
   fscanf(file, "%*26c %lu\n", &i_seed);
-  fscanf(file, "%*26c %d\n", &i_edge_fcc_N);
+  fscanf(file, "%*26c %d %d %d\n",
+         &i_edge_fcc_N[0], &i_edge_fcc_N[1], &i_edge_fcc_N[2]);
   fscanf(file, "%*26c %d %d %d\n", &i_normal[0], &i_normal[1], &i_normal[2]);
   fscanf(file, "%*26c %lf\n",&i_channel_R);
   fscanf(file, "%*26c %d %d\n", &i_iDCfrom, &i_iDCto);

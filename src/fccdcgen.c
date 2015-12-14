@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
   
   int i, s;
 
-  double cube_edge;
+  double cube_edge[3];
   
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -77,15 +77,18 @@ int main(int argc, char *argv[])
   init_MT19937(i_seed);
   
   // Set the number of spheres and dimres
-  Ns = 4 * i_edge_fcc_N * i_edge_fcc_N * i_edge_fcc_N;
+  Ns = 4 * i_edge_fcc_N[0] * i_edge_fcc_N[1] * i_edge_fcc_N[2];
   Nd = Ns / 2;
   
   // Calculate cube edge
-  cube_edge = i_edge_fcc_N * sqrt(two);
+  cube_edge[0] = i_edge_fcc_N[0] * sqrt(two);
+  cube_edge[1] = i_edge_fcc_N[1] * sqrt(two);
+  cube_edge[2] = i_edge_fcc_N[2] * sqrt(two);
   
   // Summary of configuration variables
   fprintf(stdout,"\tConfig summary\n");
-  fprintf(stdout," System size (cells)  : %d\n",i_edge_fcc_N);
+  fprintf(stdout," System size (cells)  : %d by %d by %d\n",
+          i_edge_fcc_N[0], i_edge_fcc_N[1], i_edge_fcc_N[2]);
   fprintf(stdout," MT19937 seed         : %8lu\n", i_seed);
   fprintf(stdout," Nano-channel         : [%1d %1d %1d] radius %.3le\n", 
             i_normal[0], i_normal[1], i_normal[2], i_channel_R);
@@ -93,9 +96,15 @@ int main(int argc, char *argv[])
           i_iDCfrom, i_iDCto, i_iDCto-i_iDCfrom+1);
   
   fprintf(stdout,"\n\tOther parameters\n");
-  fprintf(stdout," Coordinates range    : %.16le %.16le\n",
-          -cube_edge/two,cube_edge/two);
-  fprintf(stdout," Box edge length      : %.16le\n",cube_edge);
+  fprintf(stdout," Coordinates range    : %.16le %.16le (x)\n",
+          -cube_edge[0]/two,cube_edge[0]/two);
+  fprintf(stdout,"                        %.16le %.16le (y)\n",
+          -cube_edge[1]/two,cube_edge[1]/two);
+  fprintf(stdout,"                        %.16le %.16le (z)\n",
+          -cube_edge[2]/two,cube_edge[2]/two);
+  fprintf(stdout," Box dimensions       : %.16le (x)\n", cube_edge[0]);
+  fprintf(stdout,"                        %.16le (y)\n", cube_edge[1]);
+  fprintf(stdout,"                        %.16le (z)\n", cube_edge[2]);
   fprintf(stdout," Number of dimers     : %d\n",Nd);
   fprintf(stdout," Number of spheres    : %d\n",Ns);
   fprintf(stdout,"\n");
