@@ -20,6 +20,7 @@ void vcrossu(double v[3], double u[3], double w[3]);
 void vector(double p[3], double q[3], double pq[3], double box[3]);
 double distance(double p[3], double q[3], double box[3]);
 double vmodule(double v[3]);
+double vdotu(double v[3], double u[3]);
 
 //void box_norm(double m[3][3], double norm[3][3]);
 #endif

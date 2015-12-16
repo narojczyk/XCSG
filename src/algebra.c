@@ -14,6 +14,15 @@
 extern const double zero;
 extern const double one;
 
+/*
+ * vdotu(v,u)
+ * 
+ * Returns the dot product of two vectors v*u
+ */
+double vdotu(double v[3], double u[3])
+{
+  return v[0]*u[0] + v[1]*u[1] + v[2]*u[2];
+}
 
 /*
  * vector(p,q,v, box)
