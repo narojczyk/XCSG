@@ -17,7 +17,7 @@ void matrix_product(double m[3][3], double n[3][3], double r[3][3]);
 void vnorm(double v[3]);
 void vdotM(double v[3], double m[3][3], double w[3]);
 void vcrossu(double v[3], double u[3], double w[3]);
-void vector(double p[3], double q[3], double v[3], double B_cub[3][3]);
+void vector(double p[3], double q[3], double pq[3], double box[3]);
 double distance(double p[3], double q[3], double box[3]);
 double vmodule(double v[3]);
 

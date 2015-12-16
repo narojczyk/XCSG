@@ -16,31 +16,21 @@ extern const double one;
 
 
 /*
- * vector(B_cub,p,q,v)
- * Calculates the vector v in 3D real CUBIC box,taking into account the periodic
+ * vector(p,q,v, box)
+ * Calculates the vector v in 3D real box,taking into account the periodic
  * boundary conditions. v is a vector from point p to point q.
  */
-void vector(double p[3], double q[3], double v[3], double B_cub[3][3])
+void vector(double p[3], double q[3], double pq[3], double box[3])
 {
-  int i, f[3] = {0,0,0};
-
+  int i;
 
   for (i=0; i<3; i++){
     // Calculat distance between p and q
-    v[i] = q[i] - p[i];
-
-    // Check if periodic boundaryies apply
-    if (v[i] != 0){
-      f[i] = v[i] / fabs(v[i]);
-    }
-
-    // Apply periodic boundaries if necessary
-    //   v[i] = q[i] - p[i] - f[i] * B_cub[i][i]
-    if (fabs (v[i]) > B_cub[i][i]/2e0){
-      v[i] -= f[i] * B_cub[i][i];
-    }
+    pq[i] = q[i] - p[i];
+    
+    // Apply periodic boundaries
+    pq[i] = pq[i] - box[i] * round( pq[i]/box[i] );    
   }
-
 }
 
 /*
