@@ -35,12 +35,24 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
   int i=0;
   int step=0;
   int sngb_id, sngb_type, rand_ngb, valid_ngb, sother_id;
-  int dngb_id, dim_t2_ind;
+  int dim_ind, dngb_id, dim_t2_ind;
 
-  /* TODO:
-   * Check if the 'sph_ind' is a free sphere or forms a dimer
-   * Brake the dimer to get two free spheres for the latter case
-   */
+  if(sph[sph_ind].type == 1){
+    // Get the index of dimer for type-1 sphere
+    dim_ind = sph[sph_ind].dim_ind;
+    // Flag dimer spheres as type-3
+    sph[ dim[dim_ind].sph_ind[0] ].type = 3;
+    sph[ dim[dim_ind].sph_ind[1] ].type = 3;
+    sph[ dim[dim_ind].sph_ind[0] ].dim_ind = -1;
+    sph[ dim[dim_ind].sph_ind[1] ].dim_ind = -1;
+    // Brake dimer
+    dim[dim_ind].type = 2;
+    dim[dim_ind].sph_ind[0] = -1;
+    dim[dim_ind].sph_ind[1] = -1;
+  }else if(sph[sph_ind].type == 2){
+    // Exit if the channel sphere selected as starting point
+    return -1;
+  }
 
   // Loop until the free spheres meet
   while(1){

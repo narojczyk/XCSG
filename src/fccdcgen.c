@@ -207,7 +207,6 @@ int main(int argc, char *argv[])
               zip_Ns3_runs);
 
       while(zip_Ns3_runs != 0){
-
         // Select type-3 sphere as the starting point for zipper
         for(i=0; i<Ns; i++){
           if(spheres[i].type == 3){
@@ -223,7 +222,18 @@ int main(int argc, char *argv[])
         fprintf(stdout," completed after %6d steps (%d)\n",
           zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100),
           --zip_Ns3_runs);
-       }
+      }
+
+      // Check the number of type-3 spheres
+      Ns3 = 0;
+      for(i=0; i<Ns; i++){
+        if(spheres[i].type == 3){
+          Ns3++;
+        }
+      }
+
+      fprintf(stdout, " Free spheres    (if any): %4d %6.2lf %%\n",
+              Ns3, (1e2*Ns3)/(1e0*Ns) );
     }   // Done eliminating type-3 spheres
 
 
