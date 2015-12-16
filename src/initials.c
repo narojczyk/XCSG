@@ -22,6 +22,7 @@ extern int i_iDCfrom;
 extern int i_iDCto;
 extern int i_make_channel;
 extern int i_make_slit;
+extern int i_fs_connect;
 extern double i_channel_R;
 extern double i_slit_Th;
 
@@ -81,12 +82,6 @@ void print_version(int status)
   fprintf(stdout, "  Build date:\t%s\n\n", build);
 
   fprintf(stdout, "  Program build-in features:\n");
-  fprintf(stdout, "  * use 64bit MT19937 random num. gen.: ");
-  #ifdef USE_64BIT_MT19937
-    fprintf(stdout, "Yes\n");
-  #else
-    fprintf(stdout, "No\n");
-  #endif
     
   fprintf(stdout, "  * verbose output for debugging      : ");
   #ifdef DEBUG_MODE
@@ -94,16 +89,38 @@ void print_version(int status)
   #else
     fprintf(stdout, "No\n");
   #endif
-    fprintf(stdout, "\n");
+  
+    fprintf(stdout, "  * use 64bit MT19937 random num. gen.: ");
+  #ifdef USE_64BIT_MT19937
+    fprintf(stdout, "Yes\n");
+  #else
+    fprintf(stdout, "No\n");
+  #endif
+    
+    fprintf(stdout, "  * use 32bit MT19937 random num. gen.: ");
+  #ifdef USE_32BIT_MT19937
+    fprintf(stdout, "Yes\n");
+  #else
+    fprintf(stdout, "No\n");
+  #endif
+    
+    fprintf(stdout, "  * use drand48 random num. gen.      : ");
+  #ifdef USE_DRAND48
+    fprintf(stdout, "Yes\n");
+  #else
+    fprintf(stdout, "No\n");
+  #endif
+  fprintf(stdout, "\n");
 
   fprintf(stdout, "  Version control:\t");
   fprintf(stdout, "  sources checksum's (SHA1)\n");
   fprintf(stdout, "  %s  %s\n", fccdcgen_c_SHA1, "fccdcgen.c");
   #ifdef USE_64BIT_MT19937
     fprintf(stdout, "  %s  %s\n", mt19937_64_h_SHA1, "mt19937_64.h");
-  #else
+  #endif    
+  #ifdef USE_32BIT_MT19937
     fprintf(stdout, "  %s  %s\n", mt19937_h_SHA1, "mt19937.h");
-  #endif
+  #endif  
   fprintf(stdout, "  %s  %s\n", config_h_SHA1, "config.h");
   fprintf(stdout, "  %s  %s\n", data_h_SHA1, "data.h");
   fprintf(stdout, "  %s  %s\n", globals_h_SHA1, "globals.h");
@@ -146,6 +163,7 @@ void generate_template_config(int status)
   fprintf(f, "Make nano-channel (bool): INT\n");
   fprintf(f, "Make nano-slit (bool)   : INT\n");
   fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
+  fprintf(f, "Free sph. connect (bool): INT\n");
   
   if(fclose(f)==0) {
     fprintf(stdout,"  Template config file written to:\n%s\n",template);
@@ -173,6 +191,7 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %d\n", &i_make_channel);
   fscanf(file, "%*26c %d\n", &i_make_slit);
   fscanf(file, "%*26c %lf\n", &i_slit_Th);
+  fscanf(file, "%*26c %d\n", &i_fs_connect);
   
   // Parameters sanity check
   if(i_make_slit != 0){

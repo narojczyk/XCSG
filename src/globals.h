@@ -19,6 +19,7 @@ int i_iDCfrom = -1;             // Index of input DC structure (if <0,no input)
 int i_iDCto = -1;               // Index of last DC structure
 int i_make_channel = 0;         // Bolean flag to enable nano-channel [0|1]
 int i_make_slit = 0;            // Bolean flag to enable nano-slit [0|1]
+int i_fs_connect = 0;           // Bolean flag to connect free spheres [0|1]
 double i_channel_R = 0e0;       // Nano-channel radius in sigma units
 double i_slit_Th = 0e0;         // Nano-slit thickness in sigma units
 
