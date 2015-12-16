@@ -21,19 +21,17 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
 {
   const char *exp_f_dim = 
   "%5d  %2d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %5d %5d\n";
-  int i,k=0, atom0, atom1;
+  int i,k=0;
 
   for(i=0; i<nd; i++){
     // Export information about molecule
-    atom0 = dim[i].sph_ind[0];
-    atom1 = dim[i].sph_ind[1];
     if(dim[i].type == 1){
       if(fprintf(file, exp_f_dim, 
           k++, dim[i].type,
           dim[i].R[0], dim[i].R[1], dim[i].R[2], 
           dim[i].O[0], dim[i].O[1], dim[i].O[2],
           dim[i].L,
-          atom0, atom1) == EOF){
+          dim[i].sph_ind[0], dim[i].sph_ind[1]) == EOF){
         fprintf(stderr,"  [%s]: error: exporting dimer data failed\n",__func__);
         return EXIT_FAILURE;
       }
@@ -42,15 +40,13 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
   
   for(i=0; i<nd; i++){
     // Export information about molecule
-    atom0 = dim[i].sph_ind[0];
-    atom1 = dim[i].sph_ind[1];
     if(dim[i].type == 2){
       if(fprintf(file, exp_f_dim, 
           k++, dim[i].type,
           dim[i].R[0], dim[i].R[1], dim[i].R[2], 
           dim[i].O[0], dim[i].O[1], dim[i].O[2],
           dim[i].L,
-          atom0, atom1) == EOF){
+          dim[i].sph_ind[0], dim[i].sph_ind[1]) == EOF){
         fprintf(stderr,"  [%s]: error: exporting dimer data failed\n",__func__);
         return EXIT_FAILURE;
       }
