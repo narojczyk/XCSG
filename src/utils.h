@@ -12,9 +12,11 @@ void make_channel(
   DIM3D *dim, SPH *sph, int c[3], double cr, double box[3], int nd);
 void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int nd);
 void update_sphere_positions(DIM3D *dim, SPH *sph, double box[3], int d);
+void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d);
 void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd);
 void init_MT19937(unsigned long int s);
 void init_RNG(unsigned long int s);
+
 
 double u_RNG();
 

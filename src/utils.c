@@ -329,7 +329,38 @@ void make_channel(
     }
   }
 }
-
+/*
+ * update_dimer_parameters(dim,sph,box,d)
+ * 
+ * Update the orientation and the center of mass coordinates for dimer d,
+ * based on the spheres' positions
+ */
+void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d)
+{
+  int atom0 = dim[d].sph_ind[0];
+  int atom1 = dim[d].sph_ind[1];
+  double O[3] = {zero,zero,zero};
+  double R[3] = {zero,zero,zero};
+  
+  // Calculate current dimer orientation
+  vector(sph[atom1].r, sph[atom0].r, O, box);
+  
+  // Unit norm the calculated vector
+  vnorm(O);
+  
+  // Calculate the center of mass
+  R[0] = sph[atom1].r[0] + O[0]/two;
+  R[1] = sph[atom1].r[1] + O[1]/two;
+  R[2] = sph[atom1].r[2] + O[2]/two;
+  
+  // Store calculations in the data structure
+  dim[d].R[0] = R[0];
+  dim[d].R[1] = R[1];
+  dim[d].R[2] = R[2];
+  dim[d].O[0] = O[0];
+  dim[d].O[1] = O[1];
+  dim[d].O[2] = O[2];
+}
 /*
  * update_sphere_positions(dim, sph, d)
  * Updates positions of spheres for the dimer 'd' with regard to the periodic

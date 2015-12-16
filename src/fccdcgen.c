@@ -234,6 +234,13 @@ int main(int argc, char *argv[])
 
       fprintf(stdout, " Free spheres    (if any): %4d %6.2lf %%\n",
               Ns3, (1e2*Ns3)/(1e0*Ns) );
+
+      // Recalculate centers of mass and orientations for type-1 diemrs
+      for(i=0; i<Nd; i++){
+        if(dimers[i].type == 1){
+          update_dimer_parameters(dimers, spheres, cube_edge, i);
+        }
+      }
     }   // Done eliminating type-3 spheres
 
 
