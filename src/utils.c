@@ -25,6 +25,129 @@ extern const double two;
 extern const double pi;
 
 /*
+ * check_dimer_configuration(dim,sph,d0,d1)
+ * 
+ * Check the orientation of d0 with relation to d1 and return the index
+ * of possible transformation
+ */
+int check_dimer_configuration(DIM3D *dim, SPH *sph, double box[3], 
+                              int d0, int d1)
+{
+  // Sphere ID's
+  int d0atom0 = dim[d0].sph_ind[0];
+  int d0atom1 = dim[d0].sph_ind[1];
+  int d1atom0 = dim[d1].sph_ind[0];
+  int d1atom1 = dim[d1].sph_ind[1];
+  
+  // 'O' times 'O', dot product of dimer orientations
+  double OOdp = vdotu(dim[d0].O, dim[d1].O);
+  
+  // Sphere positions
+  double d0r0[3] = {sph[d0atom0].r[0], sph[d0atom0].r[1], sph[d0atom0].r[2]};
+  double d0r1[3] = {sph[d0atom1].r[0], sph[d0atom1].r[1], sph[d0atom1].r[2]};
+  double d1r0[3] = {sph[d1atom0].r[0], sph[d1atom0].r[1], sph[d1atom0].r[2]};
+  double d1r1[3] = {sph[d1atom1].r[0], sph[d1atom1].r[1], sph[d1atom1].r[2]};
+  
+  // Cross-dimers sphere-to-sphere distances
+  double L_d0r0_d1r0 = distance(d0r0, d1r0, box);
+  double L_d0r0_d1r1 = distance(d0r0, d1r1, box);
+  double L_d0r1_d1r0 = distance(d0r1, d1r0, box);
+  double L_d0r1_d1r1 = distance(d0r1, d1r1, box);
+  
+  // The sum of interatomic lengths
+  double sumL = L_d0r0_d1r0 + L_d0r0_d1r1 + L_d0r1_d1r0 + L_d0r1_d1r1;
+
+  // Out-of-plane tetrahedron configuration
+  if(fabs(sumL - 4e0) < 1e-10 && fabs(OOdp) < 1e-10){
+    return 69;
+  }
+  
+  // In-plane square configuration
+  if(fabs(sumL - two*(one + sqrt(two)) ) < 1e-10 && fabs(OOdp-one) < 1e-10){
+    return 11;
+  }
+  
+  
+  // In-plane dimond configuration
+  if(fabs(sumL - 3e0 - sqrt(3e0) ) < 1e-10 && fabs(OOdp-one) < 1e-10){
+    return 47;
+  }
+  
+//   /*DEBUG CODE*/
+//   printf("dimer %3d <% .5lf % .5lf % .5lf> \n",d0,dim[d0].O[0],dim[d0].O[1],dim[d0].O[2]);
+//   printf("dimer %3d <% .5lf % .5lf % .5lf> \n",d1,dim[d1].O[0],dim[d1].O[1],dim[d1].O[2]);
+//   printf("L d0r0-d1r0 %.16le d0r0-d1r1 %.16le\n", L_d0r0_d1r0, L_d0r0_d1r1);
+//   printf("L d0r1-d1r0 %.16le d0r1-d1r1 %.16le\n", L_d0r1_d1r0, L_d0r1_d1r1);
+//   printf("OOdp %.16le\n",OOdp);
+//   
+//   
+//   printf("#declare sp%03d = union{\t//pov\n",conf);
+//   printf("sphere{<% .5lf, % .5lf, % .5lf> RR texture{d0} }\t//pov\n",d0r0[0],d0r0[1],d0r0[2]);
+//   printf("sphere{<% .5lf, % .5lf, % .5lf> RR texture{d0} }\t//pov\n",d0r1[0],d0r1[1],d0r1[2]);
+//   printf("sphere{<% .5lf, % .5lf, % .5lf> RR texture{d1} }\t//pov\n",d1r0[0],d1r0[1],d1r0[2]);
+//   printf("sphere{<% .5lf, % .5lf, % .5lf> RR texture{d1} }\t//pov\n}\t//pov\n",d1r1[0],d1r1[1],d1r1[2]);
+//   conf++;
+  
+  // If no valid configuration found return zero
+  return 0;
+}
+
+void check_DC_parameters(DIM3D *dim, int nd)
+{
+  int i, j;
+  int nd1=0;
+  int fcc_count[6]={0, 0, 0, 0, 0, 0};
+  double fcc_dir[6][3];
+  
+  // F.c.c directions (in-plane)
+  fcc_dir[0][0] = -one;
+  fcc_dir[0][1] =  one;
+  fcc_dir[0][2] = zero;
+  
+  fcc_dir[1][0] =  one;
+  fcc_dir[1][1] =  one;
+  fcc_dir[1][2] = zero;
+  
+  // (out-of-plane)
+  fcc_dir[2][0] = zero;
+  fcc_dir[2][1] =  one;
+  fcc_dir[2][2] =  one;
+  
+  fcc_dir[3][0] =  one;
+  fcc_dir[3][1] = zero;
+  fcc_dir[3][2] =  one;
+  
+  fcc_dir[4][0] = zero;
+  fcc_dir[4][1] = -one;
+  fcc_dir[4][2] =  one;
+  
+  fcc_dir[5][0] = -one;
+  fcc_dir[5][1] = zero;
+  fcc_dir[5][2] =  one;
+  
+  for(i=0; i<nd; i++){
+    if(dim[i].type == 1){
+      nd1++;
+      for(j=0; j<6; j++){
+        if( fabs(vdotu(fcc_dir[j], dim[i].O) -sqrt(two)) < 1e-10 ){
+          fcc_count[j]++;
+        }
+      }
+    }
+  }
+  
+  for(j=0; j<6; j++){
+    printf("%d ",fcc_count[j]);
+  }
+  
+  if( nd1 % 6 == 0){
+    printf("\n perfect DC orientation possible (%d)\n",nd1);
+  }else{
+    printf("\n perfect DC orientation NOT possible (%d)\n",nd1);
+  }
+}
+
+/*
  * ziper(dim,sph,box,sph_ind)
  *
  * Run zipper on the structure, starting from sphere sph_ind, and continue
