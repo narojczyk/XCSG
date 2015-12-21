@@ -130,6 +130,8 @@ void print_version(int status)
   fprintf(stdout, "  %s  %s\n", initials_c_SHA1, "initials.c");
   fprintf(stdout, "  %s  %s\n", io_h_SHA1, "io.h");
   fprintf(stdout, "  %s  %s\n", io_c_SHA1, "io.c");
+  fprintf(stdout, "  %s  %s\n", structure_h_SHA1, "structure.h");
+  fprintf(stdout, "  %s  %s\n", structure_c_SHA1, "structure.c");
   fprintf(stdout, "  %s  %s\n", utils_h_SHA1, "utils.h");
   fprintf(stdout, "  %s  %s\n", utils_c_SHA1, "utils.c");
 
