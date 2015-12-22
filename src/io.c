@@ -141,14 +141,18 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box[3], int nd)
  * export_to_GLviewer()
  * Export required data for viewing the structure by data_visGL
  */
-int export_to_GLviewer(SPH *sph, double box[3], int sn, int ns)
+int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int sn, int ns, 
+                       int nd)
 {
   FILE *f;
   int i;
   char gl_f_out[16];
   const char *exp_form = "%5d % .16le % .16le % .16le %.16le %d\n";
+  const char *exp_form_d = 
+    "%5d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %d\n";
   const char *data_visGL="vcontrol.ini";
   const char *data_spheresGL="gl_s3d%05d.csv";
+  const char *data_dimersGL="gl_d3d%05d.csv";
   
   // Prepare control file for data_visGL program
   if((f = fopen(data_visGL, "w")) == NULL) {
@@ -159,7 +163,7 @@ int export_to_GLviewer(SPH *sph, double box[3], int sn, int ns)
 
   // Write to data_visGL
   fprintf(f, "Type of data            : dim3dDCS\n");
-  fprintf(f, "Number of input files   : %d\n", 1);
+  fprintf(f, "Number of input files   : %d\n", 2);
   fprintf(f, "Input lines per file    : %d\n", ns);
   fprintf(f, "Structure index         : %d\n", sn);
   fprintf(f, "(# not used          #) : %d\n", 0);
@@ -192,8 +196,34 @@ int export_to_GLviewer(SPH *sph, double box[3], int sn, int ns)
       return EXIT_FAILURE;
     }
   }
-
+  
   // Close data_spheresGL
+  fclose(f);
+  
+  // Open file for dimer data
+  sprintf(gl_f_out, data_dimersGL, sn);
+  fprintf(stdout," Writting dimer  data to file %s (visualization)\n",gl_f_out);
+  if((f = fopen(gl_f_out, "w")) == NULL){
+    fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+            __func__, gl_f_out);
+    return EXIT_FAILURE;
+  }
+    
+  // Export structure data to data_dimersGL
+  /*if( export_spheres(f, sph, ns) != 0 ){
+    return EXIT_FAILURE;
+  }*/
+  for(i=0; i<nd; i++){
+    if(fprintf(f, exp_form_d, i, 
+        dim[i].R[0], dim[i].R[1], dim[i].R[2],
+        dim[i].O[0], dim[i].O[1], dim[i].O[2],
+        dim[i].L, dim[i].type ) == EOF){
+      fprintf(stderr,"  [%s]: error: exporting positions failed\n", __func__);
+      return EXIT_FAILURE;
+    }
+  }
+  
+  // Close data_dimersGL
   fclose(f);
   
   return 0;

@@ -266,7 +266,6 @@ int main(int argc, char *argv[])
         flip_dimers(dimers, spheres, cube_edge, Odistrib, valid_dimer_pair[0], 
                     valid_dimer_pair[1]);
       }
-//       DC_metrics(Odistrib, Nd-Nd2);
     }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
     
     // Recalculate centers of mass and orientations for type-1 diemrs
@@ -306,7 +305,7 @@ int main(int argc, char *argv[])
 
   #ifdef DATA_VISGL_OUTPUT
     // Export data in data_visGL format
-    if( export_to_GLviewer(spheres, cube_edge, s, Ns) != 0 ){
+    if( export_to_GLviewer(dimers, spheres, cube_edge, s, Ns, Nd) != 0 ){
       exit_status=EXIT_FAILURE;
       goto cleanup;
     }
