@@ -56,30 +56,28 @@ void find_valid_cluster(DIM3D *dim, SPH *sph, double box[3], int nd,
     // Get indexes of respective neighbors of atoms a0,a1
     b0 = sph[a0].ngb[rn_id0];
     b1 = sph[a1].ngb[rn_id1];
+    
 
-printf("i=%3d; j=%2d j=%2d; (a=%3d; sn=%3d) (a=%3d; sn=%3d)",d0,rn_id0,rn_id1, a0, b0, a1, b1);
+// printf("i=%3d; j=%2d j=%2d; (a=%3d; sn=%3d) (a=%3d; sn=%3d)",d0,rn_id0,rn_id1, a0, b0, a1, b1);
     // Clear flags
     candidate0 = candidate1 = 0;
+    nd0 = nd1 = -1;
       
     // Make sure b0 is not the other atom of dimer d0 and is a type-1 sphere
     if(b0 != a1 && sph[b0].type == 1){
       nd0 = sph[b0].dim_ind;
       candidate0 = check_dimers_configuration(dim, sph, box, d0, nd0);
-printf(" d %3d; vc %1d",nd0, candidate0);
+// printf(" d0 %3d; vc %1d",nd0, candidate0);
     }
-else{
-  printf(" d %3d; vc -",nd0);      
-}
+
     // Make sure b1 is not the other atom of dimer d0 and is a type-1 sphere
     if(b1 != a0 && sph[b1].type == 1){
       nd1 = sph[b1].dim_ind;
       candidate1 =  check_dimers_configuration(dim, sph, box, d0, nd1);
-printf(" d %3d; vc %1d",nd1, candidate1);
+// printf(" d1 %3d; vc %1d",nd1, candidate1);
     }
-else{
-  printf(" d %3d; vc -",nd1);      
-}
-printf("\n");
+
+// printf("\n");
   }while(candidate0 == 0 && candidate1 == 0);
   
   if(candidate0 != 0){
@@ -174,6 +172,7 @@ void check_DC_parameters(DIM3D *dim, int od[6], int nd)
     }
   }
   
+  printf(" Current distribution: ");
   for(j=0; j<6; j++){
     od[j] = od_local[j];
     printf("%d ",od[j]);

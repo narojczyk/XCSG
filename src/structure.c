@@ -19,6 +19,49 @@ extern const double two;
 extern const double pi;
 
 /*
+ * DC_metrics(od, nd)
+ * 
+ * checks the distribution of dimer orientations and brakes the cluster moves
+ * if good-enough state is achieved
+ */
+int DC_metrics(int od[6], int nd1)
+{
+  static int step=1;
+  int i, even[6], evenS=0, evenM=1;
+  int level;
+  int exit_code = 1;
+   
+  for(i=0; i<6; i++){
+    even[i] = od[i] & 1;
+    evenS += even[i];
+    evenM *= even[i];
+  }
+  
+  if( nd1 % 6 == 0 && (evenS == 0 || evenM != 0) ){
+    // Perfect distribution is possible
+    level = nd1 / 6;
+  }else{
+    // Perfect distribution is not possible
+    level = (int) (((double) nd1) / 6e0) + 2;
+  }
+  
+  for(i=0; i<6; i++){
+    exit_code *= (od[i] < level) ? 1 : 0;
+  }
+
+  if(exit_code == 1){
+    printf(" Step %8d distribution : ", step);
+    for(i=0; i<6; i++){
+      printf("%3d ",od[i]);
+    }
+    printf("\n");    
+  }
+  
+  step++;
+  return exit_code;
+}
+
+/*
  * flip_dimers(dim, sph, box, od, d0, d1)
  * 
  * Change configuration of two specified dimers d0, d1 and update orientation

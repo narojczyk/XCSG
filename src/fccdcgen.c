@@ -30,6 +30,7 @@
 #include "initials.h"
 #include "io.h"
 #include "utils.h"
+#include "structure.h"
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +51,8 @@ int main(int argc, char *argv[])
   int exit_status;
   int Ns, Nd, Nd2, Ns3, Ns3_odd;
   int zip_Ns3_runs=0, zip_init_sph=-1;
-
+  int Odistrib[6] = {0,0,0,0,0,0};
+  int valid_dimer_pair[2];
   int i, s;
 
   double cube_edge[3];
@@ -175,7 +177,7 @@ int main(int argc, char *argv[])
      * set free (non-channel) spheres as type '3'
      */
     Nd2 = brake_dimers(dimers, spheres, Nd);
-
+    
     // Check the number of type-3 spheres
     Ns3 = 0;
     for(i=0; i<Ns; i++){
@@ -231,8 +233,17 @@ int main(int argc, char *argv[])
           Ns3++;
         }
       }
-
-      fprintf(stdout, " Free spheres    (if any): %4d %6.2lf %%\n",
+      // Check the number of type-2 dimers
+      Nd2=0;
+      for(i=0; i<Nd; i++){
+        if(dimers[i].type == 2){
+          Nd2++;
+        }
+      }
+      
+      fprintf(stdout, " Dimers broken left      : %4d %6.2lf %%\n",
+              Nd2, (1e2*Nd2)/(1e0*Nd) );
+      fprintf(stdout, " Free spheres  left      : %4d %6.2lf %%\n",
               Ns3, (1e2*Ns3)/(1e0*Ns) );
 
       // Recalculate centers of mass and orientations for type-1 diemrs
@@ -240,9 +251,30 @@ int main(int argc, char *argv[])
         if(dimers[i].type == 1){
           update_dimer_parameters(dimers, spheres, cube_edge, i);
         }
-      }
+      }    
     }   // Done eliminating type-3 spheres
+    
+    // Check structure parameters
+    check_DC_parameters(dimers, Odistrib, Nd);
 
+    do{
+      // Find a valid dimer configuration to flip orientations
+      find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
+
+      // Flip dimers
+      if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
+        flip_dimers(dimers, spheres, cube_edge, Odistrib, valid_dimer_pair[0], 
+                    valid_dimer_pair[1]);
+      }
+//       DC_metrics(Odistrib, Nd-Nd2);
+    }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
+    
+    // Recalculate centers of mass and orientations for type-1 diemrs
+    for(i=0; i<Nd; i++){
+      if(dimers[i].type == 1){
+        update_dimer_parameters(dimers, spheres, cube_edge, i);
+      }
+    }
 
     // Set the file name for dimer data and open the file for write
     sprintf(f_out, fo_exp_dim, s);
