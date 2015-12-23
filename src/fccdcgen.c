@@ -54,8 +54,9 @@ int main(int argc, char *argv[])
   int Odistrib[6] = {0,0,0,0,0,0};
   int valid_dimer_pair[2];
   int i, s;
+  int ti, tk, tl, tt=0;
 
-  double cube_edge[3];
+  double cube_edge[3], tr_ch[3];
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -161,16 +162,33 @@ int main(int argc, char *argv[])
       goto cleanup;
     }
 
+
+
     // Make channel
     if(i_make_channel && i_normal[0]+i_normal[1]+i_normal[2] > 0){
-      make_channel(dimers, spheres, i_normal, i_channel_R, cube_edge, Nd);
+    fprintf(stdout, " Inserting channel(s)\n");
+      for(tl=0; tl<i_ch_layout[2]; tl++){
+        for(tk=0; tk<i_ch_layout[1]; tk++){
+          for(ti=0; ti<i_ch_layout[0]; ti++){
+            tr_ch[0] = ti * cube_edge[0] / ((double) i_ch_layout[0]);
+            tr_ch[1] = tk * cube_edge[1] / ((double) i_ch_layout[1]);
+            tr_ch[2] = tl * cube_edge[2] / ((double) i_ch_layout[2]);
+            fprintf(stdout,
+                    " Channel origin translated by %.6lf %.6lf %.6lf (%d/%d)\n",
+                    tr_ch[0],tr_ch[1], tr_ch[2],
+                    ++tt,i_ch_layout[0]*i_ch_layout[1]*i_ch_layout[2]);
+            make_channel(dimers, spheres, i_normal, i_channel_R, cube_edge,
+                         tr_ch, Nd);
+          }
+        }
+      }
     }
 
     // Make slit
     if(i_make_slit && i_normal[0]+i_normal[1]+i_normal[2] > 0){
       make_slit(dimers, spheres, i_slit_Th, i_normal, Nd);
     }
-    
+
     // Modify selected properties of slit/channel spheres
     for(i=0; i<Ns; i++){
       if(spheres[i].type == 2){
@@ -178,14 +196,14 @@ int main(int argc, char *argv[])
         spheres[i].d = i_channel_sph_diam;
       }
     }
-    
+
     /* NOTE:
      * Brake dimers with spheres of type != 1
      * Set broken dimers as type '2'
      * set free (non-channel) spheres as type '3'
      */
     Nd2 = brake_dimers(dimers, spheres, Nd);
-    
+
     // Check the number of type-3 spheres
     Ns3 = 0;
     for(i=0; i<Ns; i++){
@@ -226,10 +244,10 @@ int main(int argc, char *argv[])
         }
 
         // Start zipper from selected sphere
-        fprintf(stdout," - zipper from type-%1d sph. no. %3d ",
+        fprintf(stdout," - zipper from type-%1d sph. no. %5d ",
                   spheres[zip_init_sph].type, zip_init_sph);
 
-        fprintf(stdout," completed after %6d steps (%d)\n",
+        fprintf(stdout," completed after %7d steps (%d)\n",
           zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, Ns),
           --zip_Ns3_runs);
       }
@@ -248,7 +266,7 @@ int main(int argc, char *argv[])
           Nd2++;
         }
       }
-      
+
       fprintf(stdout, " Dimers broken left      : %4d %6.2lf %%\n",
               Nd2, (1e2*Nd2)/(1e0*Nd) );
       fprintf(stdout, " Free spheres  left      : %4d %6.2lf %%\n",
@@ -259,9 +277,9 @@ int main(int argc, char *argv[])
         if(dimers[i].type == 1){
           update_dimer_parameters(dimers, spheres, cube_edge, i);
         }
-      }    
+      }
     }   // Done eliminating type-3 spheres
-    
+
     // Check structure parameters
     check_DC_parameters(dimers, Odistrib, Nd);
 
@@ -271,11 +289,11 @@ int main(int argc, char *argv[])
 
       // Flip dimers
       if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
-        flip_dimers(dimers, spheres, cube_edge, Odistrib, valid_dimer_pair[0], 
+        flip_dimers(dimers, spheres, cube_edge, Odistrib, valid_dimer_pair[0],
                     valid_dimer_pair[1]);
       }
     }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
-    
+
     // Recalculate centers of mass and orientations for type-1 diemrs
     for(i=0; i<Nd; i++){
       if(dimers[i].type == 1){

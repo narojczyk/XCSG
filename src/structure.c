@@ -289,7 +289,8 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
  *
  */
 void make_channel(
-  DIM3D *dim, SPH *sph, int c[3], double cr, double box[3], int nd)
+  DIM3D *dim, SPH *sph, int c[3], double cr, double box[3], double tr[3],
+  int nd)
 {
   int i;
   double cd[3] = {one*c[0], one*c[1], one*c[2]};
@@ -304,6 +305,11 @@ void make_channel(
       llc[1] = sph[i].r[1];
       llc[2] = sph[i].r[2];
     }
+  }
+  
+  // Translate channel by specified vector
+  for(i=0; i<3; i++){
+    llc[i] += tr[i];
   }
 
   // Find the coordinates of the center point on the channel axis
