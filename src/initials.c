@@ -18,6 +18,7 @@ extern char *prog_name;
 extern unsigned long int i_seed;
 extern int i_edge_fcc_N[3];
 extern int i_normal[3];
+extern int i_ch_layout[3];
 extern int i_iDCfrom;
 extern int i_iDCto;
 extern int i_make_channel;
@@ -25,6 +26,7 @@ extern int i_make_slit;
 extern int i_fs_connect;
 extern double i_channel_R;
 extern double i_slit_Th;
+extern double i_channel_sph_diam;
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -45,7 +47,6 @@ void print_greetings()
   Generate a D.C. phase of dimers on the f.c.c. lattice with nano-channels\n\
   Institute of Molecular Physics, Polish Academy of Sciences\n\n", stdout);
 }
-
 
 /*
  * print_usage()
@@ -166,6 +167,8 @@ void generate_template_config(int status)
   fprintf(f, "Make nano-slit (bool)   : INT\n");
   fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
   fprintf(f, "Free sph. connect (bool): INT\n");
+  fprintf(f, "Channel layout pattern  : INT_x INT_y INT_z\n");
+  fprintf(f, "Ch./Sl. sph. diameter   : DOUBLE\n");
   
   if(fclose(f)==0) {
     fprintf(stdout,"  Template config file written to:\n%s\n",template);
@@ -194,6 +197,9 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %d\n", &i_make_slit);
   fscanf(file, "%*26c %lf\n", &i_slit_Th);
   fscanf(file, "%*26c %d\n", &i_fs_connect);
+  fscanf(file, "%*26c %d %d %d\n", 
+         &i_ch_layout[0], &i_ch_layout[1], &i_ch_layout[2]);
+  fscanf(file, "%*26c %lf\n", &i_channel_sph_diam);
   
   // Parameters sanity check
   if(i_make_slit != 0){
