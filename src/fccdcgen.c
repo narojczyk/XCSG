@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
                   spheres[zip_init_sph].type, zip_init_sph);
 
         fprintf(stdout," completed after %6d steps (%d)\n",
-          zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100),
+          zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, Ns),
           --zip_Ns3_runs);
       }
 
