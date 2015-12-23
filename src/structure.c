@@ -27,19 +27,19 @@ extern const double pi;
 int DC_metrics(int od[6], int nd1)
 {
   static int step=1;
-  int i, even[6], evenS=0, evenM=1;
+  int i;//, even[6], evenS=0, evenM=1;
   int level;
   int exit_code = 1;
    
-  for(i=0; i<6; i++){
-    even[i] = od[i] & 1;
-    evenS += even[i];
-    evenM *= even[i];
-  }
+//   for(i=0; i<6; i++){
+//     even[i] = od[i] & 1;
+//     evenS += even[i];
+//     evenM *= even[i];
+//   }
   
-  if( nd1 % 6 == 0 && (evenS == 0 || evenM != 0) ){
+  if( nd1 % 6 == 0 ){
     // Perfect distribution is possible
-    level = nd1 / 6;
+    level = 1+ nd1 / 6;
   }else{
     // Perfect distribution is not possible
     level = (int) (((double) nd1) / 6e0) + 2;

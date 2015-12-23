@@ -162,8 +162,6 @@ int main(int argc, char *argv[])
       goto cleanup;
     }
 
-
-
     // Make channel
     if(i_make_channel && i_normal[0]+i_normal[1]+i_normal[2] > 0){
     fprintf(stdout, " Inserting channel(s)\n");
