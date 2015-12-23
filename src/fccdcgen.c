@@ -170,7 +170,15 @@ int main(int argc, char *argv[])
     if(i_make_slit && i_normal[0]+i_normal[1]+i_normal[2] > 0){
       make_slit(dimers, spheres, i_slit_Th, i_normal, Nd);
     }
-
+    
+    // Modify selected properties of slit/channel spheres
+    for(i=0; i<Ns; i++){
+      if(spheres[i].type == 2){
+        // Modify sphere diameter
+        spheres[i].d = i_channel_sph_diam;
+      }
+    }
+    
     /* NOTE:
      * Brake dimers with spheres of type != 1
      * Set broken dimers as type '2'
