@@ -49,7 +49,7 @@ int DC_metrics(int od[6], int nd1)
     exit_code *= (od[i] < level) ? 1 : 0;
   }
 
-  if(exit_code == 1){
+  if(exit_code == 1 || step % 1000000 == 0){
     printf(" Step %8d distribution : ", step);
     for(i=0; i<6; i++){
       printf("%3d ",od[i]);
