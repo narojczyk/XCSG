@@ -179,9 +179,10 @@ void check_DC_parameters(DIM3D *dim, int od[6], int nd)
   }
   
   if( nd1 % 6 == 0){
-    printf("\n perfect DC orientation possible (%d)\n",nd1);
+    printf("\n perfect DC orientation possible (%d/dir.)\n",nd1/6);
   }else{
-    printf("\n perfect DC orientation NOT possible (%d)\n",nd1);
+    printf("\n perfect DC orientation NOT possible (%.2lf/dir.)\n",
+           (double) nd1/6e0);
   }
 }
 
