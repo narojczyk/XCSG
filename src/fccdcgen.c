@@ -281,16 +281,18 @@ int main(int argc, char *argv[])
     // Check structure parameters
     check_DC_parameters(dimers, Odistrib, Nd);
 
-    do{
-      // Find a valid dimer configuration to flip orientations
-      find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
+    if(Nd-Nd2 > 72){
+      do{
+        // Find a valid dimer configuration to flip orientations
+        find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
 
-      // Flip dimers
-      if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
-        flip_dimers(dimers, spheres, cube_edge, Odistrib, valid_dimer_pair[0],
-                    valid_dimer_pair[1]);
-      }
-    }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
+        // Flip dimers
+        if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
+          flip_dimers(dimers, spheres, cube_edge, Odistrib, valid_dimer_pair[0],
+                      valid_dimer_pair[1]);
+        }
+      }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
+    }
 
     // Recalculate centers of mass and orientations for type-1 diemrs
     for(i=0; i<Nd; i++){

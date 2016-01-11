@@ -4,9 +4,9 @@
 char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 // char* author1 = "Mikolaj Kowalik <kowalik@ifmpan.poznan.pl>";
 char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
-char* build = "Sat Dec 26 01:26:21 CET 2015";
+char* build = "Mon Jan 11 12:19:36 CET 2016";
 
-char* fccdcgen_c_SHA1 = "f5fd0742927c54e2fce789c127bd86a7d2f59943";
+char* fccdcgen_c_SHA1 = "c90cad00465e53ae7110f9b353cd498ee2d245d4";
 char* globals_h_SHA1 = "fe8362217fa432ebc61f5213d69ed7d224b34c1f";
 char* mt19937_h_SHA1 = "08961c2d0bfffac380ab1ee575c0e530c95d762d";
 char* mt19937_64_h_SHA1 = "b442092d46c546522b41f0e9995901f78d6d1d6e";
