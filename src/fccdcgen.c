@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 
   SPH *spheres;
   DIM3D *dimers;
+  CHA *channels;
 
   char *f_ini = NULL;
   char f_out[15];
@@ -69,12 +70,27 @@ int main(int argc, char *argv[])
 
   // Open and parse config file
   if((f = fopen(f_ini, "r")) == NULL) {
-    fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+    fprintf(stderr, "  [%s]: error: cannot open config file: %s\n",
             prog_name, f_ini);
     return EXIT_FAILURE;
   }
   parse_config(f);
   fclose(f);
+  
+  // Allocate memory for channels' data
+  channels = malloc( i_n_channels * sizeof(CHA));
+  
+  // Open and read channel description data
+  if((f = fopen(i_chdesc_file, "r")) == NULL) {
+    fprintf(stderr, "  [%s]: error: cannot open channels file: %s\n",
+            prog_name, i_chdesc_file);
+    return EXIT_FAILURE;
+  }
+  exit_status = parse_channels(f, channels);
+  fclose(f);
+  if(exit_status != EXIT_SUCCESS){
+    goto cleanup;
+  }
 
   // Initiate generator with 'seed'
   init_RNG(i_seed);

@@ -10,6 +10,7 @@
 #include <getopt.h>
 
 #include "config.h"
+#include "data.h"
 #include "checksum.h"
 #include "initials.h"
 
@@ -24,6 +25,7 @@ extern int i_iDCto;
 extern int i_make_channel;
 extern int i_make_slit;
 extern int i_fs_connect;
+extern int i_n_channels; 
 extern double i_channel_R;
 extern double i_slit_Th;
 extern double i_channel_sph_diam;
@@ -170,6 +172,7 @@ void generate_template_config(int status)
   fprintf(f, "Free sph. connect (bool): INT\n");
   fprintf(f, "Channel layout pattern  : INT_x INT_y INT_z\n");
   fprintf(f, "Ch./Sl. sph. diameter   : DOUBLE\n");
+  fprintf(f, "Number of channels      : INT\n");
   fprintf(f, "Channels desc. file name: STRING\n");
   
   if(fclose(f)==0) {
@@ -180,6 +183,47 @@ void generate_template_config(int status)
       "  [%s]: error: failed to write to: %s\n", __func__, template);
     exit(EXIT_FAILURE);
   }
+}
+
+/*
+ * parse_channels(file, ch_tab)
+ * 
+ * Reads channels' configuration from 'file' and stores data for each channel
+ * respectively.
+ */
+int parse_channels(FILE *file, CHA ch_tab[])
+{
+  int i=0;
+  double c_off[3] = {0e0, 0e0, 0e0};
+  double c_nor[3] = {0e0, 0e0, 0e0};
+  double c_r = 0e0;
+  
+  // Skip first line in the file
+  fscanf(file, "%*[^\n]\n", NULL);
+
+  // Read data from the file
+  for(i=0; i<i_n_channels; i++){
+    if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf\n", 
+           &c_off[0], &c_off[1], &c_off[2],
+           &c_nor[0], &c_nor[1], &c_nor[2], &c_r ) == EOF){
+      fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
+      fprintf(stderr,"  %d data lines read; %d data lines expected\n", 
+              i, i_n_channels);
+      return EXIT_FAILURE;      
+    }else{
+    
+    ch_tab[i].offset[0] = c_off[0];
+    ch_tab[i].offset[1] = c_off[1];
+    ch_tab[i].offset[2] = c_off[2];
+    
+    ch_tab[i].normal[0] = c_nor[0];
+    ch_tab[i].normal[1] = c_nor[1];
+    ch_tab[i].normal[2] = c_nor[2];
+    
+    ch_tab[i].radius = c_r;
+    }
+  }
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -202,6 +246,7 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %d %d %d\n", 
          &i_ch_layout[0], &i_ch_layout[1], &i_ch_layout[2]);
   fscanf(file, "%*26c %lf\n", &i_channel_sph_diam);
+  fscanf(file, "%*26c %d\n", &i_n_channels);
   fscanf(file, "%*26c %s\n",  i_chdesc_file);
   
   // Parameters sanity check
