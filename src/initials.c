@@ -212,14 +212,17 @@ int parse_channels(FILE *file, CHA ch_tab[])
       return EXIT_FAILURE;      
     }else{
     
+    // Store offset for the channel 'i'
     ch_tab[i].offset[0] = c_off[0];
     ch_tab[i].offset[1] = c_off[1];
     ch_tab[i].offset[2] = c_off[2];
     
+    // Store normal vector for the channel 'i'
     ch_tab[i].normal[0] = c_nor[0];
     ch_tab[i].normal[1] = c_nor[1];
     ch_tab[i].normal[2] = c_nor[2];
     
+    // Store radius for the channel 'i'
     ch_tab[i].radius = c_r;
     }
   }
