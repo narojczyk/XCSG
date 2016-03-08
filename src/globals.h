@@ -24,6 +24,7 @@ int i_fs_connect = 0;           // Bolean flag to connect free spheres [0|1]
 double i_channel_R = 0e0;       // Nano-channel radius in sigma units
 double i_slit_Th = 0e0;         // Nano-slit thickness in sigma units
 double i_channel_sph_diam = 1e0;// Diameter for spheres in channel or slit
+char i_chdesc_file[41];         // File name for the channels' parameters
 
 // general purpose global variables
 char *prog_name;

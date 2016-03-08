@@ -27,6 +27,7 @@ extern int i_fs_connect;
 extern double i_channel_R;
 extern double i_slit_Th;
 extern double i_channel_sph_diam;
+extern char i_chdesc_file[41];
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -169,6 +170,7 @@ void generate_template_config(int status)
   fprintf(f, "Free sph. connect (bool): INT\n");
   fprintf(f, "Channel layout pattern  : INT_x INT_y INT_z\n");
   fprintf(f, "Ch./Sl. sph. diameter   : DOUBLE\n");
+  fprintf(f, "Channels desc. file name: STRING\n");
   
   if(fclose(f)==0) {
     fprintf(stdout,"  Template config file written to:\n%s\n",template);
@@ -200,6 +202,7 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %d %d %d\n", 
          &i_ch_layout[0], &i_ch_layout[1], &i_ch_layout[2]);
   fscanf(file, "%*26c %lf\n", &i_channel_sph_diam);
+  fscanf(file, "%*26c %s\n",  i_chdesc_file);
   
   // Parameters sanity check
   if(i_make_slit != 0){
