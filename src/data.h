@@ -22,5 +22,12 @@ typedef struct
   double L;         // Dimer length (dist. between spheres' centers)
 } DIM3D;
 
+typedef struct
+{
+  double offset[3]; // Channel offset from the base atom in the structure
+  double normal[3]; // Vector parallel to the channel axis
+  double radius;    // The radius of the channel
+} CHA;
+
 #endif
 /* vim: set tw=80 ts=2 sw=2 et: */
