@@ -34,12 +34,11 @@
 
 int main(int argc, char *argv[])
 {
-
   FILE *f;
 
-  SPH *spheres;
-  DIM3D *dimers;
-  CHA *channels;
+  SPH *spheres = NULL;
+  DIM3D *dimers = NULL;
+  CHA *channels = NULL;
 
   char *f_ini = NULL;
   char f_out[15];
@@ -55,9 +54,8 @@ int main(int argc, char *argv[])
   int Odistrib[6] = {0,0,0,0,0,0};
   int valid_dimer_pair[2];
   int i, s;
-  int ti, tk, tl, tt=0;
 
-  double cube_edge[3], ch_offset[3];
+  double cube_edge[3];
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -109,8 +107,6 @@ int main(int argc, char *argv[])
   fprintf(stdout," System size (cells)  : %d by %d by %d\n",
           i_edge_fcc_N[0], i_edge_fcc_N[1], i_edge_fcc_N[2]);
   fprintf(stdout," MT19937 seed         : %8lu\n", i_seed);
-  fprintf(stdout," Nano-channel         : [%1d %1d %1d] radius %.3le\n",
-            i_normal[0], i_normal[1], i_normal[2], i_channel_R);
   fprintf(stdout," Str. index range     : %d to %d (total %d files)\n",
           i_iDCfrom, i_iDCto, i_iDCto-i_iDCfrom+1);
 
@@ -257,12 +253,12 @@ int main(int argc, char *argv[])
         }
 
         // Start zipper from selected sphere
-        fprintf(stdout," - zipper from type-%1d sph. no. %5d ",
+        fprintf(stdout,"  zipper from type-%1d sph. no. %5d ",
                   spheres[zip_init_sph].type, zip_init_sph);
 
-        fprintf(stdout," completed after %7d steps (%d)\n",
-          zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, Ns),
-          --zip_Ns3_runs);
+        fprintf(stdout," completed after %7d steps (%d left)\n",
+                  zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, Ns),
+                  --zip_Ns3_runs);
       }
 
       // Check the number of type-3 spheres
@@ -353,10 +349,6 @@ int main(int argc, char *argv[])
   #endif
 
   } // End structure loop
-
-
-
-
 
 cleanup:
   // Free resources

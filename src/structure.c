@@ -179,10 +179,11 @@ void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
  */
 int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
 {
-  int i=0;
+  int i=0, nseek=0;
   int step=0;
   int sngb_id, sngb_type, rand_ngb, valid_ngb, sother_id;
   int dim_ind, dngb_id, dim_t2_ind;
+  int allow_type3=0;
 
   if(sph[sph_ind].type == 1){
     // Get the index of dimer for type-1 sphere
@@ -204,8 +205,10 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
   // Loop until the free spheres meet
   while(1){
     // Select random neighbor of sph_ind
+    nseek=0;
     do{
       valid_ngb = 0;
+      allow_type3 = 0;
       // Select neighbor index randomly
       rand_ngb = (int) (u_RNG() * 12);
       // Check not to go outside the naighbor list
@@ -213,15 +216,21 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
       // Get neighbor id and type
       sngb_id = sph[sph_ind].ngb[rand_ngb];
       sngb_type = sph[ sngb_id ].type;
-
+      // If enough steps passed OR if type-1 sphere is NOT on the list, 
+      // allow type-3 selection
+      if((sngb_type == 3) && ( (step > ms) || (nseek > 100) )){
+        allow_type3 = 1;
+      }
       // Select type-1 sphere or, if enough steps passed allow type-3 selection
-      if( ((sngb_type == 3) && (step > ms)) || (sngb_type == 1) ) {
+      if( (allow_type3 == 1) || (sngb_type == 1) ) {
         valid_ngb = 1;
       }
       // Security check not to select type-2 spheres EVER!
       if(sngb_type == 2){
         valid_ngb = 0;
-      }
+      }     
+      // Watchdog: count attempts to select valid neighbor
+      nseek++;
     }while(!valid_ngb);
 
     // Brake neighboring dimer or connect free spheres and brake the cycle
