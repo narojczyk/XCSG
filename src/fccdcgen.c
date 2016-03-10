@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
   int i, s;
   int ti, tk, tl, tt=0;
 
-  double cube_edge[3], tr_ch[3];
+  double cube_edge[3], ch_offset[3];
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -186,24 +186,15 @@ int main(int argc, char *argv[])
       goto cleanup;
     }
 
-    // Make channel
-    if(i_make_channel && i_normal[0]+i_normal[1]+i_normal[2] > 0){
-    fprintf(stdout, " Inserting channel(s)\n");
-      for(tl=0; tl<i_ch_layout[2]; tl++){
-        for(tk=0; tk<i_ch_layout[1]; tk++){
-          for(ti=0; ti<i_ch_layout[0]; ti++){
-            tr_ch[0] = ti * cube_edge[0] / ((double) i_ch_layout[0]);
-            tr_ch[1] = tk * cube_edge[1] / ((double) i_ch_layout[1]);
-            tr_ch[2] = tl * cube_edge[2] / ((double) i_ch_layout[2]);
-            fprintf(stdout,
-                    " Channel origin translated by %.6lf %.6lf %.6lf (%d/%d)\n",
-                    tr_ch[0],tr_ch[1], tr_ch[2],
-                    ++tt,i_ch_layout[0]*i_ch_layout[1]*i_ch_layout[2]);
-            make_channel(dimers, spheres, i_normal, i_channel_R, cube_edge,
-                         tr_ch, Nd);
-          }
-        }
-      }
+    // Make channel    
+    if(i_make_channel && 
+       channels[0].normal[0]+channels[0].normal[1]+channels[0].normal[2] != 0){
+      fprintf(stdout, " Inserting %d channel(s)\n", i_n_channels);
+    
+      for(i=0; i<i_n_channels; i++){
+        make_channel(dimers, spheres, channels[i].normal, channels[i].radius, 
+                     cube_edge, channels[i].offset, Nd);
+      }       
     }
 
     // Make slit

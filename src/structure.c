@@ -289,11 +289,10 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
  *
  */
 void make_channel(
-  DIM3D *dim, SPH *sph, int c[3], double cr, double box[3], double tr[3],
+  DIM3D *dim, SPH *sph, double c[3], double cr, double box[3], double tr[3],
   int nd)
 {
   int i;
-  double cd[3] = {one*c[0], one*c[1], one*c[2]};
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
   double llc_r[3] = {-box[0]/two + one, -box[1]/two + one, -box[2]/two + one};
   double p1[3], p2[3], pxcd[3], dist0, dist1;
@@ -313,9 +312,9 @@ void make_channel(
   }
 
   // Find the coordinates of the center point on the channel axis
-  ccp[0] = llc[0] * (one - cd[0]);
-  ccp[1] = llc[1] * (one - cd[1]);
-  ccp[2] = llc[2] * (one - cd[2]);
+  ccp[0] = llc[0] * (one - c[0]);
+  ccp[1] = llc[1] * (one - c[1]);
+  ccp[2] = llc[2] * (one - c[2]);
 
   for(i=0; i<2*nd; i++){
     // Determine vector from point 'i' to lowe-left-corner atom of the cube
@@ -338,18 +337,18 @@ void make_channel(
     p2[2] = p2[2] - box[2] * round( p2[2]/box[2] );
 
     // Calculate the cross product pxcd = p x cd
-    vcrossu(p1, cd, pxcd);
+    vcrossu(p1, c, pxcd);
 
     // Calculate the shortest distance of the sphere center from the line
     // with reference to p1 (lower left atom)
-    dist0 = vmodule(pxcd) / vmodule(cd);
+    dist0 = vmodule(pxcd) / vmodule(c);
 
     // Calculate the cross product pxcd = p x cd
-    vcrossu(p2, cd, pxcd);
+    vcrossu(p2, c, pxcd);
 
     // Calculate the shortest distance of the sphere center from the line
     // with reference to p2 (center point on the channel axis)
-    dist1 = vmodule(pxcd) / vmodule(cd);
+    dist1 = vmodule(pxcd) / vmodule(c);
 
     // If the sphere lies within the channel radius include the former into
     // channel and continue to the next sphere
