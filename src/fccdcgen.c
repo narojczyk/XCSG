@@ -126,6 +126,14 @@ int main(int argc, char *argv[])
   fprintf(stdout,"                        %.16le (z)\n", cube_edge[2]);
   fprintf(stdout," Number of dimers     : %d\n",Nd);
   fprintf(stdout," Number of spheres    : %d\n",Ns);
+  fprintf(stdout," Number of channels   : %d\n",i_n_channels);
+  fprintf(stdout," No.\t channell offset\t\t chanel normal\t\tradius\n");
+  for(i=0; i<i_n_channels; i++){
+    fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf\n", i,
+            channels[i].offset[0], channels[i].offset[1], channels[i].offset[2],
+            channels[i].normal[0], channels[i].normal[1], channels[i].normal[2],
+            channels[i].radius);  
+  }
   fprintf(stdout,"\n");
 
 
