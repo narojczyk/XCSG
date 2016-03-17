@@ -48,10 +48,10 @@ void find_valid_cluster(DIM3D *dim, SPH *sph, double box[3], int nd,
       
     // Randomly get the index of neighboring spheres
     rn_id0 = (int) (u_RNG() * 12);
-    rn_id0 = ( rn_id0 >= 12 ) ? 12 : rn_id0;
+    rn_id0 = ( rn_id0 >= 12 ) ? 11 : rn_id0;
     
     rn_id1 = (int) (u_RNG() * 12);
-    rn_id1 = ( rn_id1 >= 12 ) ? 12 : rn_id1;
+    rn_id1 = ( rn_id1 >= 12 ) ? 11 : rn_id1;
     
     // Get indexes of respective neighbors of atoms a0,a1
     b0 = sph[a0].ngb[rn_id0];
