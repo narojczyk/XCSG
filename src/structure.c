@@ -30,16 +30,11 @@ int DC_metrics(int od[6], int nd1)
   int i;//, even[6], evenS=0, evenM=1;
   int level;
   int exit_code = 1;
-   
-//   for(i=0; i<6; i++){
-//     even[i] = od[i] & 1;
-//     evenS += even[i];
-//     evenM *= even[i];
-//   }
   
+  // Set exit code criteria depending on the number of dimers in the system
   if( nd1 % 6 == 0 ){
     // Perfect distribution is possible
-    level = 1+ nd1 / 6;
+    level = (int) (((double) nd1) / 6e0);
   }else{
     // Perfect distribution is not possible
     level = (int) (((double) nd1) / 6e0) + 2;
@@ -93,13 +88,13 @@ void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
   
   // Assign corresponding sphere indexes randomly to fliping handler
   rn_id0 = (int) (u_RNG() * 2);
-  rn_id0 = ( rn_id0 >= 2 ) ? 2 : rn_id0;
+  rn_id0 = ( rn_id0 >= 2 ) ? 1 : rn_id0;
   rn_id1 = fabs(rn_id0 - 1);
   a0 = dim[d0].sph_ind[rn_id0];
   a1 = dim[d0].sph_ind[rn_id1];
     
   rn_id0 = (int) (u_RNG() * 2);
-  rn_id0 = ( rn_id0 >= 2 ) ? 2 : rn_id0;
+  rn_id0 = ( rn_id0 >= 2 ) ? 1 : rn_id0;
   rn_id1 = fabs(rn_id0 - 1);
   b0 = dim[d1].sph_ind[rn_id0];
   b1 = dim[d1].sph_ind[rn_id1];
