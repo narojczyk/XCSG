@@ -27,7 +27,7 @@ extern const double pi;
 int DC_metrics(int od[6], int nd1)
 {
   static int step=1;
-  int i;//, even[6], evenS=0, evenM=1;
+  int i;
   int level;
   int exit_code = 1;
   
@@ -37,19 +37,19 @@ int DC_metrics(int od[6], int nd1)
     level = (int) (((double) nd1) / 6e0);
   }else{
     // Perfect distribution is not possible
-    level = (int) (((double) nd1) / 6e0) + 2;
+    level = (int) (((double) nd1) / 6e0) + 1;
   }
   
   for(i=0; i<6; i++){
-    exit_code *= (od[i] < level) ? 1 : 0;
+    exit_code *= ( od[i] <= level ) ? 1 : 0;
   }
-
+  
   if(exit_code == 1 || step % 1000000 == 0){
-    printf(" Step %8d distribution : ", step);
+    fprintf(stdout," Step %8d distribution : ", step);
     for(i=0; i<6; i++){
-      printf("%3d ",od[i]);
+      fprintf(stdout,"%3d ",od[i]);
     }
-    printf("\n");    
+    fprintf(stdout,"cond.: <= %d\n",level);    
   }
   
   step++;

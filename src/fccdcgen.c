@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
   int Odistrib[6] = {0,0,0,0,0,0};
   int valid_dimer_pair[2];
   int i, s;
+  int redistribute_dimers;
 
   double cube_edge[3];
 
@@ -276,9 +277,11 @@ int main(int argc, char *argv[])
         }
       }
 
-      fprintf(stdout, " Dimers broken left      : %4d %6.2lf %%\n",
+      fprintf(stdout, "\n Dimers valid            : %4d %6.2lf %%\n",
+              Nd-Nd2, (1e2*(Nd-Nd2))/(1e0*Nd) );
+      fprintf(stdout, " Dimers broken           : %4d %6.2lf %%\n",
               Nd2, (1e2*Nd2)/(1e0*Nd) );
-      fprintf(stdout, " Free spheres  left      : %4d %6.2lf %%\n",
+      fprintf(stdout, " Free spheres            : %4d %6.2lf %%\n",
               Ns3, (1e2*Ns3)/(1e0*Ns) );
 
       // Recalculate centers of mass and orientations for type-1 diemrs
@@ -292,62 +295,86 @@ int main(int argc, char *argv[])
     // Check structure parameters
     check_DC_parameters(dimers, Odistrib, Nd);
 
-    if(Nd-Nd2 > 72){
-      do{
-        // Find a valid dimer configuration to flip orientations
-        find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
-
-        // Flip dimers
-        if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
-          flip_dimers(dimers, spheres, cube_edge, Odistrib, valid_dimer_pair[0],
-                      valid_dimer_pair[1]);
-        }
-      }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
+    // NOTE: The following piece of code is relevant in two cases:
+    // #1   The number of dimers is NOT divisable by 6, thus near perfect 
+    //      distribution is the goal
+    // #2   The number of dimers IS divisable by 6
+    // #2.1 Additional requirement to get perfect distribution of dimers is
+    //      that at this stage dimers MUST NOT be an odd number of dimers in 
+    //      any direction.
+    
+    if( (Nd-Nd2) % 6 != 0 ){
+      redistribute_dimers = 1;
+    }else if( (Nd-Nd2)%6 == 0 && 
+       ((Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) + (Odistrib[3]&1) + 
+       (Odistrib[4]&1) + (Odistrib[5]&1) == 0 ) ){
+      redistribute_dimers = 1;
+    }else{
+      redistribute_dimers = 0;
     }
+       
+    if( redistribute_dimers != 0 ){
+      if(Nd-Nd2 > 72){
+        do{     
+          // Find a valid dimer configuration to flip orientations
+          find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
 
-    // Recalculate centers of mass and orientations for type-1 diemrs
-    for(i=0; i<Nd; i++){
-      if(dimers[i].type == 1){
-        update_dimer_parameters(dimers, spheres, cube_edge, i);
+          // Flip dimers
+          if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
+            flip_dimers(dimers, spheres, cube_edge, Odistrib, 
+                        valid_dimer_pair[0], valid_dimer_pair[1]);
+          }
+        }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
       }
+            
+      // Recalculate centers of mass and orientations for type-1 diemrs
+      for(i=0; i<Nd; i++){
+        if(dimers[i].type == 1){
+          update_dimer_parameters(dimers, spheres, cube_edge, i);
+        }
+      }
+
+      // Set the file name for dimer data and open the file for write
+      sprintf(f_out, fo_exp_dim, s);
+      fprintf(stdout,"\n Writting dimer  data to file %s\n",f_out);
+
+      if((f = fopen(f_out, "w")) == NULL) {
+        fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+                prog_name, f_out);
+        exit_status = EXIT_FAILURE;
+        goto cleanup;
+      }
+      // Export dimer datat to file
+      export_dimers(f, dimers, Nd);
+      fclose(f);
+
+      // Set the file name for dimer data and open the file for write
+      sprintf(f_out, fo_exp_sph, s);
+      fprintf(stdout," Writting sphere data to file %s\n",f_out);
+
+      if((f = fopen(f_out, "w")) == NULL) {
+        fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+                prog_name, f_out);
+        exit_status = EXIT_FAILURE;
+        goto cleanup;
+      }
+      // Export sphere datat to file
+      export_spheres(f, spheres, Ns);
+      fclose(f);
+
+    #ifdef DATA_VISGL_OUTPUT
+      // Export data in data_visGL format
+      if( export_to_GLviewer(dimers, spheres, cube_edge, s, Ns, Nd) != 0 ){
+        exit_status=EXIT_FAILURE;
+        goto cleanup;
+      }
+    #endif
+    }else{ 
+      // If redistribute_dimers == 0, then start again on the same structure
+      fprintf(stdout," A perfect distribution cannot be reached from this "
+        "distribution.\n I will try again...\n");
+      s--;
     }
-
-    // Set the file name for dimer data and open the file for write
-    sprintf(f_out, fo_exp_dim, s);
-    fprintf(stdout," Writting dimer  data to file %s\n",f_out);
-
-    if((f = fopen(f_out, "w")) == NULL) {
-      fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
-              prog_name, f_out);
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
-    }
-    // Export dimer datat to file
-    export_dimers(f, dimers, Nd);
-    fclose(f);
-
-    // Set the file name for dimer data and open the file for write
-    sprintf(f_out, fo_exp_sph, s);
-    fprintf(stdout," Writting sphere data to file %s\n",f_out);
-
-    if((f = fopen(f_out, "w")) == NULL) {
-      fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
-              prog_name, f_out);
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
-    }
-    // Export sphere datat to file
-    export_spheres(f, spheres, Ns);
-    fclose(f);
-
-  #ifdef DATA_VISGL_OUTPUT
-    // Export data in data_visGL format
-    if( export_to_GLviewer(dimers, spheres, cube_edge, s, Ns, Nd) != 0 ){
-      exit_status=EXIT_FAILURE;
-      goto cleanup;
-    }
-  #endif
-
   } // End structure loop
 
 cleanup:

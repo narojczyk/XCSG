@@ -172,16 +172,16 @@ void check_DC_parameters(DIM3D *dim, int od[6], int nd)
     }
   }
   
-  printf(" Current distribution: ");
+  fprintf(stdout,"\n Current distribution: ");
   for(j=0; j<6; j++){
     od[j] = od_local[j];
-    printf("%d ",od[j]);
+    fprintf(stdout,"%d ",od[j]);
   }
   
   if( nd1 % 6 == 0){
-    printf("\n perfect DC orientation possible (%d/dir.)\n",nd1/6);
+    fprintf(stdout,"\n Perfect DC orientation possible (%d/dir.)\n",nd1/6);
   }else{
-    printf("\n perfect DC orientation NOT possible (%.2lf/dir.)\n",
+    fprintf(stdout,"\n Perfect DC orientation NOT possible (%.2lf/dir.)\n",
            (double) nd1/6e0);
   }
 }
