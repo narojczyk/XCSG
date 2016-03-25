@@ -163,14 +163,13 @@ void generate_template_config(int status)
 
   fprintf(f, "MT19937 seed            : LUINT\n");
   fprintf(f, "Number of edge fcc cells: INT_x INT_y INT_z\n");
-  fprintf(f, "Normal vector (slit/ch.): INT_h INT_k INT_l\n");
+  fprintf(f, "Slit normal vector      : INT_h INT_k INT_l\n");
   fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
   fprintf(f, "Load initial DC struct. : INT INT\n");
   fprintf(f, "Make nano-channel (bool): INT\n");
   fprintf(f, "Make nano-slit (bool)   : INT\n");
   fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
   fprintf(f, "Free sph. connect (bool): INT\n");
-  fprintf(f, "Channel layout pattern  : INT_x INT_y INT_z\n");
   fprintf(f, "Ch./Sl. sph. diameter   : DOUBLE\n");
   fprintf(f, "Number of channels      : INT\n");
   fprintf(f, "Channels desc. file name: STRING\n");
@@ -236,21 +235,19 @@ int parse_channels(FILE *file, CHA ch_tab[])
  */
 void parse_config(FILE *file)
 {
-  fscanf(file, "%*26c %lu\n", &i_seed);
-  fscanf(file, "%*26c %d %d %d\n",
-         &i_edge_fcc_N[0], &i_edge_fcc_N[1], &i_edge_fcc_N[2]);
+  fscanf(file, "%*26c %lu\n",      &i_seed);
+  fscanf(file, "%*26c %d %d %d\n", &i_edge_fcc_N[0], &i_edge_fcc_N[1], 
+         &i_edge_fcc_N[2]);
   fscanf(file, "%*26c %d %d %d\n", &i_normal[0], &i_normal[1], &i_normal[2]);
-  fscanf(file, "%*26c %lf\n",&i_channel_R);
-  fscanf(file, "%*26c %d %d\n", &i_iDCfrom, &i_iDCto);
-  fscanf(file, "%*26c %d\n", &i_make_channel);
-  fscanf(file, "%*26c %d\n", &i_make_slit);
-  fscanf(file, "%*26c %lf\n", &i_slit_Th);
-  fscanf(file, "%*26c %d\n", &i_fs_connect);
-  fscanf(file, "%*26c %d %d %d\n", 
-         &i_ch_layout[0], &i_ch_layout[1], &i_ch_layout[2]);
-  fscanf(file, "%*26c %lf\n", &i_channel_sph_diam);
-  fscanf(file, "%*26c %d\n", &i_n_channels);
-  fscanf(file, "%*26c %s\n",  i_chdesc_file);
+  fscanf(file, "%*26c %lf\n",      &i_channel_R);
+  fscanf(file, "%*26c %d %d\n",    &i_iDCfrom, &i_iDCto);
+  fscanf(file, "%*26c %d\n",       &i_make_channel);
+  fscanf(file, "%*26c %d\n",       &i_make_slit);
+  fscanf(file, "%*26c %lf\n",      &i_slit_Th);
+  fscanf(file, "%*26c %d\n",       &i_fs_connect);
+  fscanf(file, "%*26c %lf\n",      &i_channel_sph_diam);
+  fscanf(file, "%*26c %d\n",       &i_n_channels);
+  fscanf(file, "%*26c %s\n",        i_chdesc_file);
   
   // Parameters sanity check
   if(i_make_slit != 0){

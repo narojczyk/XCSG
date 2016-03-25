@@ -15,7 +15,6 @@ const double pi = 4e0 * atan(1e0);
 unsigned long int i_seed;       // Seed for MT19937 r.n.g.
 int i_edge_fcc_N[3] = {0, 0, 0};// Number of f.c.c. cells on edge of the box
 int i_normal[3] = {0, 0, 0};    // Normal vector describing channel or slit
-int i_ch_layout[3] = {0, 0, 0}; // Layout pattern for multiple channels
 int i_iDCfrom = -1;             // Index of input DC structure (if <0,no input)
 int i_iDCto = -1;               // Index of last DC structure
 int i_make_channel = 0;         // Bolean flag to enable nano-channel [0|1]
