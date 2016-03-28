@@ -80,17 +80,18 @@ int main(int argc, char *argv[])
   channels = malloc( i_n_channels * sizeof(CHA));
   
   // Open and read channel description data
-  if((f = fopen(i_chdesc_file, "r")) == NULL) {
-    fprintf(stderr, "  [%s]: error: cannot open channels file: %s\n",
-            prog_name, i_chdesc_file);
-    return EXIT_FAILURE;
+  if( i_make_channel != 0 ){
+    if((f = fopen(i_chdesc_file, "r")) == NULL) {
+      fprintf(stderr, "  [%s]: error: cannot open channels file: %s\n",
+              prog_name, i_chdesc_file);
+      return EXIT_FAILURE;
+    }
+    exit_status = parse_channels(f, channels);
+    fclose(f);
+    if(exit_status != EXIT_SUCCESS){
+      goto cleanup;
+    }
   }
-  exit_status = parse_channels(f, channels);
-  fclose(f);
-  if(exit_status != EXIT_SUCCESS){
-    goto cleanup;
-  }
-
   // Initiate generator with 'seed'
   init_RNG(i_seed);
 
