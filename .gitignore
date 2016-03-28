@@ -1,8 +1,10 @@
 *.o
 *~
-*.csv
+*.csv*
 *.out
 *[0-9]
 *nb
 *pdf
 *ini*
+*dat*
+notes

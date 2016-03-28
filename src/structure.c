@@ -294,7 +294,7 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
  */
 void make_channel(
   DIM3D *dim, SPH *sph, double c[3], double cr, double box[3], double tr[3],
-  int nd)
+  double csd, int nd)
 {
   int i;
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
@@ -359,6 +359,8 @@ void make_channel(
     if(dist0 < cr || dist1 < cr){
       // Mark sphere as 'channel-sphere' (type '2')
       sph[i].type = 2;
+      // ... and assign the respective channel-sphere-diameter
+      sph[i].d = csd;
       // Mark dimers that cross the channel as type '2'
       dim[ sph[i].dim_ind ].type = 2;
     }

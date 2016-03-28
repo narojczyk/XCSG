@@ -124,12 +124,13 @@ int main(int argc, char *argv[])
   fprintf(stdout," Number of dimers     : %d\n",Nd);
   fprintf(stdout," Number of spheres    : %d\n",Ns);
   fprintf(stdout," Number of channels   : %d\n",i_n_channels);
-  fprintf(stdout," No.\t channell offset\t\t chanel normal\t\tradius\n");
+  fprintf(stdout," No.\t channell offset\t\t chanel normal\t\tradius"
+    "\tsph. diameter\n");
   for(i=0; i<i_n_channels; i++){
-    fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf\n", i,
+    fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
             channels[i].offset[0], channels[i].offset[1], channels[i].offset[2],
             channels[i].normal[0], channels[i].normal[1], channels[i].normal[2],
-            channels[i].radius);  
+            channels[i].radius, channels[i].sph_d);  
   }
   fprintf(stdout,"\n");
 
@@ -190,21 +191,13 @@ int main(int argc, char *argv[])
     
       for(i=0; i<i_n_channels; i++){
         make_channel(dimers, spheres, channels[i].normal, channels[i].radius, 
-                     cube_edge, channels[i].offset, Nd);
+                     cube_edge, channels[i].offset, channels[i].sph_d, Nd);
       }       
     }
 
     // Make slit
     if(i_make_slit && i_normal[0]+i_normal[1]+i_normal[2] > 0){
       make_slit(dimers, spheres, i_slit_Th, i_normal, Nd);
-    }
-
-    // Modify selected properties of slit/channel spheres
-    for(i=0; i<Ns; i++){
-      if(spheres[i].type == 2){
-        // Modify sphere diameter
-        spheres[i].d = i_channel_sph_diam;
-      }
     }
 
     /* NOTE:

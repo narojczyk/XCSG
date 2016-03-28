@@ -27,6 +27,7 @@ typedef struct
   double offset[3]; // Channel offset from the base atom in the structure
   double normal[3]; // Vector parallel to the channel axis
   double radius;    // The radius of the channel
+  double sph_d;     // Diameter of spheres in the channel
 } CHA;
 
 #endif

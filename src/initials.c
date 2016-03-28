@@ -28,7 +28,6 @@ extern int i_fs_connect;
 extern int i_n_channels; 
 extern double i_channel_R;
 extern double i_slit_Th;
-extern double i_channel_sph_diam;
 extern char i_chdesc_file[41];
 
 static struct option long_opts[] = {
@@ -153,6 +152,7 @@ void generate_template_config(int status)
 
   FILE  *f;
   char *template = strcat(prog_name,".ini.sed");
+  char *template_ch = "channels.dat.sed";
 
   // Opening file
   if ((f = fopen(template,"w")) == NULL ) {
@@ -170,18 +170,40 @@ void generate_template_config(int status)
   fprintf(f, "Make nano-slit (bool)   : INT\n");
   fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
   fprintf(f, "Free sph. connect (bool): INT\n");
-  fprintf(f, "Ch./Sl. sph. diameter   : DOUBLE\n");
   fprintf(f, "Number of channels      : INT\n");
   fprintf(f, "Channels desc. file name: STRING\n");
   
   if(fclose(f)==0) {
-    fprintf(stdout,"  Template config file written to:\n%s\n",template);
-    exit(status);
+    fprintf(stdout," Program template config file written to: %s\n",template);
   } else {
     fprintf(stderr,
       "  [%s]: error: failed to write to: %s\n", __func__, template);
     exit(EXIT_FAILURE);
   }
+  
+  // Opening file
+  if ((f = fopen(template_ch,"w")) == NULL ) {
+    fprintf(stderr,
+      "  [%s]: error: failed to open file %s\n", __func__, template_ch);
+    exit(1);
+  }
+  
+  fprintf(f, "#axis offset (3F); axis wersor (3F); channel radius (1F);");
+  fprintf(f, " ch. sph. diameter (1F). The 1st line is skipped.\n");
+  fprintf(f, " DOUBLE_ox DOUBLE_oy DOUBLE_oz ");
+  fprintf(f, " DOUBLE_cx DOUBLE_cy DOUBLE_cz ");
+  fprintf(f, " DOUBLE_cr DOUBLE_sd\n");
+  
+  if(fclose(f)==0) {
+    fprintf(stdout," Channel desc. template config file written to: %s\n",
+            template_ch);
+    exit(status);
+  } else {
+    fprintf(stderr,
+      "  [%s]: error: failed to write to: %s\n", __func__, template_ch);
+    exit(EXIT_FAILURE);
+  }
+  
 }
 
 /*
@@ -196,15 +218,16 @@ int parse_channels(FILE *file, CHA ch_tab[])
   double c_off[3] = {0e0, 0e0, 0e0};
   double c_nor[3] = {0e0, 0e0, 0e0};
   double c_r = 0e0;
+  double s_d = 0e0;
   
   // Skip first line in the file
   fscanf(file, "%*[^\n]\n", NULL);
 
   // Read data from the file
   for(i=0; i<i_n_channels; i++){
-    if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf\n", 
+    if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n", 
            &c_off[0], &c_off[1], &c_off[2],
-           &c_nor[0], &c_nor[1], &c_nor[2], &c_r ) == EOF){
+           &c_nor[0], &c_nor[1], &c_nor[2], &c_r, &s_d) == EOF){
       fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
       fprintf(stderr,"  %d data lines read; %d data lines expected\n", 
               i, i_n_channels);
@@ -223,6 +246,9 @@ int parse_channels(FILE *file, CHA ch_tab[])
     
     // Store radius for the channel 'i'
     ch_tab[i].radius = c_r;
+    
+    // Store diameter of spheres in channel 'i'
+    ch_tab[i].sph_d = s_d;
     }
   }
   return EXIT_SUCCESS;
@@ -245,7 +271,6 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %d\n",       &i_make_slit);
   fscanf(file, "%*26c %lf\n",      &i_slit_Th);
   fscanf(file, "%*26c %d\n",       &i_fs_connect);
-  fscanf(file, "%*26c %lf\n",      &i_channel_sph_diam);
   fscanf(file, "%*26c %d\n",       &i_n_channels);
   fscanf(file, "%*26c %s\n",        i_chdesc_file);
   
