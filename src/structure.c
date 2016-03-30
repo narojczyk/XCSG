@@ -32,7 +32,7 @@ int DC_metrics(int od[6], int nd1)
   int exit_code = 1;
   
   // Set exit code criteria depending on the number of dimers in the system
-  if( nd1 % 6 == 0 ){
+  if( nd1 % 6 == 0 && (nd1/6)&1 == 0 ){
     // Perfect distribution is possible
     level = (int) (((double) nd1) / 6e0);
   }else{

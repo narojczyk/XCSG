@@ -292,7 +292,9 @@ int main(int argc, char *argv[])
     // NOTE: The following piece of code is relevant in two cases:
     // #1   The number of dimers is NOT divisable by 6, thus near perfect 
     //      distribution is the goal
-    // #2   The number of dimers IS divisable by 6
+    // #1.1 The number of dimer IS divisable by 6 BUT the result is ODD number.
+    //      In this case the perfect distribution of molecules is not possible.
+    // #2   The number of dimers IS divisable by 6 AND an EVEN number
     // #2.1 Additional requirement to get perfect distribution of dimers is
     //      that at this stage dimers MUST NOT be an odd number of dimers in 
     //      any direction.
