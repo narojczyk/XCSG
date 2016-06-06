@@ -125,15 +125,17 @@ int main(int argc, char *argv[])
   fprintf(stdout," Number of dimers     : %d\n",Nd);
   fprintf(stdout," Number of spheres    : %d\n",Ns);
   fprintf(stdout," Number of channels   : %d\n",i_n_channels);
-  fprintf(stdout," No.\t channell offset\t\t chanel normal\t\tradius"
-    "\tsph. diameter\n");
-  for(i=0; i<i_n_channels; i++){
-    fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
-            channels[i].offset[0], channels[i].offset[1], channels[i].offset[2],
-            channels[i].normal[0], channels[i].normal[1], channels[i].normal[2],
-            channels[i].radius, channels[i].sph_d);  
+  if (i_make_channel){
+    fprintf(stdout," No.\t channell offset\t\t chanel normal\t\tradius"
+      "\tsph. diameter\n");
+    for(i=0; i<i_n_channels; i++){
+      fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
+              channels[i].offset[0], channels[i].offset[1], channels[i].offset[2],
+              channels[i].normal[0], channels[i].normal[1], channels[i].normal[2],
+              channels[i].radius, channels[i].sph_d);  
+    }
+    fprintf(stdout,"\n");
   }
-  fprintf(stdout,"\n");
 
 
   // Allocate memory for spheres and dimers
@@ -223,7 +225,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, " Free spheres    (if any): %4d %6.2lf %%\n",
             Ns3, (1e2*Ns3)/(1e0*Ns) );
 
-    if(i_fs_connect == 1){
+    if(Ns3 > 0 && i_fs_connect == 1){
       // Check if there are even number of type-3 spheres
       Ns3_odd=0;
       Ns3_odd = Ns3 & 1;
@@ -300,17 +302,19 @@ int main(int argc, char *argv[])
     //      any direction.
     
     if( (Nd-Nd2) % 6 != 0 ){
-      redistribute_dimers = 1;
+      redistribute_dimers = 2;
     }else if( (Nd-Nd2)%6 == 0 && 
        ((Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) + (Odistrib[3]&1) + 
        (Odistrib[4]&1) + (Odistrib[5]&1) == 0 ) ){
+      redistribute_dimers = 2;
+    }else if( DC_metrics(Odistrib, Nd-Nd2) ){
       redistribute_dimers = 1;
     }else{
       redistribute_dimers = 0;
     }
        
     if( redistribute_dimers != 0 ){
-      if(Nd-Nd2 > 72){
+      if(Nd-Nd2 > 72 && redistribute_dimers == 2){
         do{     
           // Find a valid dimer configuration to flip orientations
           find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
