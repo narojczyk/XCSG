@@ -41,12 +41,9 @@ int main(int argc, char *argv[])
   CHA *channels = NULL;
 
   char *f_ini = NULL;
-  char f_out[15];
   char f_inp[15];
 
   const char *fo_iDC = "initdc3d.%04d";
-  const char *fo_exp_dim = "d3d%05d.csv";
-  const char *fo_exp_sph = "s3d%05d.csv";
 
   int exit_status;
   int Ns, Nd, Nd2, Ns3, Ns3_odd;
@@ -333,42 +330,14 @@ int main(int argc, char *argv[])
           update_dimer_parameters(dimers, spheres, cube_edge, i);
         }
       }
-
-      // Set the file name for dimer data and open the file for write
-      sprintf(f_out, fo_exp_dim, s);
-      fprintf(stdout,"\n Writting dimer  data to file %s\n",f_out);
-
-      if((f = fopen(f_out, "w")) == NULL) {
-        fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
-                prog_name, f_out);
+      
+      
+      // Generate required output files for structure 's'
+      if( exp_str_data(dimers, spheres, cube_edge, Ns, Nd, s) != 0 ){
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
-      // Export dimer datat to file
-      export_dimers(f, dimers, Nd);
-      fclose(f);
 
-      // Set the file name for dimer data and open the file for write
-      sprintf(f_out, fo_exp_sph, s);
-      fprintf(stdout," Writting sphere data to file %s\n",f_out);
-
-      if((f = fopen(f_out, "w")) == NULL) {
-        fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
-                prog_name, f_out);
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
-      }
-      // Export sphere datat to file
-      export_spheres(f, spheres, Ns);
-      fclose(f);
-
-    #ifdef DATA_VISGL_OUTPUT
-      // Export data in data_visGL format
-      if( export_to_GLviewer(dimers, spheres, cube_edge, s, Ns, Nd) != 0 ){
-        exit_status=EXIT_FAILURE;
-        goto cleanup;
-      }
-    #endif
     }else{ 
       // If redistribute_dimers == 0, then start again on the same structure
       fprintf(stdout," A perfect distribution cannot be reached from this "

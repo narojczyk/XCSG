@@ -8,9 +8,58 @@
 #include <stdlib.h>
 // #include <math.h>
 // #include <string.h>
-// #include "config.h"
+#include "config.h"
 #include "data.h"
 #include "io.h"
+
+/*
+ * export_structure_data()
+ * Use export_spheres(), export_dimers(), and export_to_GLviewer() to write the
+ * complete set of informations for the final structure.
+ */
+int exp_str_data(DIM3D *dim, SPH *sph, double box[3], int ns, int nd, int strn)
+{
+  FILE *file;
+  char f_out[15];
+  const char *fo_exp_dim = "d3d%05d.csv";
+  const char *fo_exp_sph = "s3d%05d.csv";
+  
+  // Set the file name for dimer data and open the file for write
+  sprintf(f_out, fo_exp_dim, strn);
+  fprintf(stdout,"\n Writting dimer  data to file %s\n",f_out);
+
+  if((file = fopen(f_out, "w")) == NULL) {
+    fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+            __func__, f_out);
+    return EXIT_FAILURE;
+  }
+  // Export dimer datat to file
+  export_dimers(file, dim, nd);
+  fclose(file);
+
+  // Set the file name for dimer data and open the file for write
+  sprintf(f_out, fo_exp_sph, strn);
+  fprintf(stdout," Writting sphere data to file %s\n",f_out);
+
+  if((file = fopen(f_out, "w")) == NULL) {
+    fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+            __func__, f_out);
+    return EXIT_FAILURE;
+  }
+  // Export sphere datat to file
+  export_spheres(file, sph, ns);
+  fclose(file);
+  
+  
+#ifdef DATA_VISGL_OUTPUT
+  // Export data in data_visGL format
+  if( export_to_GLviewer(dim, sph, box, strn, ns, nd) != 0 ){
+    return EXIT_FAILURE;
+  }
+#endif
+  
+  return 0;
+}
 
 /*
  * export_dimers()
@@ -141,7 +190,7 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box[3], int nd)
  * export_to_GLviewer()
  * Export required data for viewing the structure by data_visGL
  */
-int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int sn, int ns, 
+int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns, 
                        int nd)
 {
   FILE *f;
@@ -165,7 +214,7 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int sn, int ns,
   fprintf(f, "Type of data            : dim3dDCS\n");
   fprintf(f, "Number of input files   : %d\n", 2);
   fprintf(f, "Input lines per file    : %d\n", ns);
-  fprintf(f, "Structure index         : %d\n", sn);
+  fprintf(f, "Structure index         : %d\n", strn);
   fprintf(f, "(# not used          #) : %d\n", 0);
   fprintf(f, "Box dimensions          : %.16le %.16le %.16le\n", 
           box[0], box[1], box[2]);
@@ -176,7 +225,7 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int sn, int ns,
   fclose(f);
   
   // Open file for spheres data
-  sprintf(gl_f_out, data_spheresGL, sn);
+  sprintf(gl_f_out, data_spheresGL, strn);
   fprintf(stdout," Writting sphere data to file %s (visualization)\n",gl_f_out);
   if((f = fopen(gl_f_out, "w")) == NULL){
     fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
@@ -201,7 +250,7 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int sn, int ns,
   fclose(f);
   
   // Open file for dimer data
-  sprintf(gl_f_out, data_dimersGL, sn);
+  sprintf(gl_f_out, data_dimersGL, strn);
   fprintf(stdout," Writting dimer  data to file %s (visualization)\n",gl_f_out);
   if((f = fopen(gl_f_out, "w")) == NULL){
     fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
