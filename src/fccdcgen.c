@@ -52,8 +52,11 @@ int main(int argc, char *argv[])
   int valid_dimer_pair[2];
   int i, s;
   int redistribute_dimers;
+  int cdd_odd = -1;
+  int low_on_dimers = 0;
 
   double cube_edge[3];
+  
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -287,6 +290,13 @@ int main(int argc, char *argv[])
 
     // Check structure parameters
     dimer_distribution(dimers, Odistrib, Nd);
+    
+    // Check if the current distribution of molecules if even (0) or not (>0)
+    cdd_odd = (Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) 
+            + (Odistrib[3]&1) + (Odistrib[4]&1) + (Odistrib[5]&1);
+            
+    // Check if the number of dimers in the system is high enough
+    low_on_dimers = (((double) Nd - Nd2)/((double) Nd) < 2e-1 ? 1 : 0);
 
     // NOTE: The following piece of code is relevant in two cases:
     // #1   The number of dimers is NOT divisable by 6, thus near perfect 
@@ -300,9 +310,7 @@ int main(int argc, char *argv[])
     
     if( (Nd-Nd2) % 6 != 0 ){
       redistribute_dimers = 2;
-    }else if( (Nd-Nd2)%6 == 0 && 
-       ((Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) + (Odistrib[3]&1) + 
-       (Odistrib[4]&1) + (Odistrib[5]&1) == 0 ) ){
+    }else if( (Nd-Nd2)%6 == 0 && (cdd_odd == 0 ) ){
       redistribute_dimers = 2;
     }else if( validate_distrib(Odistrib, Nd-Nd2) ){
       redistribute_dimers = 1;
@@ -311,7 +319,7 @@ int main(int argc, char *argv[])
     }
        
     if( redistribute_dimers != 0 ){
-      if(Nd-Nd2 > 72 && redistribute_dimers == 2){
+      if(low_on_dimers == 0 && redistribute_dimers == 2){
         do{     
           // Find a valid dimer configuration to flip orientations
           find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
