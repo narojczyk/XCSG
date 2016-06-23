@@ -19,12 +19,12 @@ extern const double two;
 extern const double pi;
 
 /*
- * DC_metrics(od, nd)
+ * validate_distrib(od, nd)
  * 
  * checks the distribution of dimer orientations and brakes the cluster moves
  * if good-enough state is achieved
  */
-int DC_metrics(int od[6], int nd1)
+int validate_distrib(int od[6], int nd1)
 {
   static int step=1;
   int i;

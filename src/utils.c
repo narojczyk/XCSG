@@ -157,7 +157,7 @@ int check_dimers_configuration(DIM3D *dim, SPH *sph, double box[3],
   return 0;
 }
 
-void check_DC_parameters(DIM3D *dim, int od[6], int nd)
+void dimer_distribution(DIM3D *dim, int od[6], int nd)
 {
   int i, j;
   int nd1=0;

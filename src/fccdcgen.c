@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
     }   // Done eliminating type-3 spheres
 
     // Check structure parameters
-    check_DC_parameters(dimers, Odistrib, Nd);
+    dimer_distribution(dimers, Odistrib, Nd);
 
     // NOTE: The following piece of code is relevant in two cases:
     // #1   The number of dimers is NOT divisable by 6, thus near perfect 
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
        ((Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) + (Odistrib[3]&1) + 
        (Odistrib[4]&1) + (Odistrib[5]&1) == 0 ) ){
       redistribute_dimers = 2;
-    }else if( DC_metrics(Odistrib, Nd-Nd2) ){
+    }else if( validate_distrib(Odistrib, Nd-Nd2) ){
       redistribute_dimers = 1;
     }else{
       redistribute_dimers = 0;
@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
             flip_dimers(dimers, spheres, cube_edge, Odistrib, 
                         valid_dimer_pair[0], valid_dimer_pair[1]);
           }
-        }while(DC_metrics(Odistrib, Nd-Nd2) == 0);
+        }while(validate_distrib(Odistrib, Nd-Nd2) == 0);
       }
             
       // Recalculate centers of mass and orientations for type-1 diemrs
