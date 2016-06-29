@@ -19,20 +19,20 @@ extern const double two;
 extern const double pi;
 
 /*
- * validate_distrib(od, nd)
+ * validate_distrib(od, nd, step)
  * 
  * checks the distribution of dimer orientations and brakes the cluster moves
- * if good-enough state is achieved
+ * if good-enough state is achieved. Returns '1' if the conditions are met and
+ * zero otherwise.
  */
-int validate_distrib(int od[6], int nd1)
+int validate_distrib(int od[6], int nd1, int step)
 {
-  static int step=1;
   int i;
   int level;
-  int exit_code = 1;
+  int exit_code = 1; // Assume the structure is good ;)
   
   // Set exit code criteria depending on the number of dimers in the system
-  if( nd1 % 6 == 0 && (nd1/6)&1 == 0 ){
+  if( nd1 % 6 == 0 && step < (int) 25e+6 ){
     // Perfect distribution is possible
     level = (int) (((double) nd1) / 6e0);
   }else{
@@ -47,12 +47,11 @@ int validate_distrib(int od[6], int nd1)
   if(exit_code == 1 || step % 1000000 == 0){
     fprintf(stdout," Step %8d distribution : ", step);
     for(i=0; i<6; i++){
-      fprintf(stdout,"%3d ",od[i]);
+      fprintf(stdout," %3d  ",od[i]);
     }
     fprintf(stdout,"cond.: <= %d\n",level);    
   }
-  
-  step++;
+ 
   return exit_code;
 }
 
