@@ -172,18 +172,24 @@ void dimer_distribution(DIM3D *dim, int od[6], int nd)
     }
   }
   
-  fprintf(stdout,"\n Current distribution: ");
-  for(j=0; j<6; j++){
-    od[j] = od_local[j];
-    fprintf(stdout,"%d ",od[j]);
-  }
-  
   if( nd1 % 6 == 0){
     fprintf(stdout,"\n Perfect DC orientation possible (%d/dir.)\n",nd1/6);
   }else{
     fprintf(stdout,"\n Perfect DC orientation NOT possible (%.2lf/dir.)\n",
            (double) nd1/6e0);
   }
+  
+  fprintf(stdout," Initial distribution: \n");
+  fprintf(stdout,"%29s %5s %5s %5s %5s %5s %5s\n", 
+          "directions: ", "[i10]", "[110]", "[011]", "[101]", "[0i1]", "[i01]");
+  fprintf(stdout,"%29s ", "molecules: ");
+  for(j=0; j<6; j++){
+    od[j] = od_local[j];
+    fprintf(stdout," %3d  ",od[j]);
+  }
+  fprintf(stdout,"\n\n");
+  
+
 }
 
 int check_dimer_direction(DIM3D *dim, int i)
