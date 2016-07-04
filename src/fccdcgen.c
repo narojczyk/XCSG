@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
   int redistribute_dimers;
   int cdd_odd = -1;
   int low_on_dimers = 0;
+  int flip_count = 0;
 
   double cube_edge[3];
   
@@ -297,61 +298,56 @@ int main(int argc, char *argv[])
             
     // Check if the number of dimers in the system is high enough
     low_on_dimers = (((double) Nd - Nd2)/((double) Nd) < 2e-1 ? 1 : 0);
-
-    // NOTE: The following piece of code is relevant in two cases:
-    // #1   The number of dimers is NOT divisable by 6, thus near perfect 
-    //      distribution is the goal
-    // #1.1 The number of dimer IS divisable by 6 BUT the result is ODD number.
-    //      In this case the perfect distribution of molecules is not possible.
-    // #2   The number of dimers IS divisable by 6 AND an EVEN number
-    // #2.1 Additional requirement to get perfect distribution of dimers is
-    //      that at this stage dimers MUST NOT be an odd number of dimers in 
-    //      any direction.
+    if(low_on_dimers != 0){
+      fprintf(stdout, " Number of dimers to low to get a good structure\n");
+    }
     
-    if( (Nd-Nd2) % 6 != 0 ){
-      redistribute_dimers = 2;
-    }else if( (Nd-Nd2)%6 == 0 && (cdd_odd == 0 ) ){
-      redistribute_dimers = 2;
-    }else if( validate_distrib(Odistrib, Nd-Nd2) ){
-      redistribute_dimers = 1;
-    }else{
-      redistribute_dimers = 0;
-    }
-       
-    if( redistribute_dimers != 0 ){
-      if(low_on_dimers == 0 && redistribute_dimers == 2){
-        do{     
-          // Find a valid dimer configuration to flip orientations
-          find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
+    // Reorganize molecules to get best distribution possible
+    flip_count = 0;
+    if( !validate_distrib(Odistrib, Nd-Nd2, flip_count) && !low_on_dimers ){      
+      do{     
+        // Find a valid dimer configuration to flip orientations
+        find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
 
-          // Flip dimers
-          if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
-            flip_dimers(dimers, spheres, cube_edge, Odistrib, 
-                        valid_dimer_pair[0], valid_dimer_pair[1]);
-          }
-        }while(validate_distrib(Odistrib, Nd-Nd2) == 0);
-      }
-            
-      // Recalculate centers of mass and orientations for type-1 diemrs
-      for(i=0; i<Nd; i++){
-        if(dimers[i].type == 1){
-          update_dimer_parameters(dimers, spheres, cube_edge, i);
+        // Flip dimers
+        if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
+          flip_dimers(dimers, spheres, cube_edge, Odistrib, 
+                      valid_dimer_pair[0], valid_dimer_pair[1]);
         }
-      }
+        
+        // Run zipper every once in a while (zipper length = X*num. of sph.)
+        if(flip_count % 1000000 == 0){
+          do{
+            // Select random type-1 sphere to start from
+            zip_init_sph = (int) (u_RNG() * Ns);
+            zip_init_sph = (zip_init_sph < Ns ? zip_init_sph : Ns - 1);
+          }while(spheres[zip_init_sph].type != 1);
+          fprintf(stdout," Zipper %6d steps; dist. : ",
+            zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));
+          for(i=0; i<6; i++){
+            fprintf(stdout," %3d  ", Odistrib[i]);
+          }
+          fprintf(stdout,"\n");
+        }
+        
+        flip_count++;
+      }while(validate_distrib(Odistrib, Nd-Nd2, flip_count) == 0);
       
-      
-      // Generate required output files for structure 's'
-      if( exp_str_data(dimers, spheres, cube_edge, Ns, Nd, s) != 0 ){
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
-      }
-
-    }else{ 
-      // If redistribute_dimers == 0, then start again on the same structure
-      fprintf(stdout," A perfect distribution cannot be reached from this "
-        "distribution.\n I will try again...\n");
-      s--;
     }
+    
+    // Recalculate centers of mass and orientations for type-1 diemrs
+    for(i=0; i<Nd; i++){
+      if(dimers[i].type == 1){
+        update_dimer_parameters(dimers, spheres, cube_edge, i);
+      }
+    }
+
+    // Generate required output files for structure 's'
+    if( exp_str_data(dimers, spheres, cube_edge, Ns, Nd, s) != 0 ){
+      exit_status = EXIT_FAILURE;
+      goto cleanup;
+    }
+        
   } // End structure loop
 
 cleanup:
