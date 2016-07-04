@@ -280,21 +280,27 @@ int main(int argc, char *argv[])
               Nd2, (1e2*Nd2)/(1e0*Nd) );
       fprintf(stdout, " Free spheres            : %4d %6.2lf %%\n",
               Ns3, (1e2*Ns3)/(1e0*Ns) );
-
-      // Recalculate centers of mass and orientations for type-1 diemrs
-      for(i=0; i<Nd; i++){
-        if(dimers[i].type == 1){
-          update_dimer_parameters(dimers, spheres, cube_edge, i);
-        }
-      }
     }   // Done eliminating type-3 spheres
 
-    // Check structure parameters
-    dimer_distribution(dimers, Odistrib, Nd);
+    // Check and display structure parameters after channel setup (if any)
+    if( (Nd-Nd2) % 6 == 0){
+      fprintf(stdout,"\n Perfect DC orientation possible (%d/dir.)\n",
+              (Nd-Nd2)/6);
+    }else{
+      fprintf(stdout,"\n Perfect DC orientation NOT possible (%.2lf/dir.)\n",
+              ((double) (Nd-Nd2))/6e0);
+    }
+
+    test_dimer_distribution(dimers, Odistrib, Nd);
+
+    fprintf(stdout," %-28s %5s %5s %5s %5s %5s %5s\n", 
+          "Initial distribution:", "[i10]", "[110]", "[011]", "[101]", "[0i1]", "[i01]");
+    // Displayed at the first flip or prior to structure export (if perfect 
+    // distribution is alredy present)
     
-    // Check if the current distribution of molecules if even (0) or not (>0)
-    cdd_odd = (Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) 
-            + (Odistrib[3]&1) + (Odistrib[4]&1) + (Odistrib[5]&1);
+//     // Check if the current distribution of molecules if even (0) or not (>0)
+//     cdd_odd = (Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) 
+//             + (Odistrib[3]&1) + (Odistrib[4]&1) + (Odistrib[5]&1);
             
     // Check if the number of dimers in the system is high enough
     low_on_dimers = (((double) Nd - Nd2)/((double) Nd) < 2e-1 ? 1 : 0);
@@ -315,19 +321,23 @@ int main(int argc, char *argv[])
                       valid_dimer_pair[0], valid_dimer_pair[1]);
         }
         
-        // Run zipper every once in a while (zipper length = X*num. of sph.)
-        if(flip_count % 1000000 == 0){
+        // Run zipper every once in a while (zipper length = X*num. of sph.)       
+        if(flip_count %1000000 == 0){
           do{
             // Select random type-1 sphere to start from
             zip_init_sph = (int) (u_RNG() * Ns);
             zip_init_sph = (zip_init_sph < Ns ? zip_init_sph : Ns - 1);
           }while(spheres[zip_init_sph].type != 1);
-          fprintf(stdout," Zipper %6d steps; dist. : ",
+          
+//           test_dimer_distribution(dimers,  Odistrib, Nd);
+//           fprintf(stdout," Step %9d distribution :", flip_count);
+//           display_dimer_distribution(Odistrib);
+          
+          fprintf(stdout," Zipper %7d steps; distr.:",
             zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));
-          for(i=0; i<6; i++){
-            fprintf(stdout," %3d  ", Odistrib[i]);
-          }
-          fprintf(stdout,"\n");
+          // Display distribution after zipper
+          test_dimer_distribution(dimers,  Odistrib, Nd);
+          display_dimer_distribution(Odistrib);
         }
         
         flip_count++;
@@ -335,12 +345,10 @@ int main(int argc, char *argv[])
       
     }
     
-    // Recalculate centers of mass and orientations for type-1 diemrs
-    for(i=0; i<Nd; i++){
-      if(dimers[i].type == 1){
-        update_dimer_parameters(dimers, spheres, cube_edge, i);
-      }
-    }
+    // Perform a final test of the structure prior to export
+    test_dimer_distribution(dimers,  Odistrib, Nd);
+    fprintf(stdout," Step %9d distribution :", flip_count);
+    display_dimer_distribution(Odistrib);
 
     // Generate required output files for structure 's'
     if( exp_str_data(dimers, spheres, cube_edge, Ns, Nd, s) != 0 ){

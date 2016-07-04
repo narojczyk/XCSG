@@ -45,7 +45,7 @@ int validate_distrib(int od[6], int nd1, int step)
   }
   
   if(exit_code == 1 || step % 1000000 == 0){
-    fprintf(stdout," Step %8d distribution : ", step);
+    fprintf(stdout," Step %9d distribution :", step);
     for(i=0; i<6; i++){
       fprintf(stdout," %3d  ",od[i]);
     }
@@ -280,6 +280,14 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
       break;
     }
   } // Infinite 'while' loop
+  
+  // Recalculate centers of mass and orientations for type-1 diemrs
+  for(i=0; i<nd; i++){
+    if(dim[i].type == 1){
+      update_dimer_parameters(dim, sph, box, i);
+    }
+  }
+          
   return ++step;
 }
 

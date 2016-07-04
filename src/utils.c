@@ -157,7 +157,7 @@ int check_dimers_configuration(DIM3D *dim, SPH *sph, double box[3],
   return 0;
 }
 
-void dimer_distribution(DIM3D *dim, int od[6], int nd)
+void test_dimer_distribution(DIM3D *dim, int od[6], int nd)
 {
   int i, j;
   int nd1=0;
@@ -165,31 +165,28 @@ void dimer_distribution(DIM3D *dim, int od[6], int nd)
   int od_local[6]={0,0,0,0,0,0};
   
   for(i=0; i<nd; i++){
-    o_ind = check_dimer_direction(dim, i);
-    if(o_ind != -1){
-      od_local[o_ind]++;
-      nd1++;
+    if(dim[i].type == 1){
+      o_ind = check_dimer_direction(dim, i);
+      if(o_ind != -1){
+        od_local[o_ind]++;
+        nd1++;
+      }
     }
   }
-  
-  if( nd1 % 6 == 0){
-    fprintf(stdout,"\n Perfect DC orientation possible (%d/dir.)\n",nd1/6);
-  }else{
-    fprintf(stdout,"\n Perfect DC orientation NOT possible (%.2lf/dir.)\n",
-           (double) nd1/6e0);
-  }
-  
-  fprintf(stdout," Initial distribution: \n");
-  fprintf(stdout,"%29s %5s %5s %5s %5s %5s %5s\n", 
-          "directions: ", "[i10]", "[110]", "[011]", "[101]", "[0i1]", "[i01]");
-  fprintf(stdout,"%29s ", "molecules: ");
+
   for(j=0; j<6; j++){
     od[j] = od_local[j];
+  }
+}
+
+void display_dimer_distribution(int od[6])
+{
+  int j;
+  
+  for(j=0; j<6; j++){
     fprintf(stdout," %3d  ",od[j]);
   }
-  fprintf(stdout,"\n\n");
-  
-
+  fprintf(stdout,"\n");
 }
 
 int check_dimer_direction(DIM3D *dim, int i)
