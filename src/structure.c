@@ -32,7 +32,7 @@ int validate_distrib(int od[6], int nd1, int step)
   int exit_code = 1; // Assume the structure is good ;)
   
   // Set exit code criteria depending on the number of dimers in the system
-  if( nd1 % 6 == 0 && step < (int) 25e+6 ){
+  if( nd1 % 6 == 0 && step < (int) 1e+8 ){
     // Perfect distribution is possible
     level = (int) (((double) nd1) / 6e0);
   }else{
