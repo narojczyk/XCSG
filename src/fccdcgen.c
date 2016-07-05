@@ -290,8 +290,8 @@ int main(int argc, char *argv[])
 
     test_dimer_distribution(dimers, Odistrib, Nd);
 
-    fprintf(stdout," %-28s %5s %5s %5s %5s %5s %5s\n", 
-          "Initial distribution:", "[i10]", "[110]", "[011]", "[101]", "[0i1]", "[i01]");
+    fprintf(stdout," %-28s %5s %5s %5s %5s %5s %5s\n",
+          "Initial distribution:", "[110]", "[i10]", "[101]", "[i01]", "[011]", "[0i1]");
     // Displayed at the first flip or prior to structure export (if perfect 
     // distribution is alredy present)
             

@@ -28,28 +28,28 @@ int check_dimer_direction(DIM3D *dim, int i)
   int j;
   double fcc_dir[6][3];
   
-  fcc_dir[0][0] = -one;
+  fcc_dir[0][0] =  one;
   fcc_dir[0][1] =  one;
   fcc_dir[0][2] = zero;
   
-  fcc_dir[1][0] =  one;
+  fcc_dir[1][0] = -one;
   fcc_dir[1][1] =  one;
   fcc_dir[1][2] = zero;
   
-  fcc_dir[2][0] = zero;
-  fcc_dir[2][1] =  one;
+  fcc_dir[2][0] =  one;
+  fcc_dir[2][1] = zero;
   fcc_dir[2][2] =  one;
   
-  fcc_dir[3][0] =  one;
+  fcc_dir[3][0] = -one;
   fcc_dir[3][1] = zero;
-  fcc_dir[3][2] =  one;
+  fcc_dir[3][2] =  one;  
   
   fcc_dir[4][0] = zero;
-  fcc_dir[4][1] = -one;
+  fcc_dir[4][1] =  one;
   fcc_dir[4][2] =  one;
   
-  fcc_dir[5][0] = -one;
-  fcc_dir[5][1] = zero;
+  fcc_dir[5][0] = zero;
+  fcc_dir[5][1] = -one;
   fcc_dir[5][2] =  one;
   
   if(dim[i].type == 1){
