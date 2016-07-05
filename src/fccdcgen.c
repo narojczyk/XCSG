@@ -51,8 +51,6 @@ int main(int argc, char *argv[])
   int Odistrib[6] = {0,0,0,0,0,0};
   int valid_dimer_pair[2];
   int i, s;
-  int redistribute_dimers;
-  int cdd_odd = -1;
   int low_on_dimers = 0;
   int flip_count = 0;
 
@@ -138,7 +136,6 @@ int main(int argc, char *argv[])
     fprintf(stdout,"\n");
   }
 
-
   // Allocate memory for spheres and dimers
   spheres = malloc( Ns * sizeof(SPH));
   dimers  = malloc( Nd * sizeof(DIM3D));
@@ -170,7 +167,7 @@ int main(int argc, char *argv[])
       fprintf(stdout," Generating new structure\n");
       // Set fcc structure of spheres
       sph_set_fcc( spheres, Ns, i_edge_fcc_N);
-      // TODO: Set initial arrangemente into dimers
+      // TODO: Set initial dimer structure here
 
     }
 
@@ -297,10 +294,6 @@ int main(int argc, char *argv[])
           "Initial distribution:", "[i10]", "[110]", "[011]", "[101]", "[0i1]", "[i01]");
     // Displayed at the first flip or prior to structure export (if perfect 
     // distribution is alredy present)
-    
-//     // Check if the current distribution of molecules if even (0) or not (>0)
-//     cdd_odd = (Odistrib[0]&1) + (Odistrib[1]&1) + (Odistrib[2]&1) 
-//             + (Odistrib[3]&1) + (Odistrib[4]&1) + (Odistrib[5]&1);
             
     // Check if the number of dimers in the system is high enough
     low_on_dimers = (((double) Nd - Nd2)/((double) Nd) < 2e-1 ? 1 : 0);
@@ -329,10 +322,6 @@ int main(int argc, char *argv[])
             zip_init_sph = (zip_init_sph < Ns ? zip_init_sph : Ns - 1);
           }while(spheres[zip_init_sph].type != 1);
           
-//           test_dimer_distribution(dimers,  Odistrib, Nd);
-//           fprintf(stdout," Step %9d distribution :", flip_count);
-//           display_dimer_distribution(Odistrib);
-          
           fprintf(stdout," Zipper %7d steps; distr.:",
             zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));
           // Display distribution after zipper
@@ -341,9 +330,8 @@ int main(int argc, char *argv[])
         }
         
         flip_count++;
-      }while(validate_distrib(Odistrib, Nd-Nd2, flip_count) == 0);
-      
-    }
+      }while(validate_distrib(Odistrib, Nd-Nd2, flip_count) == 0);      
+    }   // finished with flipping
     
     // Perform a final test of the structure prior to export
     test_dimer_distribution(dimers,  Odistrib, Nd);

@@ -12,11 +12,171 @@
 #include "data.h"
 #include "utils.h"
 #include "algebra.h"
+#include "structure.h"
 
 extern const double zero;
 extern const double one;
 extern const double two;
-extern const double pi;
+
+/*
+ * find_valid_cluster()
+ * 
+ * Find a pair of molecules oriented such that they can be flipped to change
+ * their orientation
+ */
+
+void find_valid_cluster(DIM3D *dim, SPH *sph, double box[3], int nd, 
+                        int vclust[2])
+{
+  int rn_id0, rn_id1;   // array indexes generated randomly
+  int a0, a1, b0, b1;   // sphere indexes of first and second dimer resp.
+  int d0, nd0, nd1;     // selected dimer index and neighboring dimer ids.
+  int candidate0 = 0, candidate1 = 0; // Valid configuration flags
+  
+  vclust[0] = -1;
+  vclust[1] = -1;
+  // Do the following untill valid dimer cluster is located
+  do{   
+    // Select a random type-1 dimer
+    do{
+      d0 = (int) (u_RNG() * (nd+1));
+      d0 = ( d0 >= nd ) ? nd : d0;
+    }while(dim[d0].type != 1);
+      
+    // Get index of spheres for the selected dimer
+    a0 = dim[d0].sph_ind[0];
+    a1 = dim[d0].sph_ind[1];
+      
+    // Randomly get the index of neighboring spheres
+    rn_id0 = (int) (u_RNG() * 12);
+    rn_id0 = ( rn_id0 >= 12 ) ? 11 : rn_id0;
+    
+    rn_id1 = (int) (u_RNG() * 12);
+    rn_id1 = ( rn_id1 >= 12 ) ? 11 : rn_id1;
+    
+    // Get indexes of respective neighbors of atoms a0,a1
+    b0 = sph[a0].ngb[rn_id0];
+    b1 = sph[a1].ngb[rn_id1];
+    
+    // Clear flags
+    candidate0 = candidate1 = 0;
+    nd0 = nd1 = -1;
+      
+    // Make sure b0 is not the other atom of dimer d0 and is a type-1 sphere
+    if(b0 != a1 && sph[b0].type == 1){
+      nd0 = sph[b0].dim_ind;
+      candidate0 = check_dimers_configuration(dim, sph, box, d0, nd0);
+    }
+
+    // Make sure b1 is not the other atom of dimer d0 and is a type-1 sphere
+    if(b1 != a0 && sph[b1].type == 1){
+      nd1 = sph[b1].dim_ind;
+      candidate1 =  check_dimers_configuration(dim, sph, box, d0, nd1);
+    }
+  }while(candidate0 == 0 && candidate1 == 0);
+  
+  if(candidate0 != 0){
+    vclust[0] = d0;
+    vclust[1] = nd0;
+  }else if(candidate1 != 0){
+    vclust[0] = d0;
+    vclust[1] = nd1;
+  }
+}
+
+/*
+ * check_dimers_configuration(dim,sph,d0,d1)
+ * 
+ * Check the orientation of d0 with relation to d1 and return the index
+ * of possible transformation
+ */
+int check_dimers_configuration(DIM3D *dim, SPH *sph, double box[3], 
+                              int d0, int d1)
+{
+  // Sphere ID's
+  int d0atom0 = dim[d0].sph_ind[0];
+  int d0atom1 = dim[d0].sph_ind[1];
+  int d1atom0 = dim[d1].sph_ind[0];
+  int d1atom1 = dim[d1].sph_ind[1];
+  
+  // 'O' times 'O', dot product of dimer orientations
+  double OOdp = vdotu(dim[d0].O, dim[d1].O);
+  
+  // Sphere positions
+  double d0r0[3] = {sph[d0atom0].r[0], sph[d0atom0].r[1], sph[d0atom0].r[2]};
+  double d0r1[3] = {sph[d0atom1].r[0], sph[d0atom1].r[1], sph[d0atom1].r[2]};
+  double d1r0[3] = {sph[d1atom0].r[0], sph[d1atom0].r[1], sph[d1atom0].r[2]};
+  double d1r1[3] = {sph[d1atom1].r[0], sph[d1atom1].r[1], sph[d1atom1].r[2]};
+  
+  // Cross-dimers sphere-to-sphere distances
+  double L_d0r0_d1r0 = distance(d0r0, d1r0, box);
+  double L_d0r0_d1r1 = distance(d0r0, d1r1, box);
+  double L_d0r1_d1r0 = distance(d0r1, d1r0, box);
+  double L_d0r1_d1r1 = distance(d0r1, d1r1, box);
+  
+  // The sum of interatomic lengths
+  double sumL = L_d0r0_d1r0 + L_d0r0_d1r1 + L_d0r1_d1r0 + L_d0r1_d1r1;
+
+  // Out-of-plane tetrahedron configuration
+  if(fabs(sumL - 4e0) < 1e-10 && fabs(OOdp) < 1e-10){
+    return 69;
+  }
+  
+  // In-plane square configuration
+  if(fabs(sumL - two*(one + sqrt(two)) ) < 1e-10 && fabs(OOdp-one) < 1e-10){
+    return 11;
+  }
+  
+  // In-plane dimond configuration
+  if(fabs(sumL - 3e0 - sqrt(3e0) ) < 1e-10 && fabs(OOdp-one) < 1e-10){
+    return 47;
+  }
+  
+  // If no valid configuration found return zero
+  return 0;
+}
+
+/*
+ * test_dimer_distribution()
+ * 
+ * Chceck current partition of dimer orientations
+ */
+void test_dimer_distribution(DIM3D *dim, int od[6], int nd)
+{
+  int i, j;
+  int nd1=0;
+  int o_ind;
+  int od_local[6]={0,0,0,0,0,0};
+  
+  for(i=0; i<nd; i++){
+    if(dim[i].type == 1){
+      o_ind = check_dimer_direction(dim, i);
+      if(o_ind != -1){
+        od_local[o_ind]++;
+        nd1++;
+      }
+    }
+  }
+
+  for(j=0; j<6; j++){
+    od[j] = od_local[j];
+  }
+}
+
+/*
+ * display_dimer_distribution()
+ * 
+ * Display current partition of dimer orientations
+ */
+void display_dimer_distribution(int od[6])
+{
+  int j;
+  
+  for(j=0; j<6; j++){
+    fprintf(stdout," %3d  ",od[j]);
+  }
+  fprintf(stdout,"\n");
+}
 
 /*
  * validate_distrib(od, nd, step)
@@ -150,19 +310,6 @@ void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
     fprintf(stderr," [%s] Illegal orientation index (%d) of fliped dimer %d\n",
       __func__, o_id1, d1);    
   }
-  
-  /*        
-      printf("After fliping\n");
- printf("dimer %3d <% .5lf % .5lf % .5lf> (%3d %3d)\n",
-        d0,dim[d0].O[0],dim[d0].O[1],dim[d0].O[2],
-        dim[d0].sph_ind[0],dim[d0].sph_ind[1]
-       );
- printf("dimer %3d <% .5lf % .5lf % .5lf> (%3d %3d)\n",
-        dngb1,dim[d1].O[0],dim[d1].O[1],dim[d1].O[2],
-        dim[d1].sph_ind[0],dim[d1].sph_ind[1]
-       );
-  */
-  
 }
 
 /*
@@ -406,8 +553,6 @@ void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int nd)
     // To get the distance of a sphere's center from the plane one should
     // (in principle) divide the above by the length of the plane's normal.
     // This is not done here, as the normal is unit-normed.
-
-// printf(" %3d %16.12lf\n",i,dist0);
 
     // If the sphere lies within the plane, include the sphere into
     // plane and continue to the next sphere

@@ -278,7 +278,6 @@ void parse_config(FILE *file)
   if(i_make_slit != 0){
     i_make_channel = 0;
   }
-
 }
 
 /*

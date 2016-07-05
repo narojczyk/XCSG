@@ -1,7 +1,6 @@
 #ifndef _INITIALS_H
 #define _INITIALS_H
 
-
 void print_greetings(void);
 void print_usage(int status);
 void print_version(int status);

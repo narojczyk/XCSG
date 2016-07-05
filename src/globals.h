@@ -9,7 +9,6 @@
 const double zero = (double) 0;
 const double one = (double) 1;
 const double two = (double) 2;
-const double pi = 4e0 * atan(1e0);
 
 // config file variables
 unsigned long int i_seed;       // Seed for MT19937 r.n.g.
@@ -28,7 +27,5 @@ char i_chdesc_file[41];         // File name for the channels' parameters
 // general purpose global variables
 char *prog_name;
 
-
 #endif
-
 /* vim: set tw=80 ts=2 sw=2 et: */

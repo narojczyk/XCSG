@@ -234,9 +234,6 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
   }
   
   // Export structure data to data_spheresGL
-  /*if( export_spheres(f, sph, ns) != 0 ){
-    return EXIT_FAILURE;
-  }*/
   for(i=0; i<ns; i++){
     if(fprintf(f, exp_form, i, 
         sph[i].r[0], sph[i].r[1], sph[i].r[2], 
@@ -259,9 +256,6 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
   }
     
   // Export structure data to data_dimersGL
-  /*if( export_spheres(f, sph, ns) != 0 ){
-    return EXIT_FAILURE;
-  }*/
   for(i=0; i<nd; i++){
     if(fprintf(f, exp_form_d, i, 
         dim[i].R[0], dim[i].R[1], dim[i].R[2],
