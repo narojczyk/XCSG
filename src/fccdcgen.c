@@ -129,8 +129,8 @@ int main(int argc, char *argv[])
       "\tsph. diameter\n");
     for(i=0; i<i_n_channels; i++){
       fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
-              channels[i].offset[0], channels[i].offset[1], channels[i].offset[2],
-              channels[i].normal[0], channels[i].normal[1], channels[i].normal[2],
+              channels[i].os[0], channels[i].os[1], channels[i].os[2],
+              channels[i].nm[0], channels[i].nm[1], channels[i].nm[2],
               channels[i].radius, channels[i].sph_d);  
     }
     fprintf(stdout,"\n");
@@ -186,13 +186,18 @@ int main(int argc, char *argv[])
     }
 
     // Make channel    
-    if(i_make_channel && 
-       channels[0].normal[0]+channels[0].normal[1]+channels[0].normal[2] != 0){
-      fprintf(stdout, " Inserting %d channel(s)\n", i_n_channels);
-    
+    if(i_make_channel){
       for(i=0; i<i_n_channels; i++){
-        make_channel(dimers, spheres, channels[i].normal, channels[i].radius, 
-                     cube_edge, channels[i].offset, channels[i].sph_d, Nd);
+        // Test channel data
+        if(channels[i].nm[0]+channels[i].nm[1]+channels[i].nm[2] != 0){
+          fprintf(stdout, " Inserting %d channel(s)\n", i_n_channels);
+          make_channel(dimers, spheres, channels[i].nm, channels[i].radius, 
+                     cube_edge, channels[i].os, channels[i].sph_d, Nd);
+        }else{
+          fprintf(stderr, 
+                  " [ERR] Missing normal vector for channel %d, skipping\n", 
+                  i_n_channels);
+        }
       }       
     }
 
