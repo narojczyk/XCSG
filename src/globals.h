@@ -19,10 +19,12 @@ int i_iDCto = -1;               // Index of last DC structure
 int i_make_channel = 0;         // Bolean flag to enable nano-channel [0|1]
 int i_make_slit = 0;            // Bolean flag to enable nano-slit [0|1]
 int i_fs_connect = 0;           // Bolean flag to connect free spheres [0|1]
-int i_n_channels = 0;           // Number of channels described in i_chdesc_file
-double i_channel_R = 0e0;       // Nano-channel radius in sigma units
-double i_slit_Th = 0e0;         // Nano-slit thickness in sigma units
-char i_chdesc_file[41];         // File name for the channels' parameters
+int i_n_channels = 0;           // Number of channels described in i_Fchannels
+int i_n_slits = 0;              // Number of slits described in i_Fslits
+double i_channel_R = 0e0;       // Nano-channel radius in sigma units   [obsolete]
+double i_slit_Th = 0e0;         // Nano-slit thickness in sigma units   
+char i_Fchannels[41];           // File name for the channels' parameters
+char i_Fslits[41];              // File name for the channels' parameters
 
 // general purpose global variables
 char *prog_name;

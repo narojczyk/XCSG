@@ -80,9 +80,9 @@ int main(int argc, char *argv[])
   
   // Open and read channel description data
   if( i_make_channel != 0 ){
-    if((f = fopen(i_chdesc_file, "r")) == NULL) {
+    if((f = fopen(i_Fchannels, "r")) == NULL) {
       fprintf(stderr, "  [%s]: error: cannot open channels file: %s\n",
-              prog_name, i_chdesc_file);
+              prog_name, i_Fchannels);
       return EXIT_FAILURE;
     }
     exit_status = parse_channels(f, channels);

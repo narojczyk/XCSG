@@ -28,7 +28,7 @@ extern int i_fs_connect;
 extern int i_n_channels; 
 extern double i_channel_R;
 extern double i_slit_Th;
-extern char i_chdesc_file[41];
+extern char i_Fchannels[41];
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -290,7 +290,7 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %lf\n",      &i_slit_Th);
   fscanf(file, "%*26c %d\n",       &i_fs_connect);
   fscanf(file, "%*26c %d\n",       &i_n_channels);
-  fscanf(file, "%*26c %s\n",        i_chdesc_file);
+  fscanf(file, "%*26c %s\n",        i_Fchannels);
   
   // Parameters sanity check
   if(i_make_slit != 0){
