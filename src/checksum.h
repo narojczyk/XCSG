@@ -4,7 +4,8 @@
 char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 // char* author1 = "Mikolaj Kowalik <kowalik@ifmpan.poznan.pl>";
 char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
-char* build = "Tue Jul  5 11:54:16 CEST 2016";
+char* buildAt = "darkwater";
+char* build = "Mon Jul 31 12:31:14 CEST 2017";
 
 char* fccdcgen_c_SHA1 = "8dc49779d99bb084cd87ee6a126b63c63be587f1";
 char* globals_h_SHA1 = "32e26d9e19026846e43f8ef0fbe6c467770777a4";
@@ -15,7 +16,7 @@ char* data_h_SHA1 = "a9b18441d461e495d2fac057a112113eafd977b5";
 char* algebra_h_SHA1 = "e51585f049fd50662a6338b1775faa06b5bd55e0";
 char* algebra_c_SHA1 = "865fe4e83a6c780e38fce90e83cbdf05df609f98";
 char* initials_h_SHA1 = "bb46773c2e17a5acc42970c73ebca329c6cf5ab4";
-char* initials_c_SHA1 = "b77061669af304436d0ca82832301159ed725d53";
+char* initials_c_SHA1 = "92b2728cecb3a7ae2616e45a9eb4b6dac3c338c8";
 char* io_h_SHA1 = "1de46ce845e474eac2b9999ab4d963a41b401612";
 char* io_c_SHA1 = "2836eba5370c6785dcdc598f37e443d99f629d61";
 char* structure_h_SHA1 = "59a01b1b3a12de3104926b53edd76d44a1c73c49";

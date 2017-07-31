@@ -46,7 +46,7 @@ static struct option long_opts[] = {
 void print_greetings()
 {
   fputs("\n\
-  Generate a D.C. phase of dimers on the f.c.c. lattice with nano-channels\n\
+  Generate a D.C. phase of dimers (with inclusions) on the f.c.c. lattice\n\
   Institute of Molecular Physics, Polish Academy of Sciences\n\n", stdout);
 }
 
@@ -64,8 +64,8 @@ void print_usage(int status)
     fputs("\
     Option list:\n\
       -h, --help     print this information\n\
-      -v, --version  print version and build details\n\
-      -t, --template generate template config file\n", stdout);
+      -t, --template generate template config file\n\
+      -v, --version  print version and build details\n", stdout);
   }
   exit(status);
 }
@@ -82,7 +82,8 @@ void print_version(int status)
 //   fprintf(stdout, "  Created by:\t%s\n\t\t%s\n", author0, author1);
   fprintf(stdout, "  Created by:\t%s\n", author0);
   fprintf(stdout, "  Build by:\t%s\n", builder);
-  fprintf(stdout, "  Build date:\t%s\n\n", build);
+  fprintf(stdout, "  Build date:\t%s\n", build);
+  fprintf(stdout, "  Build host:\t%s\n\n", buildAt);
 
   fprintf(stdout, "  Program build-in features:\n");
     

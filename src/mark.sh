@@ -9,13 +9,16 @@ if [ $? -ne 0 ]; then
 fi
 builderMail=`git config user.email 2>/dev/null`
 if [ $? -ne 0 ]; then
-  builderMail="${builderName}@localhost"
+  builderMail="unknown"
 fi
+
+buildHost=`uname -n`
 
 src_base=(`ls -1 *.[ch] | grep -v checksum.h`)
 N=${#src_base[@]}
 
 eval "sed -i 's/builder.*$/builder\ =\ \"$builderName\ <$builderMail>\";/' checksum.h"
+eval "sed -i 's/buildAt.*$/buildAt\ =\ \"$buildHost\";/' checksum.h"
 
 i=0
 while [ $i -lt $N ]
