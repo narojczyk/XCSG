@@ -350,6 +350,7 @@ cleanup:
   // Free resources
   free(spheres);
   free(dimers);
+  free(channels);
   return exit_status;
 }
 
