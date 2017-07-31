@@ -51,11 +51,11 @@ void print_greetings()
 }
 
 /*
- * print_usage()
+ * print_help()
  *
  * Display description of command line arguments
  */
-void print_usage(int status)
+void print_help(int status)
 {
   if(status != EXIT_SUCCESS){
     fprintf(stderr, "  Try '%s --help' for more information.\n", prog_name);
@@ -64,9 +64,24 @@ void print_usage(int status)
     fputs("\
     Option list:\n\
       -h, --help     print this information\n\
+      -i, --info     print detailed usage description\n\
       -t, --template generate template config file\n\
       -v, --version  print version and build details\n", stdout);
   }
+  exit(status);
+}
+
+/*
+ * print_info()
+ *
+ * Display information about the program usage
+ */
+void print_info(int status)
+{
+  fprintf(stdout, "  %s usage description\n\n", prog_name);
+  
+  fprintf(stdout, "  will be provided here eventually :)\n", prog_name);
+  
   exit(status);
 }
 
@@ -84,6 +99,8 @@ void print_version(int status)
   fprintf(stdout, "  Build by:\t%s\n", builder);
   fprintf(stdout, "  Build date:\t%s\n", build);
   fprintf(stdout, "  Build host:\t%s\n\n", buildAt);
+  
+  fprintf(stdout, "  Try '-i' or '--info' for usage details\n\n");
 
   fprintf(stdout, "  Program build-in features:\n");
     
@@ -290,20 +307,23 @@ void parse_options(int argc, char *argv[], char**f)
 {
   char optc;
   opterr = 0;
-  while ((optc = getopt_long(argc, argv, "hvt", long_opts, &optind)) != -1) {
+  while ((optc = getopt_long(argc, argv, "hvit", long_opts, &optind)) != -1) {
     switch (optc) {
       case 'h':
-        print_usage(EXIT_SUCCESS);
+        print_help(EXIT_SUCCESS);
         break;
+      case 'i':
+        print_info(EXIT_SUCCESS);
+        break;        
+      case 't':
+        generate_template_config(EXIT_SUCCESS);
+        break;        
       case 'v':
         print_version(EXIT_SUCCESS);
         break;
-      case 't':
-        generate_template_config(EXIT_SUCCESS);
-        break;
       default:
         fprintf(stderr, "  [%s]: Unknown option '-%c'\n", prog_name, optopt);
-        print_usage(EXIT_FAILURE);
+        print_help(EXIT_FAILURE);
         break;
     }
   }
@@ -317,7 +337,7 @@ void parse_options(int argc, char *argv[], char**f)
   if(optind == argc) {
     fprintf(stderr, "  [%s]: error: missing config file specification\n",
             prog_name);
-    print_usage(EXIT_FAILURE);
+    print_help(EXIT_FAILURE);
   }
   *f = argv[optind];
 }
