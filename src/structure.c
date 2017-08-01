@@ -521,7 +521,6 @@ void make_channel(
   }
 }
 
-
 /*
  * make_slit(dim,sph,c,ns)
  * Introduces a plane (single atomic layer) into dimer structure. The plane
@@ -529,10 +528,10 @@ void make_channel(
  * atoms belong to the plane, are flagged for braking.
  * NOTE: periodic boundaries are not taken into account here
  */
-void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int ns)
-{
+void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
+               double ssd, double nm[3], int ns){
   int i;
-  double cd[3] = {one*c[0], one*c[1], one*c[2]};
+  double cd[3] = {one*nm[0], one*nm[1], one*nm[2]};
   double p[3];
   double dist0;
 
@@ -556,7 +555,7 @@ void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int ns)
 
     // If the sphere lies within the plane, include the sphere into
     // plane and continue to the next sphere
-    if(fabs(dist0) < sth ){
+    if(fabs(dist0) < thick ){
       // Mark sphere as 'channel-sphere' (type '2')
       sph[i].type = 2;
       // Mark dimers that cross the channel as type '2'

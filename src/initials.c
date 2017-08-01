@@ -18,7 +18,7 @@ extern char *prog_name;
 
 extern unsigned long int i_seed;
 extern int i_edge_fcc_N[3];
-extern int i_normal[3];
+// extern int i_normal[3];
 extern int i_ch_layout[3];
 extern int i_iDCfrom;
 extern int i_iDCto;
@@ -26,9 +26,11 @@ extern int i_make_channel;
 extern int i_make_slit;
 extern int i_fs_connect;
 extern int i_n_channels; 
-extern double i_channel_R;
-extern double i_slit_Th;
+extern int i_n_slits; 
+// extern double i_channel_R;
+// extern double i_slit_Th;
 extern char i_Fchannels[41];
+extern char i_Fslits[41];
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -80,7 +82,7 @@ void print_info(int status)
 {
   fprintf(stdout, "  %s usage description\n\n", prog_name);
   
-  fprintf(stdout, "  will be provided here eventually :)\n", prog_name);
+  fprintf(stdout, "  will be provided here eventually :)\n");
   
   exit(status);
 }
@@ -273,6 +275,54 @@ int parse_channels(FILE *file, CHA ch_tab[])
 }
 
 /*
+ * parse_slits(file, sl_tab)
+ * 
+ * Reads slits' configuration from 'file' and stores data for each slit
+ * respectively.
+ */
+int parse_slits(FILE *file, SLI sl_tab[])
+{
+  int i=0;
+  double sl_off[3] = {0e0, 0e0, 0e0};
+  double sl_nor[3] = {0e0, 0e0, 0e0};
+  double sl_th = 0e0;
+  double s_d = 0e0;
+  
+  // Skip first line in the file
+  fscanf(file, "%*[^\n]\n", NULL);
+
+  // Read data from the file
+  for(i=0; i<i_n_slits; i++){
+    if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n", 
+           &sl_off[0], &sl_off[1], &sl_off[2],
+           &sl_nor[0], &sl_nor[1], &sl_nor[2], &sl_th, &s_d) == EOF){
+      fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
+      fprintf(stderr,"  %d data lines read; %d data lines expected\n", 
+              i, i_n_slits);
+      return EXIT_FAILURE;      
+    }else{
+    
+    // Store offset for the slit 'i'
+    sl_tab[i].os[0] = sl_off[0];
+    sl_tab[i].os[1] = sl_off[1];
+    sl_tab[i].os[2] = sl_off[2];
+    
+    // Store normal vector for the slit 'i'
+    sl_tab[i].nm[0] = sl_nor[0];
+    sl_tab[i].nm[1] = sl_nor[1];
+    sl_tab[i].nm[2] = sl_nor[2];
+    
+    // Store radius for the slit 'i'
+    sl_tab[i].thickness = sl_th;
+    
+    // Store diameter of spheres in slit 'i'
+    sl_tab[i].sph_d = s_d;
+    }
+  }
+  return EXIT_SUCCESS;
+}
+
+/*
  * parse_config(file)
  *
  * Reads configuration option using file descriptor provided.
@@ -282,20 +332,14 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %lu\n",      &i_seed);
   fscanf(file, "%*26c %d %d %d\n", &i_edge_fcc_N[0], &i_edge_fcc_N[1], 
          &i_edge_fcc_N[2]);
-  fscanf(file, "%*26c %d %d %d\n", &i_normal[0], &i_normal[1], &i_normal[2]);
-  fscanf(file, "%*26c %lf\n",      &i_channel_R);
   fscanf(file, "%*26c %d %d\n",    &i_iDCfrom, &i_iDCto);
   fscanf(file, "%*26c %d\n",       &i_make_channel);
   fscanf(file, "%*26c %d\n",       &i_make_slit);
-  fscanf(file, "%*26c %lf\n",      &i_slit_Th);
   fscanf(file, "%*26c %d\n",       &i_fs_connect);
   fscanf(file, "%*26c %d\n",       &i_n_channels);
   fscanf(file, "%*26c %s\n",        i_Fchannels);
-  
-  // Parameters sanity check
-  if(i_make_slit != 0){
-    i_make_channel = 0;
-  }
+  fscanf(file, "%*26c %d\n",       &i_n_slits);
+  fscanf(file, "%*26c %s\n",        i_Fslits);
 }
 
 /*

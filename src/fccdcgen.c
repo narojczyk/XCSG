@@ -20,7 +20,7 @@
  *  #2  Modify slit creation to allow arbitrary slit orientation and position
  *  #3  Generate DC structure
  *  #4  Remove modifying sphere properties from within make_channel 
- *  (and data structure)
+ *  (and data structure)  ????
  */
 
 #include <libgen.h>
@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
   CHA *channels = NULL;
+  SLI *slits = NULL;
 
   char *f_ini = NULL;
   char f_inp[15];
@@ -82,6 +83,9 @@ int main(int argc, char *argv[])
   // Allocate memory for channels' data
   channels = malloc( i_n_channels * sizeof(CHA));
   
+  // Allocate memory for slits' data
+  slits = malloc( i_n_slits * sizeof(CHA));
+  
   // Open and read channel description data
   if( i_make_channel != 0 ){
     if((f = fopen(i_Fchannels, "r")) == NULL) {
@@ -95,6 +99,21 @@ int main(int argc, char *argv[])
       goto cleanup;
     }
   }
+  
+  // Open and read slits description data
+  if( i_make_slit != 0 ){
+    if((f = fopen(i_Fslits, "r")) == NULL) {
+      fprintf(stderr, "  [%s]: error: cannot open slits file: %s\n",
+              prog_name, i_Fslits);
+      return EXIT_FAILURE;
+    }
+    exit_status = parse_slits(f, slits);
+    fclose(f);
+    if(exit_status != EXIT_SUCCESS){
+      goto cleanup;
+    }
+  }
+  
   // Initiate generator with 'seed'
   init_RNG(i_seed);
 
@@ -129,6 +148,7 @@ int main(int argc, char *argv[])
   fprintf(stdout," Number of spheres    : %d\n",Ns);
   fprintf(stdout," Number of channels   : %d\n",i_n_channels);
   if (i_make_channel){
+    fprintf(stdout," Channels data from   : %s\n",i_Fchannels);
     fprintf(stdout," No.\t channell offset\t\t chanel normal\t\tradius"
       "\tsph. diameter\n");
     for(i=0; i<i_n_channels; i++){
@@ -136,6 +156,19 @@ int main(int argc, char *argv[])
               channels[i].os[0], channels[i].os[1], channels[i].os[2],
               channels[i].nm[0], channels[i].nm[1], channels[i].nm[2],
               channels[i].radius, channels[i].sph_d);  
+    }
+    fprintf(stdout,"\n");
+  }
+  fprintf(stdout," Number of slits      : %d\n",i_n_slits);
+  if (i_make_slit){
+    fprintf(stdout," Slit data from       : %s\n",i_Fslits);
+    fprintf(stdout," No.\tslit offset\t\t\tslit normal\t\tthick."
+      "\t sph. diam.\n");
+    for(i=0; i<i_n_slits; i++){
+      fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
+              slits[i].os[0], slits[i].os[1], slits[i].os[2],
+              slits[i].nm[0], slits[i].nm[1], slits[i].nm[2],
+              slits[i].thickness, slits[i].sph_d);  
     }
     fprintf(stdout,"\n");
   }
@@ -206,8 +239,19 @@ int main(int argc, char *argv[])
     }
 
     // Make slit    
-    if(i_make_slit && i_normal[0]+i_normal[1]+i_normal[2] > 0){
-      make_slit(dimers, spheres, i_slit_Th, i_normal, Ns);
+    if(i_make_slit){
+      for(i=0; i<i_n_slits; i++){
+        // Test slit data
+        if(slits[i].nm[0]+slits[i].nm[1]+slits[i].nm[2] != 0){
+          fprintf(stdout, " Inserting %d slit(s)\n", i_n_slits);
+          make_slit(dimers, spheres, cube_edge, slits[i].thickness, slits[i].os, 
+                    slits[i].sph_d, slits[i].nm, Ns);
+        }else{
+          fprintf(stderr, 
+                  " [ERR] Missing normal vector for channel %d, skipping\n", 
+                  i_n_slits);
+        }
+      }       
     }
 
     /* NOTE:
@@ -225,11 +269,11 @@ int main(int argc, char *argv[])
       }
     }
 
-    fprintf(stdout, " Dimers broken   (if any): %4d %6.2lf %%\n",
+    fprintf(stdout, " Dimers broken     (if any): %4d %6.2lf %%\n",
             Nd2, (1e2*Nd2)/(1e0*Nd) );
-    fprintf(stdout, " Channel spheres (if any): %4d %6.2lf %%\n",
+    fprintf(stdout, " Inclusion spheres (if any): %4d %6.2lf %%\n",
             2 * Nd2 - Ns3, (1e2*(2 * Nd2 - Ns3))/(1e0*Ns));
-    fprintf(stdout, " Free spheres    (if any): %4d %6.2lf %%\n",
+    fprintf(stdout, " Free spheres      (if any): %4d %6.2lf %%\n",
             Ns3, (1e2*Ns3)/(1e0*Ns) );
 
     if(Ns3 > 0 && i_fs_connect == 1){
@@ -359,6 +403,7 @@ cleanup:
   // Free resources
   free(spheres);
   free(dimers);
+  free(slits);
   free(channels);
   return exit_status;
 }
