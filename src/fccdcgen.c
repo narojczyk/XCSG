@@ -16,7 +16,11 @@
 /*
  *
  * TODO:
- *
+ *  #1  Move slit data to files
+ *  #2  Modify slit creation to allow arbitrary slit orientation and position
+ *  #3  Generate DC structure
+ *  #4  Remove modifying sphere properties from within make_channel 
+ *  (and data structure)
  */
 
 #include <libgen.h>
@@ -201,9 +205,9 @@ int main(int argc, char *argv[])
       }       
     }
 
-    // Make slit
+    // Make slit    
     if(i_make_slit && i_normal[0]+i_normal[1]+i_normal[2] > 0){
-      make_slit(dimers, spheres, i_slit_Th, i_normal, Nd);
+      make_slit(dimers, spheres, i_slit_Th, i_normal, Ns);
     }
 
     /* NOTE:

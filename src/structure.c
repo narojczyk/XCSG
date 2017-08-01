@@ -523,13 +523,13 @@ void make_channel(
 
 
 /*
- * make_slit(dim.sph,c,nd)
+ * make_slit(dim,sph,c,ns)
  * Introduces a plane (single atomic layer) into dimer structure. The plane
  * is described by coordinate axis origin and normal vector 'c'. Dimers who's
  * atoms belong to the plane, are flagged for braking.
  * NOTE: periodic boundaries are not taken into account here
  */
-void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int nd)
+void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int ns)
 {
   int i;
   double cd[3] = {one*c[0], one*c[1], one*c[2]};
@@ -540,7 +540,7 @@ void make_slit(DIM3D *dim, SPH *sph, double sth, int c[3], int nd)
   vnorm(cd);
 
   // Loop over all spheres in the structure
-  for(i=0; i<2*nd; i++){
+  for(i=0; i<ns; i++){
     // Get the i'th sphere position
     p[0] = sph[i].r[0];
     p[1] = sph[i].r[1];
