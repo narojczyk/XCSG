@@ -86,6 +86,9 @@ int main(int argc, char *argv[])
   
   // Open and read channel description data
   if( i_make_channel != 0 ){
+    // Clean alocated memory for channels
+    memory_clean_channels(channels, i_n_channels);
+    
     if((f = fopen(i_Fchannels, "r")) == NULL) {
       fprintf(stderr, "  [%s]: error: cannot open channels file: %s\n",
               prog_name, i_Fchannels);
@@ -100,6 +103,9 @@ int main(int argc, char *argv[])
   
   // Open and read slits description data
   if( i_make_slit != 0 ){
+    // Clean alocated memory for channels
+    memory_clean_slits(slits, i_n_slits);
+    
     if((f = fopen(i_Fslits, "r")) == NULL) {
       fprintf(stderr, "  [%s]: error: cannot open slits file: %s\n",
               prog_name, i_Fslits);

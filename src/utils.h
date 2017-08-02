@@ -10,6 +10,8 @@ int count_typeX_dimers(DIM3D *dim, int X, int nd);
 
 void memory_clean_spheres(SPH *sph, int nd);
 void memory_clean_dimers(DIM3D *dim, int nd);
+void memory_clean_slits(SLI *sli, int nsl);
+void memory_clean_channels(CHA *cha, int nch);
 void update_sphere_positions(DIM3D *dim, SPH *sph, double box[3], int d);
 void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d);
 void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd);

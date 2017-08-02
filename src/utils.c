@@ -305,6 +305,8 @@ int sph_set_fcc( SPH *sph, int ns, int fcc[3])
 /*
  * memory_clean_spheres(sph, ns)
  * memory_clean_dimers(dim, nd)
+ * memory_clean_slits(sl, nsl)
+ * memory_clean_channels(cha, nch) 
  *
  * Assign default values to data structures' arrays
  */
@@ -361,6 +363,47 @@ void memory_clean_dimers(DIM3D *dim, int nd)
 
 }
 
+void memory_clean_slits(SLI *sli, int nsl)
+{
+  SLI template;
+  int i;
+
+  // Default values for initial array of spheres
+  template.os[0] = zero;     
+  template.os[1] = zero;
+  template.os[2] = zero;     
+  template.nm[0] = zero;
+  template.nm[1] = zero;
+  template.nm[2] = zero;     
+  template.thickness = zero; 
+  template.sph_d = one; 
+
+  // Copy default values to the array
+  for(i=0; i<nsl; i++){
+    sli[i] = template;
+  }
+}
+
+void memory_clean_channels(CHA *cha, int nch)
+{
+  CHA template;
+  int i;
+
+  // Default values for initial array of spheres
+  template.os[0] = zero;     
+  template.os[1] = zero;
+  template.os[2] = zero;     
+  template.nm[0] = zero;
+  template.nm[1] = zero;
+  template.nm[2] = zero;     
+  template.radius = zero; 
+  template.sph_d = one; 
+
+  // Copy default values to the array
+  for(i=0; i<nch; i++){
+    cha[i] = template;
+  }
+}
 
 /*
  * u_RNG()
