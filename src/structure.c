@@ -549,22 +549,22 @@ void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
     p[1][0] = sph[i].r[0] - os[0] + box[0];
     p[1][1] = sph[i].r[1] - os[1];
     p[1][2] = sph[i].r[2] - os[2];
-
-    p[2][0] = sph[i].r[0] - os[0] - box[0];
-    p[2][1] = sph[i].r[1] - os[1];
-    p[2][2] = sph[i].r[2] - os[2];
+    
+    p[2][0] = sph[i].r[0] - os[0];
+    p[2][1] = sph[i].r[1] - os[1] + box[1];
+    p[2][2] = sph[i].r[2] - os[2];    
     
     p[3][0] = sph[i].r[0] - os[0];
-    p[3][1] = sph[i].r[1] - os[1] + box[1];
-    p[3][2] = sph[i].r[2] - os[2];
+    p[3][1] = sph[i].r[1] - os[1];
+    p[3][2] = sph[i].r[2] - os[2] + box[2];
 
-    p[4][0] = sph[i].r[0] - os[0];
-    p[4][1] = sph[i].r[1] - os[1] - box[1];
+    p[4][0] = sph[i].r[0] - os[0] - box[0];
+    p[4][1] = sph[i].r[1] - os[1];
     p[4][2] = sph[i].r[2] - os[2];
-
+    
     p[5][0] = sph[i].r[0] - os[0];
-    p[5][1] = sph[i].r[1] - os[1];
-    p[5][2] = sph[i].r[2] - os[2] + box[2];
+    p[5][1] = sph[i].r[1] - os[1] - box[1];
+    p[5][2] = sph[i].r[2] - os[2];
 
     p[6][0] = sph[i].r[0] - os[0];
     p[6][1] = sph[i].r[1] - os[1];
