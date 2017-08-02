@@ -187,6 +187,7 @@ int main(int argc, char *argv[])
     if(i_iDCfrom >= 0 && i_iDCto >= i_iDCfrom){
       sprintf(f_inp, fo_iDC, s);
       fprintf(stdout," Reading structure from file %s\n",f_inp);
+      
       // Load existing DC structure
       if((f = fopen(f_inp, "r")) == NULL) {
         fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
@@ -198,20 +199,19 @@ int main(int argc, char *argv[])
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
+      
+      // Bind dimers to spheres and vice versa
+      bind_spheres_to_dimers(dimers, spheres, Nd);
+
+      // Generate sphere positions for all dimers
+      for(i=0; i<Nd; i++){
+        update_sphere_positions(dimers, spheres, cube_edge, i);
+      }
     }else{
       fprintf(stdout," Generating new structure\n");
       // Set fcc structure of spheres
       sph_set_fcc( spheres, Ns, i_edge_fcc_N);
       // TODO: Set initial dimer structure here
-
-    }
-
-    // Bind dimers to spheres and vice versa
-    bind_spheres_to_dimers(dimers, spheres, Nd);
-
-    // Generate sphere positions for all dimers
-    for(i=0; i<Nd; i++){
-      update_sphere_positions(dimers, spheres, cube_edge, i);
     }
 
     // Find neighbors for spheres
