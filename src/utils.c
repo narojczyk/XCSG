@@ -382,4 +382,18 @@ void init_RNG(unsigned long int s)
   #endif
 }
 
+void display_stats(int vd, int bd, int is, int fs, int ns)
+{
+    fprintf(stdout, " Dimers valid      (if any): %4d %6.2lf %%\n",
+            vd, (1e2*vd)/(2e0*ns) );
+    fprintf(stdout, " Dimers broken     (if any): %4d %6.2lf %%\n",
+            bd, (1e2*bd)/(2e0*ns) );
+    fprintf(stdout, " Dimers spheres    (if any): %4d %6.2lf %%\n",
+            2 * (vd), (2e2*(vd))/(1e0*ns) );
+    fprintf(stdout, " Inclusion spheres (if any): %4d %6.2lf %%\n",
+            is, (1e2*(is))/(1e0*ns));
+    fprintf(stdout, " Free spheres      (if any): %4d %6.2lf %%\n",
+            fs, (1e2*fs)/(1e0*ns) );
+}
+
 /* vim: set tw=80 ts=2 sw=2 et: */

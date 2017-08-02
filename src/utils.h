@@ -13,6 +13,7 @@ void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d);
 void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd);
 void init_MT19937(unsigned long int s);
 void init_RNG(unsigned long int s);
+void display_stats(int vd, int bd, int is, int fs, int ns);
 
 double u_RNG();
 

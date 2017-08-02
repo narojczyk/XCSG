@@ -267,12 +267,8 @@ int main(int argc, char *argv[])
       }
     }
 
-    fprintf(stdout, " Dimers broken     (if any): %4d %6.2lf %%\n",
-            Nd2, (1e2*Nd2)/(1e0*Nd) );
-    fprintf(stdout, " Inclusion spheres (if any): %4d %6.2lf %%\n",
-            2 * Nd2 - Ns3, (1e2*(2 * Nd2 - Ns3))/(1e0*Ns));
-    fprintf(stdout, " Free spheres      (if any): %4d %6.2lf %%\n",
-            Ns3, (1e2*Ns3)/(1e0*Ns) );
+    // Display current statistics
+    display_stats(Nd-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, Ns);
 
     if(Ns3 > 0 && i_fs_connect == 1){
       // Check if there are even number of type-3 spheres
@@ -322,12 +318,8 @@ int main(int argc, char *argv[])
         }
       }
 
-      fprintf(stdout, "\n Dimers valid            : %4d %6.2lf %%\n",
-              Nd-Nd2, (1e2*(Nd-Nd2))/(1e0*Nd) );
-      fprintf(stdout, " Dimers broken           : %4d %6.2lf %%\n",
-              Nd2, (1e2*Nd2)/(1e0*Nd) );
-      fprintf(stdout, " Free spheres            : %4d %6.2lf %%\n",
-              Ns3, (1e2*Ns3)/(1e0*Ns) );
+      // Display current statistics
+      display_stats(Nd-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, Ns);
     }   // Done eliminating type-3 spheres
 
     // Check and display structure parameters after channel setup (if any)
