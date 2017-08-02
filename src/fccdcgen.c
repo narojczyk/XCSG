@@ -75,8 +75,11 @@ int main(int argc, char *argv[])
             prog_name, f_ini);
     return EXIT_FAILURE;
   }
-  parse_config(f);
+  exit_status = parse_config(f);
   fclose(f);
+  if(exit_status != EXIT_SUCCESS){
+      goto cleanup;
+  }
   
   // Allocate memory for channels' data
   channels = malloc( i_n_channels * sizeof(CHA));

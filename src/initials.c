@@ -350,8 +350,10 @@ int parse_slits(FILE *file, SLI sl_tab[])
  *
  * Reads configuration option using file descriptor provided.
  */
-void parse_config(FILE *file)
+int parse_config(FILE *file)
 {
+  int exit_code = EXIT_SUCCESS;
+  
   fscanf(file, "%*26c %lu\n",      &i_seed);
   fscanf(file, "%*26c %d %d %d\n", &i_edge_fcc_N[0], &i_edge_fcc_N[1], 
          &i_edge_fcc_N[2]);
@@ -363,6 +365,27 @@ void parse_config(FILE *file)
   fscanf(file, "%*26c %s\n",        i_Fchannels);
   fscanf(file, "%*26c %d\n",       &i_n_slits);
   fscanf(file, "%*26c %s\n",        i_Fslits);
+  
+  // Parameters sanity check
+  if(i_iDCto < i_iDCfrom || i_iDCfrom < 0 || i_iDCto < 0){
+    fprintf(stderr," [%s] ERROR: Incorrect parameters for structure indexes\n",
+      __func__);
+    exit_code = EXIT_FAILURE;
+  }
+  
+  if(i_make_channel != 0 && i_n_channels < 1){
+    fprintf(stderr," [%s] ERROR: i_n_channels must be greater than 0\n",
+      __func__);
+    exit_code = EXIT_FAILURE;
+  }
+  
+  if(i_make_slit != 0 && i_n_slits < 1){
+    fprintf(stderr," [%s] ERROR: i_n_slits must be greater than 0\n",
+      __func__);
+    exit_code = EXIT_FAILURE;
+  }
+  
+  return exit_code;
 }
 
 /*
