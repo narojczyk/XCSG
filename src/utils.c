@@ -23,6 +23,30 @@ extern const double zero;
 extern const double one;
 extern const double two;
 
+int count_typeX_dimers(DIM3D *dim, int X, int nd)
+{
+  int i, count=0;
+  
+  for(i=0; i<nd; i++){
+    if(dim[i].type == X){
+      count++;
+    }
+  }
+  return count;  
+}
+
+int count_typeX_spheres(SPH *sph, int X, int ns)
+{
+  int i, count=0;
+  
+  for(i=0; i<ns; i++){
+    if(sph[i].type == X){
+      count++;
+    }
+  }
+  return count;
+}
+
 int check_dimer_direction(DIM3D *dim, int i)
 {
   int j;

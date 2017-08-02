@@ -260,12 +260,7 @@ int main(int argc, char *argv[])
     Nd2 = brake_dimers(dimers, spheres, Nd);
 
     // Check the number of type-3 spheres
-    Ns3 = 0;
-    for(i=0; i<Ns; i++){
-      if(spheres[i].type == 3){
-        Ns3++;
-      }
-    }
+    Ns3 = count_typeX_spheres(spheres, 3, Ns);
 
     // Display current statistics
     display_stats(Nd-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, Ns);
@@ -304,19 +299,11 @@ int main(int argc, char *argv[])
       }
 
       // Check the number of type-3 spheres
-      Ns3 = 0;
-      for(i=0; i<Ns; i++){
-        if(spheres[i].type == 3){
-          Ns3++;
-        }
-      }
+      Ns3 = count_typeX_spheres(spheres, 3, Ns);
+
       // Check the number of type-2 dimers
-      Nd2=0;
-      for(i=0; i<Nd; i++){
-        if(dimers[i].type == 2){
-          Nd2++;
-        }
-      }
+      Nd2 = count_typeX_dimers(dimers, 2, Nd);
+
 
       // Display current statistics
       display_stats(Nd-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, Ns);
