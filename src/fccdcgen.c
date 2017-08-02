@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
   channels = malloc( i_n_channels * sizeof(CHA));
   
   // Allocate memory for slits' data
-  slits = malloc( i_n_slits * sizeof(CHA));
+  slits = malloc( i_n_slits * sizeof(SLI));
   
   // Open and read channel description data
   if( i_make_channel != 0 ){
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
       
       // Load existing DC structure
       if((f = fopen(f_inp, "r")) == NULL) {
-        fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+        fprintf(stderr, "  [%s]: error: cannot open structure file %s\n",
                 prog_name, f_inp);
         exit_status = EXIT_FAILURE;
         goto cleanup;
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
         update_sphere_positions(dimers, spheres, cube_edge, i);
       }
     }else{
-      fprintf(stdout," Generating new structure\n");
+      fprintf(stdout," Generating structure from scratch\n");
       // Set fcc structure of spheres
       sph_set_fcc( spheres, Ns, i_edge_fcc_N);
       // TODO: Set initial dimer structure here
