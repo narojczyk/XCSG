@@ -19,6 +19,7 @@ extern char *prog_name;
 extern unsigned long int i_seed;
 extern int i_edge_fcc_N[3];
 extern int i_ch_layout[3];
+extern int i_load_DC_from_file;
 extern int i_iDCfrom;
 extern int i_iDCto;
 extern int i_make_channel;
@@ -178,15 +179,13 @@ void generate_template_config(int status)
       "  [%s]: error: failed to open file %s\n", __func__, template);
     exit(1);
   }
-
+  
   fprintf(f, "RNG seed                : LUINT\n");
   fprintf(f, "Number of edge fcc cells: INT_x INT_y INT_z\n");
-//   fprintf(f, "Slit normal vector      : INT_h INT_k INT_l\n");
-//   fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
-  fprintf(f, "Load initial DC struct. : INT INT\n");
+  fprintf(f, "Load initial DC   (bool): INT\n");
+  fprintf(f, "Structures (start end)  : INT INT\n");
   fprintf(f, "Make nano-channel (bool): INT\n");
   fprintf(f, "Make nano-slit    (bool): INT\n");
-//   fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
   fprintf(f, "Free sph. connect (bool): INT\n");
   fprintf(f, "Number of channels      : INT\n");
   fprintf(f, "Channels desc. file name: STRING\n");
@@ -357,6 +356,7 @@ int parse_config(FILE *file)
   fscanf(file, "%*26c %lu\n",      &i_seed);
   fscanf(file, "%*26c %d %d %d\n", &i_edge_fcc_N[0], &i_edge_fcc_N[1], 
          &i_edge_fcc_N[2]);
+  fscanf(file, "%*26c %d\n",       &i_load_DC_from_file);
   fscanf(file, "%*26c %d %d\n",    &i_iDCfrom, &i_iDCto);
   fscanf(file, "%*26c %d\n",       &i_make_channel);
   fscanf(file, "%*26c %d\n",       &i_make_slit);
@@ -368,19 +368,19 @@ int parse_config(FILE *file)
   
   // Parameters sanity check
   if(i_iDCto < i_iDCfrom || i_iDCfrom < 0 || i_iDCto < 0){
-    fprintf(stderr," [%s] ERROR: Incorrect parameters for structure indexes\n",
+    fprintf(stderr," [%s] error: Incorrect parameters for structure indexes\n",
       __func__);
     exit_code = EXIT_FAILURE;
   }
   
   if(i_make_channel != 0 && i_n_channels < 1){
-    fprintf(stderr," [%s] ERROR: i_n_channels must be greater than 0\n",
+    fprintf(stderr," [%s] error: i_n_channels must be greater than 0\n",
       __func__);
     exit_code = EXIT_FAILURE;
   }
   
   if(i_make_slit != 0 && i_n_slits < 1){
-    fprintf(stderr," [%s] ERROR: i_n_slits must be greater than 0\n",
+    fprintf(stderr," [%s] error: i_n_slits must be greater than 0\n",
       __func__);
     exit_code = EXIT_FAILURE;
   }

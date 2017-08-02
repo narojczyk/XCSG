@@ -192,8 +192,8 @@ int main(int argc, char *argv[])
     memory_clean_dimers(dimers, Nd);
 
     fprintf(stdout,"\n ***\tProcessing structure %d\n",s);
-    // Regarding the ini settings, load input structure or grnerate a new one
-    if(i_iDCfrom >= 0 && i_iDCto >= i_iDCfrom){
+    // Load input structure or generate a new one depending on the ini settings
+    if(i_load_DC_from_file == 1){
       sprintf(f_inp, fo_iDC, s);
       fprintf(stdout," Reading structure from file %s\n",f_inp);
       
@@ -216,18 +216,28 @@ int main(int argc, char *argv[])
       for(i=0; i<Nd; i++){
         update_sphere_positions(dimers, spheres, cube_edge, i);
       }
+      
+      // Find neighbors for spheres
+      if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
+        exit_status = EXIT_FAILURE;
+        goto cleanup;
+      }
     }else{
       fprintf(stdout," Generating structure from scratch\n");
       // Set fcc structure of spheres
-      sph_set_fcc( spheres, Ns, i_edge_fcc_N);
+      sph_set_fcc( spheres, Ns, i_edge_fcc_N);      
+          
+      // Find neighbors for spheres
+      if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
+        exit_status = EXIT_FAILURE;
+        goto cleanup;
+      }
+      
       // TODO: Set initial dimer structure here
+goto cleanup;
     }
 
-    // Find neighbors for spheres
-    if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
-    }
+
 
     // Make channel    
     if(i_make_channel){
