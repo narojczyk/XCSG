@@ -233,8 +233,13 @@ int main(int argc, char *argv[])
         goto cleanup;
       }
       
+      for(i=0; i<Nd; i++){
+        dimers[i].type = 2;
+      }
+      
       // TODO: Set initial dimer structure here
-goto cleanup;
+
+// goto cleanup;
     }
 
 

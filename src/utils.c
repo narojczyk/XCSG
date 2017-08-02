@@ -130,7 +130,7 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
   int broken_dimers = 0;
   for(i=0; i<nd; i++){
 
-    // Check for type set by make_channel()
+    // Check for type set by make_channel() or make_slit()
     if(dim[i].type == 2){
       // Get atom indexes
       atom0 = dim[i].sph_ind[0];
@@ -141,16 +141,20 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
       dim[i].sph_ind[1] = -1;
 
       // Set the free (non-channel) sphere (if any) to type '3'
-      if(sph[atom0].type == 1){
+      if(atom0 >= 0 && sph[atom0].type == 1){
         sph[atom0].type = 3;
       }
-      if(sph[atom1].type == 1){
+      if(atom1 >= 0 && sph[atom1].type == 1){
         sph[atom1].type = 3;
       }
 
       // Remove dimer index from the sphere data
-      sph[atom0].dim_ind = -1;
-      sph[atom1].dim_ind = -1;
+      if(atom0 >= 0){
+        sph[atom0].dim_ind = -1;
+      }
+      if(atom1 >= 0){
+        sph[atom1].dim_ind = -1;
+      }
 
       // Count broken dimers
       broken_dimers++;
@@ -256,6 +260,7 @@ int sph_set_fcc( SPH *sph, int ns, int fcc[3])
   int i, x=0, y=0, z=0;
   double cell_edge = sqrt(two);
   double cell_edge_half = cell_edge/two;
+  double com[3]={zero,zero,zero};
 
   for(i=0; i<ns; i+=4){
     sph[i  ].r[0] = - fcc[0] * cell_edge_half + x * cell_edge;
@@ -278,6 +283,18 @@ int sph_set_fcc( SPH *sph, int ns, int fcc[3])
     sph[i+1].d = one;
     sph[i+2].d = one;
     sph[i+3].d = one;
+    
+    // set default type as free spheres
+    sph[i  ].type = 3;
+    sph[i+1].type = 3;
+    sph[i+2].type = 3;
+    sph[i+3].type = 3;
+    
+    // clear dimer indexes
+    sph[i  ].dim_ind = -1;
+    sph[i+1].dim_ind = -1;
+    sph[i+2].dim_ind = -1;
+    sph[i+3].dim_ind = -1;
 
     // Increment cell in x direction
     x++;
@@ -298,8 +315,21 @@ int sph_set_fcc( SPH *sph, int ns, int fcc[3])
     fprintf(stderr," index %d > Ns\n",(x+1)*(y+1)*(z+1)*4);
     return EXIT_FAILURE;
   }
+  // Calculate the center of mass of the new structure
+  for(i=0; i<ns; i++){
+    com[0] += sph[i].r[0];
+    com[1] += sph[i].r[1];
+    com[2] += sph[i].r[2];
 
-  return 0;
+  }
+  // Move the center of mass of the new structure to point 0
+  for(i=0; i<ns; i++){
+    sph[i].r[0] -= com[0]/ns;
+    sph[i].r[1] -= com[1]/ns;
+    sph[i].r[2] -= com[2]/ns;
+  }
+
+  return EXIT_SUCCESS;
 }
 
 /*
