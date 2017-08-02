@@ -18,7 +18,6 @@ extern char *prog_name;
 
 extern unsigned long int i_seed;
 extern int i_edge_fcc_N[3];
-// extern int i_normal[3];
 extern int i_ch_layout[3];
 extern int i_iDCfrom;
 extern int i_iDCto;
@@ -27,8 +26,6 @@ extern int i_make_slit;
 extern int i_fs_connect;
 extern int i_n_channels; 
 extern int i_n_slits; 
-// extern double i_channel_R;
-// extern double i_slit_Th;
 extern char i_Fchannels[41];
 extern char i_Fslits[41];
 
@@ -173,6 +170,7 @@ void generate_template_config(int status)
   FILE  *f;
   char *template = strcat(prog_name,".ini.sed");
   char *template_ch = "channels.dat.sed";
+  char *template_sl = "slits.dat.sed";
 
   // Opening file
   if ((f = fopen(template,"w")) == NULL ) {
@@ -181,20 +179,23 @@ void generate_template_config(int status)
     exit(1);
   }
 
-  fprintf(f, "MT19937 seed            : LUINT\n");
+  fprintf(f, "RNG seed                : LUINT\n");
   fprintf(f, "Number of edge fcc cells: INT_x INT_y INT_z\n");
-  fprintf(f, "Slit normal vector      : INT_h INT_k INT_l\n");
-  fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
+//   fprintf(f, "Slit normal vector      : INT_h INT_k INT_l\n");
+//   fprintf(f, "Chanel radius [sigma]   : DOUBLE\n");
   fprintf(f, "Load initial DC struct. : INT INT\n");
   fprintf(f, "Make nano-channel (bool): INT\n");
-  fprintf(f, "Make nano-slit (bool)   : INT\n");
-  fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
+  fprintf(f, "Make nano-slit    (bool): INT\n");
+//   fprintf(f, "Slit thickness [sigma]  : DOUBLE\n");
   fprintf(f, "Free sph. connect (bool): INT\n");
   fprintf(f, "Number of channels      : INT\n");
   fprintf(f, "Channels desc. file name: STRING\n");
+  fprintf(f, "Number of slits         : INT\n");
+  fprintf(f, "Slits descrip. file name: STRING\n");
   
   if(fclose(f)==0) {
-    fprintf(stdout," Program template config file written to: %s\n",template);
+    fprintf(stdout," Main  program template config file written to: %s\n",
+            template);
   } else {
     fprintf(stderr,
       "  [%s]: error: failed to write to: %s\n", __func__, template);
@@ -217,10 +218,32 @@ void generate_template_config(int status)
   if(fclose(f)==0) {
     fprintf(stdout," Channel desc. template config file written to: %s\n",
             template_ch);
-    exit(status);
   } else {
     fprintf(stderr,
       "  [%s]: error: failed to write to: %s\n", __func__, template_ch);
+    exit(EXIT_FAILURE);
+  }
+  
+  // Opening file
+  if ((f = fopen(template_sl,"w")) == NULL ) {
+    fprintf(stderr,
+      "  [%s]: error: failed to open file %s\n", __func__, template_sl);
+    exit(1);
+  }
+                
+  fprintf(f, "#plane offset (3F); plane normal (3F); pl. thickness (1F);");
+  fprintf(f, " plane sph. diameter (1F). 1st line is skipped.\n");
+  fprintf(f, " DOUBLE_ox DOUBLE_oy DOUBLE_oz ");
+  fprintf(f, " DOUBLE_cx DOUBLE_cy DOUBLE_cz ");
+  fprintf(f, " DOUBLE_cr DOUBLE_sd\n");
+  
+  if(fclose(f)==0) {
+    fprintf(stdout," Slit descrip. template config file written to: %s\n",
+            template_sl);
+    exit(status);
+  } else {
+    fprintf(stderr,
+      "  [%s]: error: failed to write to: %s\n", __func__, template_sl);
     exit(EXIT_FAILURE);
   }
   
