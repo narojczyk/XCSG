@@ -16,8 +16,6 @@
 /*
  *
  * TODO:
- *  #1  Move slit data to files
- *  #2  Modify slit creation to allow arbitrary slit orientation and position
  *  #3  Generate DC structure
  *  #4  Remove modifying sphere properties from within make_channel 
  *  (and data structure)  ????

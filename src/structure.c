@@ -530,36 +530,66 @@ void make_channel(
  */
 void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
                double ssd, double nm[3], int ns){
-  int i;
+  int i,j;
   double cd[3] = {one*nm[0], one*nm[1], one*nm[2]};
-  double p[3];
-  double dist0;
+  double p[7][3];
+  double dist;
 
   // Transform the plane vector to unit vector;
   vnorm(cd);
 
   // Loop over all spheres in the structure
   for(i=0; i<ns; i++){
-    // Get the i'th sphere position
-    p[0] = sph[i].r[0];
-    p[1] = sph[i].r[1];
-    p[2] = sph[i].r[2];
+    // Get the i'th sphere position relative to the plane inside periodic box
+    p[0][0] = sph[i].r[0] - os[0];
+    p[0][1] = sph[i].r[1] - os[1];
+    p[0][2] = sph[i].r[2] - os[2];
+    
+    // ... and in the six of the sorrounding images 
+    p[1][0] = sph[i].r[0] - os[0] + box[0];
+    p[1][1] = sph[i].r[1] - os[1];
+    p[1][2] = sph[i].r[2] - os[2];
 
-    // Calculate the dot product of the normal to the plane located at
-    // axes origin and a position vector of i'th sphere
-    dist0 = zero - cd[0]*p[0] - cd[1]*p[1] - cd[2]*p[2];
+    p[2][0] = sph[i].r[0] - os[0] - box[0];
+    p[2][1] = sph[i].r[1] - os[1];
+    p[2][2] = sph[i].r[2] - os[2];
+    
+    p[3][0] = sph[i].r[0] - os[0];
+    p[3][1] = sph[i].r[1] - os[1] + box[1];
+    p[3][2] = sph[i].r[2] - os[2];
 
-    // To get the distance of a sphere's center from the plane one should
-    // (in principle) divide the above by the length of the plane's normal.
-    // This is not done here, as the normal is unit-normed.
+    p[4][0] = sph[i].r[0] - os[0];
+    p[4][1] = sph[i].r[1] - os[1] - box[1];
+    p[4][2] = sph[i].r[2] - os[2];
 
-    // If the sphere lies within the plane, include the sphere into
-    // plane and continue to the next sphere
-    if(fabs(dist0) < thick ){
-      // Mark sphere as 'channel-sphere' (type '2')
-      sph[i].type = 2;
-      // Mark dimers that cross the channel as type '2'
-      dim[ sph[i].dim_ind ].type = 2;
+    p[5][0] = sph[i].r[0] - os[0];
+    p[5][1] = sph[i].r[1] - os[1];
+    p[5][2] = sph[i].r[2] - os[2] + box[2];
+
+    p[6][0] = sph[i].r[0] - os[0];
+    p[6][1] = sph[i].r[1] - os[1];
+    p[6][2] = sph[i].r[2] - os[2] - box[2];  
+    
+    for(j=0; j<=6; j++){
+      // Calculate the dot product of the normal to the plane located at
+      // axes origin and a position vector of i'th sphere
+      dist = zero - cd[0]*p[j][0] - cd[1]*p[j][1] - cd[2]*p[j][2];
+
+      // To get the distance of a sphere's center from the plane one should
+      // (in principle) divide the above by the length of the plane's normal.
+      // This is not done here, as the normal is unit-normed.
+
+      // If the sphere lies within the plane, include the sphere into
+      // plane and continue to the next sphere
+      if(fabs(dist) < thick ){
+        // Mark sphere as 'channel-sphere' (type '2')
+        sph[i].type = 2;
+        // Mark dimers that cross the channel as type '2'
+        dim[ sph[i].dim_ind ].type = 2;
+        // Escape the j-loop if sphere is found to lie on the lane
+        break;
+      }
+      
     }
   }
 }
