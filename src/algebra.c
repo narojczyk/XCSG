@@ -68,6 +68,24 @@ double distance(double p[3], double q[3], double box[3])
 }
 
 /*
+ * distance_absolute(p, q)
+ *
+ * Computes the absolute distance between points p and q in real space
+ */
+double distance_absolute(double p[3], double q[3])
+{
+  int i;
+  double pq[3];
+    
+  for (i=0; i<3; i++){
+    // Calculat absolute distance between p and q
+    pq[i] = q[i] - p[i];
+  }
+
+  return sqrt(pq[0]*pq[0] + pq[1]*pq[1] + pq[2]*pq[2]);
+}
+
+/*
  *
  * vmodule(v)
  *

@@ -495,22 +495,29 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
  */
 void make_channel(
   DIM3D *dim, SPH *sph, double c[3], double cr, double box[3], double tr[3],
-  double csd, int nd)
+  double csd, int ns)
 {
   int i;
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
-  double llc_r[3] = {-box[0]/two + one, -box[1]/two + one, -box[2]/two + one};
-  double p1[3], p2[3], pxcd[3], dist0, dist1;
-
+  double p1[3], p2[3], pxcd[3], dist, dist0, dist1;
+  double ref[3] = {-box[0]/two, -box[1]/two, -box[2]/two};
+  double min_dist = box[0]; // any relatively large number will do
+  
   // Find coordinates of the sphere in lower-left-corner of the cube
-  for(i=1; i<2*nd; i++){
-    if(sph[i].r[0]<llc_r[0] && sph[i].r[1]<llc_r[1] && sph[i].r[2]< llc_r[2]){
+  for(i=0; i<ns; i++){
+    // Calculate distance (no p.b.) of a sphere from a reference point
+    dist = distance_absolute(ref, sph[i].r);
+
+    if(dist < min_dist){
+      // take the sphere coordinates as closer to ref than the previous one
       llc[0] = sph[i].r[0];
       llc[1] = sph[i].r[1];
       llc[2] = sph[i].r[2];
+      // remember the new distance
+      min_dist = dist;
     }
   }
-  
+
   // Translate channel by specified vector
   for(i=0; i<3; i++){
     llc[i] += tr[i];
@@ -521,7 +528,7 @@ void make_channel(
   ccp[1] = llc[1] * (one - c[1]);
   ccp[2] = llc[2] * (one - c[2]);
 
-  for(i=0; i<2*nd; i++){
+  for(i=0; i<ns; i++){
     // Determine vector from point 'i' to lowe-left-corner atom of the cube
     p1[0] = llc[0] - sph[i].r[0];
     p1[1] = llc[1] - sph[i].r[1];

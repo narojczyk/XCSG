@@ -19,6 +19,7 @@ void vdotM(double v[3], double m[3][3], double w[3]);
 void vcrossu(double v[3], double u[3], double w[3]);
 void vector(double p[3], double q[3], double pq[3], double box[3]);
 double distance(double p[3], double q[3], double box[3]);
+double distance_absolute(double p[3], double q[3]);
 double vmodule(double v[3]);
 double vdotu(double v[3], double u[3]);
 

@@ -16,9 +16,6 @@
 /*
  *
  * TODO:
- *  #3  Generate DC structure
- *  #4  Remove modifying sphere properties from within make_channel 
- *  (and data structure)  ????
  */
 
 #include <libgen.h>
@@ -251,7 +248,7 @@ int main(int argc, char *argv[])
         if(channels[i].nm[0]+channels[i].nm[1]+channels[i].nm[2] != 0){
           fprintf(stdout, " Inserting %d channel(s)\n", i_n_channels);
           make_channel(dimers, spheres, channels[i].nm, channels[i].radius, 
-                     cube_edge, channels[i].os, channels[i].sph_d, Nd);
+                     cube_edge, channels[i].os, channels[i].sph_d, Ns);
         }else{
           fprintf(stderr, 
                   " [ERR] Missing normal vector for channel %d, skipping\n", 
