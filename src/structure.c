@@ -19,6 +19,50 @@ extern const double one;
 extern const double two;
 
 /*
+ * make_dimer(dim,sph,s1,s2)
+ * 
+ * Make dimer from s1,s2 spheres and update all relevant table data
+ */
+
+void make_dimer(DIM3D *dim, SPH *sph, double box[3], int s1, int s2, int nd)
+{
+  int i = 0;
+  int dim_t2_ind = -1;
+  
+  // Find a free (type-2) dimer
+  while(dim[i].type == 1){
+    i++;
+    // Brake the loop if no free dimers are found - this should not happen
+    if(i == nd){
+      i = -1;
+      fprintf(stderr," [%s] error: No free type-2 dimers found.\n",__func__);
+      fprintf(stderr," Cannot connect free spheres - this should not happen\n");
+      break;
+    }
+  }
+  
+  if(i >= 0 && dim[i].type != 1){    
+    dim_t2_ind = i;
+
+    // Update sphere data
+    sph[s1].type = 1;
+    sph[s1].dim_ind = dim_t2_ind;
+
+    sph[s2].type = 1;
+    sph[s2].dim_ind = dim_t2_ind;
+
+    // Update dimer data
+    dim[dim_t2_ind].type = 1;
+    dim[dim_t2_ind].sph_ind[0] = s1;
+    dim[dim_t2_ind].sph_ind[1] = s2;
+    update_dimer_parameters(dim, sph, box, dim_t2_ind);
+  }else{
+    fprintf(stderr,
+            " [%s] error: Inconsistent data in dimer structure.\n",__func__);
+  }  
+}
+
+/*
  * find_valid_cluster()
  * 
  * Find a pair of molecules oriented such that they can be flipped to change
@@ -154,6 +198,10 @@ void test_dimer_distribution(DIM3D *dim, int od[6], int nd)
       if(o_ind != -1){
         od_local[o_ind]++;
         nd1++;
+      }else{
+        fprintf(stderr,
+                " [%s] error code received from 'check_dimer_direction()'\n",
+                __func__);        
       }
     }
   }
@@ -433,8 +481,7 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
     if(dim[i].type == 1){
       update_dimer_parameters(dim, sph, box, i);
     }
-  }
-          
+  }          
   return ++step;
 }
 
@@ -493,7 +540,6 @@ void make_channel(
     p2[0] = p2[0] - box[0] * round( p2[0]/box[0] );
     p2[1] = p2[1] - box[1] * round( p2[1]/box[1] );
     p2[2] = p2[2] - box[2] * round( p2[2]/box[2] );
-
     // Calculate the cross product pxcd = p x cd
     vcrossu(p1, c, pxcd);
 
@@ -513,10 +559,14 @@ void make_channel(
     if(dist0 < cr || dist1 < cr){
       // Mark sphere as 'channel-sphere' (type '2')
       sph[i].type = 2;
+      
       // ... and assign the respective channel-sphere-diameter
       sph[i].d = csd;
+     
       // Mark dimers that cross the channel as type '2'
-      dim[ sph[i].dim_ind ].type = 2;
+      if( sph[i].dim_ind >= 0 ){
+        dim[ sph[i].dim_ind ].type = 2;
+      }      
     }
   }
 }
@@ -585,7 +635,9 @@ void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
         // Mark sphere as 'channel-sphere' (type '2')
         sph[i].type = 2;
         // Mark dimers that cross the channel as type '2'
-        dim[ sph[i].dim_ind ].type = 2;
+        if( sph[i].dim_ind >= 0 ){
+          dim[ sph[i].dim_ind ].type = 2;
+        }
         // Escape the j-loop if sphere is found to lie on the lane
         break;
       }

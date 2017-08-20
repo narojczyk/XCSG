@@ -23,24 +23,140 @@ extern const double zero;
 extern const double one;
 extern const double two;
 
-int count_typeX_dimers(DIM3D *dim, int X, int nd)
+int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
+{
+  int nseek = 0;
+  int sngb_id, sngb_type, rand_ngb, valid_ngb;
+  
+  // Check if sph_ind is a valid array index
+  if(sph_ind == -1){
+    return -1;
+  }
+  
+  // Select random neighbor of sph_ind
+  do{
+    valid_ngb = 0;
+    // Select neighbor index randomly
+    rand_ngb = (int) (u_RNG() * 12);
+    // Check not to go outside the naighbor list
+    rand_ngb = (rand_ngb < 12) ? rand_ngb : 11;
+    // Get neighbor id and type
+    sngb_id = sph[sph_ind].ngb[rand_ngb];
+    sngb_type = sph[ sngb_id ].type;
+
+    // Select type-x sphere
+    if(sngb_type == x ) {
+      valid_ngb = 1;
+    }
+    // Security check not to select type-2 spheres EVER!
+    if(sngb_type == 2){
+      valid_ngb = 0;
+    }     
+    // Watchdog: count attempts to select valid neighbor
+    nseek++;
+    if(nseek > 500){
+      fprintf(stderr,
+              " [%s] error: Cannot locate type %d neighbour of %d sphere\n",
+              __func__, x, sph_ind);
+      fprintf(stderr," [%s] terminated by Watchdog\n", __func__);
+      return -1;
+    }
+  }while(!valid_ngb);
+  
+  return sngb_id;
+}
+
+/*
+ * draw_sphere_typeX(sph,x,ns)
+ * 
+ * Randomly select a sphere of type x
+ * BEWARE of the infinite loop possibility.
+ */
+int draw_sphere_typeX(SPH *sph, int x, int ns)
+{
+  int sp_id = (int) (u_RNG() * ns);
+  
+  while(1){
+    // Check not to go outside the sphere tab
+    sp_id = (sp_id < ns) ? sp_id : ns - 1;    
+    // Check if the type is ok
+    if(sph[sp_id].type == x){
+      return sp_id;
+    }else{
+      // Draw another index in type is not correct.
+      sp_id = (int) (u_RNG() * ns);
+    }
+  }  
+}
+
+/*
+ * find_critical_FS(sph,ns)
+ * 
+ * Find a free type-3 sphere with the lowest count of type-3 neigbours
+ */
+
+int find_critical_FS(SPH *sph, int ns)
+{
+  int i, ic;
+  int min_ic = 100;
+  int crit_fs = -1;
+
+  for(i=0; i<ns; i++){
+    if(sph[i].type == 3){
+      // clear type-3 spheres count for i'th sphere
+      ic = count_typeX_sp_neighbours(sph, 3, i)  ;
+      
+      // remember 'i' index if calculated ic is minimal
+      if(ic > 0 && ic < min_ic){
+        min_ic = ic;
+        crit_fs = i;
+      }      
+    }
+  }  
+
+  // Return the index of the selected sphere (or error code if none found)
+  return crit_fs;
+}
+
+/*
+ * count_typeX_sp_neighbours(sph,x,id)
+ * 
+ * check the neighbours list of sphere 'id' and count all neighbours of type x
+ */
+int count_typeX_sp_neighbours(SPH *sph, int x, int id)
+{
+  int ic = 0, i;
+  
+  // Check if id is valid array index
+  if(id == -1){
+    return -1;
+  }
+  
+  // count possible neighbours to connect.
+  for(i=0; i<12; i++){
+    ic += (sph[sph[id].ngb[i]].type == x) ? 1 : 0 ;
+  }      
+  return ic;  
+}
+
+int count_typeX_dimers(DIM3D *dim, int x, int nd)
 {
   int i, count=0;
   
   for(i=0; i<nd; i++){
-    if(dim[i].type == X){
+    if(dim[i].type == x){
       count++;
     }
   }
   return count;  
 }
 
-int count_typeX_spheres(SPH *sph, int X, int ns)
+int count_typeX_spheres(SPH *sph, int x, int ns)
 {
   int i, count=0;
   
   for(i=0; i<ns; i++){
-    if(sph[i].type == X){
+    if(sph[i].type == x){
       count++;
     }
   }
@@ -83,7 +199,9 @@ int check_dimer_direction(DIM3D *dim, int i)
       }
     }
   }
-  
+  fprintf(stderr,"\n [%s] error: unrecognized dimer orientation\n",__func__);
+  fprintf(stderr," dimer %d O: %.16le %.16le %.16le\n", 
+          i, dim[i].O[0], dim[i].O[1], dim[i].O[2]);
   return -1;
 }
 
@@ -196,6 +314,7 @@ void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d)
   dim[d].O[1] = O[1];
   dim[d].O[2] = O[2];
 }
+ 
 /*
  * update_sphere_positions(dim, sph, d)
  * Updates positions of spheres for the dimer 'd' with regard to the periodic
@@ -370,7 +489,7 @@ void memory_clean_dimers(DIM3D *dim, int nd)
   int i;
 
   // Default values for initial array of dimers
-  template.type = 1;    // regular dimers
+  template.type = 2;    // regular dimers
   template.sph_ind[0] = -1;
   template.sph_ind[1] = -1;
   template.R[0] = zero;
@@ -492,5 +611,6 @@ void display_stats(int vd, int bd, int is, int fs, int ns)
     fprintf(stdout, " Free spheres      (if any): %4d %6.2lf %%\n",
             fs, (1e2*fs)/(1e0*ns) );
 }
+
 
 /* vim: set tw=80 ts=2 sw=2 et: */

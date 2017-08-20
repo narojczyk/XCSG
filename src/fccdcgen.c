@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 
   const char *fo_iDC = "initdc3d.%04d";
 
+//   int *spFScount = NULL;
   int exit_status;
   int Ns, Nd, Nd2, Ns3, Ns3_odd;
   int zip_Ns3_runs=0, zip_init_sph=-1;
@@ -58,6 +59,8 @@ int main(int argc, char *argv[])
   int flip_count = 0;
 
   double cube_edge[3];
+  
+  int fsi, fsn, fsi_chances;
   
 
   // Extract program name from the path.
@@ -183,6 +186,7 @@ int main(int argc, char *argv[])
   // Allocate memory for spheres and dimers
   spheres = malloc( Ns * sizeof(SPH));
   dimers  = malloc( Nd * sizeof(DIM3D));
+//   spFScount = malloc( Ns * sizeof(int));
 
   // Loop over selected set of structures
   for(s=i_iDCfrom; s<=i_iDCto; s++){
@@ -190,6 +194,7 @@ int main(int argc, char *argv[])
     // Clean allocated memory
     memory_clean_spheres(spheres, Ns);
     memory_clean_dimers(dimers, Nd);
+    // memory for spFScount is cleared on first use
 
     fprintf(stdout,"\n ***\tProcessing structure %d\n",s);
     // Load input structure or generate a new one depending on the ini settings
@@ -223,7 +228,7 @@ int main(int argc, char *argv[])
         goto cleanup;
       }
     }else{
-      fprintf(stdout," Generating structure from scratch\n");
+      fprintf(stdout," Generating pure f.c.c. structure\n");
       // Set fcc structure of spheres
       sph_set_fcc( spheres, Ns, i_edge_fcc_N);      
           
@@ -233,17 +238,12 @@ int main(int argc, char *argv[])
         goto cleanup;
       }
       
+      // Flag all dimers as broken at this point
       for(i=0; i<Nd; i++){
         dimers[i].type = 2;
       }
-      
-      // TODO: Set initial dimer structure here
-
-// goto cleanup;
     }
-
-
-
+  
     // Make channel    
     if(i_make_channel){
       for(i=0; i<i_n_channels; i++){
@@ -287,9 +287,53 @@ int main(int argc, char *argv[])
     Ns3 = count_typeX_spheres(spheres, 3, Ns);
 
     // Display current statistics
-    display_stats(Nd-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, Ns);
+    display_stats(Nd-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, Ns);
+  
+    // Randomly (where possible) connect all neighbouring free spheres 
+    // into dimers. In critical cases start with spheres with fewest possible 
+    // connections
+    if(Ns3 > 1 && i_fs_connect == 1){
+      
+      fprintf(stdout,"\n\n Randomly connecting all possible free spheres\n");
+      do{
+        // Find a sphere with the lowes count of chanses to form a dimer
+        fsi = find_critical_FS(spheres, Ns);
+        fsi_chances = count_typeX_sp_neighbours(spheres, 3, fsi);
+        
+        // If the possibilities are high enough, select sphere randomly
+        if(fsi_chances >= 5){
+          fsi = draw_sphere_typeX(spheres, 3, Ns);
+          fsi_chances = count_typeX_sp_neighbours(spheres, 3, fsi);
+        }
+        
+        // Randomly select neighbour of fsi 
+        fsn = draw_ngb_sphere_typeX(spheres, 3, fsi);
 
-    if(Ns3 > 0 && i_fs_connect == 1){
+        // Create a valid dimer from the pair of spheres
+        if( fsi != -1 && fsn != -1){
+          make_dimer(dimers, spheres, cube_edge, fsi, fsn, Nd);
+          // Update free spheres count
+          Ns3 -= 2;
+        }
+      }while(fsi_chances > 0);
+      
+      test_dimer_distribution(dimers, Odistrib, Nd);
+      
+      // Check the number of type-2 dimers
+      Nd2 = count_typeX_dimers(dimers, 2, Nd);
+
+      // Check the number of type-3 spheres
+      Ns3 = count_typeX_spheres(spheres, 3, Ns);
+    
+      // Display current statistics
+      display_stats(Nd-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, Ns);
+    }
+
+    // Eliminate remaining free spheres (if any) using zipper
+    if(Ns3 > 1 && i_fs_connect == 1){
+      fprintf(stdout, "\n\n Connecting remaining free spheres with zipper\n",
+              zip_Ns3_runs);
+      
       // Check if there are even number of type-3 spheres
       Ns3_odd=0;
       Ns3_odd = Ns3 & 1;
@@ -321,6 +365,8 @@ int main(int argc, char *argv[])
                   zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, Ns),
                   --zip_Ns3_runs);
       }
+      
+      test_dimer_distribution(dimers, Odistrib, Nd);
 
       // Check the number of type-3 spheres
       Ns3 = count_typeX_spheres(spheres, 3, Ns);
@@ -328,12 +374,11 @@ int main(int argc, char *argv[])
       // Check the number of type-2 dimers
       Nd2 = count_typeX_dimers(dimers, 2, Nd);
 
-
       // Display current statistics
       display_stats(Nd-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, Ns);
     }   // Done eliminating type-3 spheres
 
-    // Check and display structure parameters after channel setup (if any)
+    // Check and display structure parameters after inclusions setup (if any)
     if( (Nd-Nd2) % 6 == 0){
       fprintf(stdout,"\n Perfect DC orientation possible (%d/dir.)\n",
               (Nd-Nd2)/6);
@@ -342,7 +387,7 @@ int main(int argc, char *argv[])
               ((double) (Nd-Nd2))/6e0);
     }
 
-    test_dimer_distribution(dimers, Odistrib, Nd);
+    
 
     fprintf(stdout," %-28s %5s %5s %5s %5s %5s %5s\n",
           "Initial distribution:", "[110]", "[i10]", "[101]", "[i01]", "[011]", "[0i1]");
@@ -375,14 +420,13 @@ int main(int argc, char *argv[])
             zip_init_sph = (int) (u_RNG() * Ns);
             zip_init_sph = (zip_init_sph < Ns ? zip_init_sph : Ns - 1);
           }while(spheres[zip_init_sph].type != 1);
-          
           fprintf(stdout," Zipper %7d steps; distr.:",
-            zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));
+            zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));  
           // Display distribution after zipper
           test_dimer_distribution(dimers,  Odistrib, Nd);
           display_dimer_distribution(Odistrib);
         }
-        
+
         flip_count++;
       }while(validate_distrib(Odistrib, Nd-Nd2, flip_count) == 0);      
     }   // finished with flipping
@@ -402,6 +446,7 @@ int main(int argc, char *argv[])
 
 cleanup:
   // Free resources
+//   free(spFScount);
   free(spheres);
   free(dimers);
   free(slits);

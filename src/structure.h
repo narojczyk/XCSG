@@ -6,6 +6,7 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms);
 int check_dimers_configuration(DIM3D *dim, SPH *sph, double box[3], 
                               int d0, int d1);
 
+void make_dimer(DIM3D *dim, SPH *sph, double box[3], int s1, int s2, int nd);
 void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, 
                  int d1);
 void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3], 
