@@ -33,9 +33,9 @@ typedef struct
 typedef struct
 {
   double os[3];     // Channel offset from the base atom in the structure
-  double nm[3];     // Vector parallel to the channel axis
-  double thickness; // The radius of the channel
-  double sph_d;     // Diameter of spheres in the channel
+  double nm[3];     // Vector orthogonal to the plane
+  double thickness; // The thickness of the plane
+  double sph_d;     // Diameter of spheres in the plane
 } SLI;
 
 #endif
