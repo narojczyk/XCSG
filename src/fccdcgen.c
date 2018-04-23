@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
   int flip_count = 0;
 
   double cube_edge[3];
-  
+
   int fsi, fsn, fsi_chances;
-  
+
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -80,18 +80,18 @@ int main(int argc, char *argv[])
   if(exit_status != EXIT_SUCCESS){
       goto cleanup;
   }
-  
+
   // Allocate memory for channels' data
   channels = malloc( i_n_channels * sizeof(CHA));
-  
+
   // Allocate memory for slits' data
   slits = malloc( i_n_slits * sizeof(SLI));
-  
+
   // Open and read channel description data
   if( i_make_channel != 0 ){
     // Clean alocated memory for channels
     memory_clean_channels(channels, i_n_channels);
-    
+
     if((f = fopen(i_Fchannels, "r")) == NULL) {
       fprintf(stderr, "  [%s]: error: cannot open channels file: %s\n",
               prog_name, i_Fchannels);
@@ -103,12 +103,12 @@ int main(int argc, char *argv[])
       goto cleanup;
     }
   }
-  
+
   // Open and read slits description data
   if( i_make_slit != 0 ){
     // Clean alocated memory for channels
     memory_clean_slits(slits, i_n_slits);
-    
+
     if((f = fopen(i_Fslits, "r")) == NULL) {
       fprintf(stderr, "  [%s]: error: cannot open slits file: %s\n",
               prog_name, i_Fslits);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
       goto cleanup;
     }
   }
-  
+
   // Initiate generator with 'seed'
   init_RNG(i_seed);
 
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
       fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
               channels[i].os[0], channels[i].os[1], channels[i].os[2],
               channels[i].nm[0], channels[i].nm[1], channels[i].nm[2],
-              channels[i].radius, channels[i].sph_d);  
+              channels[i].radius, channels[i].sph_d);
     }
     fprintf(stdout,"\n");
   }
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
       fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
               slits[i].os[0], slits[i].os[1], slits[i].os[2],
               slits[i].nm[0], slits[i].nm[1], slits[i].nm[2],
-              slits[i].thickness, slits[i].sph_d);  
+              slits[i].thickness, slits[i].sph_d);
     }
     fprintf(stdout,"\n");
   }
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
     if(i_load_DC_from_file == 1){
       sprintf(f_inp, fo_iDC, s);
       fprintf(stdout," Reading structure from file %s\n",f_inp);
-      
+
       // Load existing DC structure
       if((f = fopen(f_inp, "r")) == NULL) {
         fprintf(stderr, "  [%s]: error: cannot open structure file %s\n",
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
-      
+
       // Bind dimers to spheres and vice versa
       bind_spheres_to_dimers(dimers, spheres, Nd);
 
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
       for(i=0; i<Nd; i++){
         update_sphere_positions(dimers, spheres, cube_edge, i);
       }
-      
+
       // Find neighbors for spheres
       if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
         exit_status = EXIT_FAILURE;
@@ -227,50 +227,50 @@ int main(int argc, char *argv[])
     }else{
       fprintf(stdout," Generating pure f.c.c. structure\n");
       // Set fcc structure of spheres
-      sph_set_fcc( spheres, Ns, i_edge_fcc_N);      
-          
+      sph_set_fcc( spheres, Ns, i_edge_fcc_N);
+
       // Find neighbors for spheres
       if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
-      
+
       // Flag all dimers as broken at this point
       for(i=0; i<Nd; i++){
         dimers[i].type = 2;
       }
     }
-  
-    // Make channel    
+
+    // Make channel
     if(i_make_channel){
       for(i=0; i<i_n_channels; i++){
         // Test channel data
         if(channels[i].nm[0]+channels[i].nm[1]+channels[i].nm[2] != 0){
           fprintf(stdout, " Inserting %d channel(s)\n", i_n_channels);
-          make_channel(dimers, spheres, channels[i].nm, channels[i].radius, 
+          make_channel(dimers, spheres, channels[i].nm, channels[i].radius,
                      cube_edge, channels[i].os, channels[i].sph_d, Ns);
         }else{
-          fprintf(stderr, 
-                  " [ERR] Missing normal vector for channel %d, skipping\n", 
+          fprintf(stderr,
+                  " [ERR] Missing normal vector for channel %d, skipping\n",
                   i_n_channels);
         }
-      }       
+      }
     }
 
-    // Make slit    
+    // Make slit
     if(i_make_slit){
       for(i=0; i<i_n_slits; i++){
         // Test slit data
         if(slits[i].nm[0]+slits[i].nm[1]+slits[i].nm[2] != 0){
           fprintf(stdout, " Inserting %d slit(s)\n", i_n_slits);
-          make_slit(dimers, spheres, cube_edge, slits[i].thickness, slits[i].os, 
+          make_slit(dimers, spheres, cube_edge, slits[i].thickness, slits[i].os,
                     slits[i].sph_d, slits[i].nm, Ns);
         }else{
-          fprintf(stderr, 
-                  " [ERR] Missing normal vector for channel %d, skipping\n", 
+          fprintf(stderr,
+                  " [ERR] Missing normal vector for channel %d, skipping\n",
                   i_n_slits);
         }
-      }       
+      }
     }
 
     /* NOTE:
@@ -285,25 +285,25 @@ int main(int argc, char *argv[])
 
     // Display current statistics
     display_stats(Nd-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, Ns);
-  
-    // Randomly (where possible) connect all neighbouring free spheres 
-    // into dimers. In critical cases start with spheres with fewest possible 
+
+    // Randomly (where possible) connect all neighbouring free spheres
+    // into dimers. In critical cases start with spheres with fewest possible
     // connections
     if(Ns3 > 1 && i_fs_connect == 1){
-      
+
       fprintf(stdout,"\n\n Randomly connecting all possible free spheres\n");
       do{
         // Find a sphere with the lowes count of chanses to form a dimer
         fsi = find_critical_FS(spheres, Ns);
         fsi_chances = count_typeX_sp_neighbours(spheres, 3, fsi);
-        
+
         // If the possibilities are high enough, select sphere randomly
         if(fsi_chances >= 5){
           fsi = draw_sphere_typeX(spheres, 3, Ns);
           fsi_chances = count_typeX_sp_neighbours(spheres, 3, fsi);
         }
-        
-        // Randomly select neighbour of fsi 
+
+        // Randomly select neighbour of fsi
         fsn = draw_ngb_sphere_typeX(spheres, 3, fsi);
 
         // Create a valid dimer from the pair of spheres
@@ -313,15 +313,15 @@ int main(int argc, char *argv[])
           Ns3 -= 2;
         }
       }while(fsi_chances > 0);
-      
+
       test_dimer_distribution(dimers, Odistrib, Nd);
-      
+
       // Check the number of type-2 dimers
       Nd2 = count_typeX_dimers(dimers, 2, Nd);
 
       // Check the number of type-3 spheres
       Ns3 = count_typeX_spheres(spheres, 3, Ns);
-    
+
       // Display current statistics
       display_stats(Nd-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, Ns);
     }
@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
     if(Ns3 > 1 && i_fs_connect == 1){
       fprintf(stdout, "\n\n Connecting remaining free spheres with zipper\n",
               zip_Ns3_runs);
-      
+
       // Check if there are even number of type-3 spheres
       Ns3_odd=0;
       Ns3_odd = Ns3 & 1;
@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
                   zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, Ns),
                   --zip_Ns3_runs);
       }
-      
+
       test_dimer_distribution(dimers, Odistrib, Nd);
 
       // Check the number of type-3 spheres
@@ -384,33 +384,33 @@ int main(int argc, char *argv[])
               ((double) (Nd-Nd2))/6e0);
     }
 
-    
+
 
     fprintf(stdout," %-28s %5s %5s %5s %5s %5s %5s\n",
           "Initial distribution:", "[110]", "[i10]", "[101]", "[i01]", "[011]", "[0i1]");
-    // Displayed at the first flip or prior to structure export (if perfect 
+    // Displayed at the first flip or prior to structure export (if perfect
     // distribution is alredy present)
-            
+
     // Check if the number of dimers in the system is high enough
     low_on_dimers = (((double) Nd - Nd2)/((double) Nd) < 2e-1 ? 1 : 0);
     if(low_on_dimers != 0){
       fprintf(stdout, " Number of dimers to low to get a good structure\n");
     }
-    
+
     // Reorganize molecules to get best distribution possible
     flip_count = 0;
-    if( !validate_distrib(Odistrib, Nd-Nd2, flip_count) && !low_on_dimers ){      
-      do{     
+    if( !validate_distrib(Odistrib, Nd-Nd2, flip_count) && !low_on_dimers ){
+      do{
         // Find a valid dimer configuration to flip orientations
         find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
 
         // Flip dimers
         if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
-          flip_dimers(dimers, spheres, cube_edge, Odistrib, 
+          flip_dimers(dimers, spheres, cube_edge, Odistrib,
                       valid_dimer_pair[0], valid_dimer_pair[1]);
         }
-        
-        // Run zipper every once in a while (zipper length = X*num. of sph.)       
+
+        // Run zipper every once in a while (zipper length = X*num. of sph.)
         if(flip_count %1000000 == 0){
           do{
             // Select random type-1 sphere to start from
@@ -418,16 +418,16 @@ int main(int argc, char *argv[])
             zip_init_sph = (zip_init_sph < Ns ? zip_init_sph : Ns - 1);
           }while(spheres[zip_init_sph].type != 1);
           fprintf(stdout," Zipper %7d steps; distr.:",
-            zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));  
+            zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));
           // Display distribution after zipper
           test_dimer_distribution(dimers,  Odistrib, Nd);
           display_dimer_distribution(Odistrib);
         }
 
         flip_count++;
-      }while(validate_distrib(Odistrib, Nd-Nd2, flip_count) == 0);      
+      }while(validate_distrib(Odistrib, Nd-Nd2, flip_count) == 0);
     }   // finished with flipping
-    
+
     // Perform a final test of the structure prior to export
     test_dimer_distribution(dimers,  Odistrib, Nd);
     fprintf(stdout," Step %9d distribution :", flip_count);
@@ -438,7 +438,7 @@ int main(int argc, char *argv[])
       exit_status = EXIT_FAILURE;
       goto cleanup;
     }
-        
+
   } // End structure loop
 
 cleanup:

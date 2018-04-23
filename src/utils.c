@@ -27,12 +27,12 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
 {
   int nseek = 0;
   int sngb_id, sngb_type, rand_ngb, valid_ngb;
-  
+
   // Check if sph_ind is a valid array index
   if(sph_ind == -1){
     return -1;
   }
-  
+
   // Select random neighbor of sph_ind
   do{
     valid_ngb = 0;
@@ -51,7 +51,7 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
     // Security check not to select type-2 spheres EVER!
     if(sngb_type == 2){
       valid_ngb = 0;
-    }     
+    }
     // Watchdog: count attempts to select valid neighbor
     nseek++;
     if(nseek > 500){
@@ -62,23 +62,23 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
       return -1;
     }
   }while(!valid_ngb);
-  
+
   return sngb_id;
 }
 
 /*
  * draw_sphere_typeX(sph,x,ns)
- * 
+ *
  * Randomly select a sphere of type x
  * BEWARE of the infinite loop possibility.
  */
 int draw_sphere_typeX(SPH *sph, int x, int ns)
 {
   int sp_id = (int) (u_RNG() * ns);
-  
+
   while(1){
     // Check not to go outside the sphere tab
-    sp_id = (sp_id < ns) ? sp_id : ns - 1;    
+    sp_id = (sp_id < ns) ? sp_id : ns - 1;
     // Check if the type is ok
     if(sph[sp_id].type == x){
       return sp_id;
@@ -86,12 +86,12 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
       // Draw another index in type is not correct.
       sp_id = (int) (u_RNG() * ns);
     }
-  }  
+  }
 }
 
 /*
  * find_critical_FS(sph,ns)
- * 
+ *
  * Find a free type-3 sphere with the lowest count of type-3 neigbours
  */
 
@@ -105,14 +105,14 @@ int find_critical_FS(SPH *sph, int ns)
     if(sph[i].type == 3){
       // clear type-3 spheres count for i'th sphere
       ic = count_typeX_sp_neighbours(sph, 3, i)  ;
-      
+
       // remember 'i' index if calculated ic is minimal
       if(ic > 0 && ic < min_ic){
         min_ic = ic;
         crit_fs = i;
-      }      
+      }
     }
-  }  
+  }
 
   // Return the index of the selected sphere (or error code if none found)
   return crit_fs;
@@ -120,41 +120,41 @@ int find_critical_FS(SPH *sph, int ns)
 
 /*
  * count_typeX_sp_neighbours(sph,x,id)
- * 
+ *
  * check the neighbours list of sphere 'id' and count all neighbours of type x
  */
 int count_typeX_sp_neighbours(SPH *sph, int x, int id)
 {
   int ic = 0, i;
-  
+
   // Check if id is valid array index
   if(id == -1){
     return -1;
   }
-  
+
   // count possible neighbours to connect.
   for(i=0; i<12; i++){
     ic += (sph[sph[id].ngb[i]].type == x) ? 1 : 0 ;
-  }      
-  return ic;  
+  }
+  return ic;
 }
 
 int count_typeX_dimers(DIM3D *dim, int x, int nd)
 {
   int i, count=0;
-  
+
   for(i=0; i<nd; i++){
     if(dim[i].type == x){
       count++;
     }
   }
-  return count;  
+  return count;
 }
 
 int count_typeX_spheres(SPH *sph, int x, int ns)
 {
   int i, count=0;
-  
+
   for(i=0; i<ns; i++){
     if(sph[i].type == x){
       count++;
@@ -167,31 +167,31 @@ int check_dimer_direction(DIM3D *dim, int i)
 {
   int j;
   double fcc_dir[6][3];
-  
+
   fcc_dir[0][0] =  one;
   fcc_dir[0][1] =  one;
   fcc_dir[0][2] = zero;
-  
+
   fcc_dir[1][0] = -one;
   fcc_dir[1][1] =  one;
   fcc_dir[1][2] = zero;
-  
+
   fcc_dir[2][0] =  one;
   fcc_dir[2][1] = zero;
   fcc_dir[2][2] =  one;
-  
+
   fcc_dir[3][0] = -one;
   fcc_dir[3][1] = zero;
-  fcc_dir[3][2] =  one;  
-  
+  fcc_dir[3][2] =  one;
+
   fcc_dir[4][0] = zero;
   fcc_dir[4][1] =  one;
   fcc_dir[4][2] =  one;
-  
+
   fcc_dir[5][0] = zero;
   fcc_dir[5][1] = -one;
   fcc_dir[5][2] =  one;
-  
+
   if(dim[i].type == 1){
     for(j=0; j<6; j++){
       if( fabs(fabs(vdotu(fcc_dir[j], dim[i].O)) -sqrt(two)) < 1e-10 ){
@@ -200,7 +200,7 @@ int check_dimer_direction(DIM3D *dim, int i)
     }
   }
   fprintf(stderr,"\n [%s] error: unrecognized dimer orientation\n",__func__);
-  fprintf(stderr," dimer %d O: %.16le %.16le %.16le\n", 
+  fprintf(stderr," dimer %d O: %.16le %.16le %.16le\n",
           i, dim[i].O[0], dim[i].O[1], dim[i].O[2]);
   return -1;
 }
@@ -284,7 +284,7 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
 
 /*
  * update_dimer_parameters(dim,sph,box,d)
- * 
+ *
  * Update the orientation and the center of mass coordinates for dimer d,
  * based on the spheres' positions
  */
@@ -294,18 +294,18 @@ void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d)
   int atom1 = dim[d].sph_ind[1];
   double O[3] = {zero,zero,zero};
   double R[3] = {zero,zero,zero};
-  
+
   // Calculate current dimer orientation
   vector(sph[atom1].r, sph[atom0].r, O, box);
-  
+
   // Unit norm the calculated vector
   vnorm(O);
-  
+
   // Calculate the center of mass
   R[0] = sph[atom1].r[0] + O[0]/two;
   R[1] = sph[atom1].r[1] + O[1]/two;
   R[2] = sph[atom1].r[2] + O[2]/two;
-  
+
   // Store calculations in the data structure
   dim[d].R[0] = R[0];
   dim[d].R[1] = R[1];
@@ -314,7 +314,7 @@ void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d)
   dim[d].O[1] = O[1];
   dim[d].O[2] = O[2];
 }
- 
+
 /*
  * update_sphere_positions(dim, sph, d)
  * Updates positions of spheres for the dimer 'd' with regard to the periodic
@@ -402,13 +402,13 @@ int sph_set_fcc( SPH *sph, int ns, int fcc[3])
     sph[i+1].d = one;
     sph[i+2].d = one;
     sph[i+3].d = one;
-    
+
     // set default type as free spheres
     sph[i  ].type = 3;
     sph[i+1].type = 3;
     sph[i+2].type = 3;
     sph[i+3].type = 3;
-    
+
     // clear dimer indexes
     sph[i  ].dim_ind = -1;
     sph[i+1].dim_ind = -1;
@@ -455,7 +455,7 @@ int sph_set_fcc( SPH *sph, int ns, int fcc[3])
  * memory_clean_spheres(sph, ns)
  * memory_clean_dimers(dim, nd)
  * memory_clean_slits(sl, nsl)
- * memory_clean_channels(cha, nch) 
+ * memory_clean_channels(cha, nch)
  *
  * Assign default values to data structures' arrays
  */
@@ -518,14 +518,14 @@ void memory_clean_slits(SLI *sli, int nsl)
   int i;
 
   // Default values for initial array of spheres
-  template.os[0] = zero;     
+  template.os[0] = zero;
   template.os[1] = zero;
-  template.os[2] = zero;     
+  template.os[2] = zero;
   template.nm[0] = zero;
   template.nm[1] = zero;
-  template.nm[2] = zero;     
-  template.thickness = zero; 
-  template.sph_d = one; 
+  template.nm[2] = zero;
+  template.thickness = zero;
+  template.sph_d = one;
 
   // Copy default values to the array
   for(i=0; i<nsl; i++){
@@ -539,14 +539,14 @@ void memory_clean_channels(CHA *cha, int nch)
   int i;
 
   // Default values for initial array of spheres
-  template.os[0] = zero;     
+  template.os[0] = zero;
   template.os[1] = zero;
-  template.os[2] = zero;     
+  template.os[2] = zero;
   template.nm[0] = zero;
   template.nm[1] = zero;
-  template.nm[2] = zero;     
-  template.radius = zero; 
-  template.sph_d = one; 
+  template.nm[2] = zero;
+  template.radius = zero;
+  template.sph_d = one;
 
   // Copy default values to the array
   for(i=0; i<nch; i++){

@@ -23,7 +23,7 @@ int exp_str_data(DIM3D *dim, SPH *sph, double box[3], int ns, int nd, int strn)
   char f_out[15];
   const char *fo_exp_dim = "d3d%05d.csv";
   const char *fo_exp_sph = "s3d%05d.csv";
-  
+
   // Set the file name for dimer data and open the file for write
   sprintf(f_out, fo_exp_dim, strn);
   fprintf(stdout,"\n Writting dimer  data to file %s\n",f_out);
@@ -49,15 +49,15 @@ int exp_str_data(DIM3D *dim, SPH *sph, double box[3], int ns, int nd, int strn)
   // Export sphere datat to file
   export_spheres(file, sph, ns);
   fclose(file);
-  
-  
+
+
 #ifdef DATA_VISGL_OUTPUT
   // Export data in data_visGL format
   if( export_to_GLviewer(dim, sph, box, strn, ns, nd) != 0 ){
     return EXIT_FAILURE;
   }
 #endif
-  
+
   return 0;
 }
 
@@ -68,16 +68,16 @@ int exp_str_data(DIM3D *dim, SPH *sph, double box[3], int ns, int nd, int strn)
  */
 int export_dimers(FILE *file, DIM3D *dim, int nd)
 {
-  const char *exp_f_dim = 
+  const char *exp_f_dim =
   "%5d  %2d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %5d %5d\n";
   int i,k=0;
 
   for(i=0; i<nd; i++){
     // Export information about molecule
     if(dim[i].type == 1){
-      if(fprintf(file, exp_f_dim, 
+      if(fprintf(file, exp_f_dim,
           k++, dim[i].type,
-          dim[i].R[0], dim[i].R[1], dim[i].R[2], 
+          dim[i].R[0], dim[i].R[1], dim[i].R[2],
           dim[i].O[0], dim[i].O[1], dim[i].O[2],
           dim[i].L,
           dim[i].sph_ind[0], dim[i].sph_ind[1]) == EOF){
@@ -86,13 +86,13 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
       }
     }
   }
-  
+
   for(i=0; i<nd; i++){
     // Export information about molecule
     if(dim[i].type == 2){
-      if(fprintf(file, exp_f_dim, 
+      if(fprintf(file, exp_f_dim,
           k++, dim[i].type,
-          dim[i].R[0], dim[i].R[1], dim[i].R[2], 
+          dim[i].R[0], dim[i].R[1], dim[i].R[2],
           dim[i].O[0], dim[i].O[1], dim[i].O[2],
           dim[i].L,
           dim[i].sph_ind[0], dim[i].sph_ind[1]) == EOF){
@@ -116,17 +116,17 @@ int export_spheres(FILE *file, SPH *sph, int ns)
 
   for(i=0; i<ns; i++){
     // Write sphere positions and properties
-    if(fprintf(file, exp_f_sph_0, 
-        i, sph[i].type, 
+    if(fprintf(file, exp_f_sph_0,
+        i, sph[i].type,
         sph[i].r[0], sph[i].r[1], sph[i].r[2], sph[i].d) == EOF){
       fprintf(stderr,"  [%s]: error: exporting sphere data failed\n", __func__);
       return EXIT_FAILURE;
     }
-    
+
     // Write sphere neighbors table
-    if(fprintf(file, exp_f_sph_1, 
-        sph[i].ngb[0], sph[i].ngb[1], sph[i].ngb[2], sph[i].ngb[3], 
-        sph[i].ngb[4], sph[i].ngb[5], sph[i].ngb[6], sph[i].ngb[7], 
+    if(fprintf(file, exp_f_sph_1,
+        sph[i].ngb[0], sph[i].ngb[1], sph[i].ngb[2], sph[i].ngb[3],
+        sph[i].ngb[4], sph[i].ngb[5], sph[i].ngb[6], sph[i].ngb[7],
         sph[i].ngb[8], sph[i].ngb[9], sph[i].ngb[10], sph[i].ngb[11]) == EOF){
       fprintf(stderr,"  [%s]: error: exporting sphere data failed\n", __func__);
       return EXIT_FAILURE;
@@ -142,9 +142,9 @@ int export_spheres(FILE *file, SPH *sph, int ns)
 int load_dcsgen(FILE *file, DIM3D *dim, double box[3], int nd)
 {
   // Template structure instance for data input
-  DIM3D tm; 
+  DIM3D tm;
   int i, j;
-  
+
   // Initiate fields not read from file with defaults
   tm.type = 1;
   tm.sph_ind[0] = tm.sph_ind[1] = -1;
@@ -181,7 +181,7 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box[3], int nd)
     fprintf(stderr,
       "  [%s]: error: allocated memory for %d molecules\n", __func__, nd);
   }
-  
+
   // Return the number of data lines imported
   return i;
 }
@@ -190,19 +190,19 @@ int load_dcsgen(FILE *file, DIM3D *dim, double box[3], int nd)
  * export_to_GLviewer()
  * Export required data for viewing the structure by data_visGL
  */
-int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns, 
+int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
                        int nd)
 {
   FILE *f;
   int i;
   char gl_f_out[16];
   const char *exp_form = "%5d % .16le % .16le % .16le %.16le %d\n";
-  const char *exp_form_d = 
+  const char *exp_form_d =
     "%5d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %d\n";
   const char *data_visGL="vcontrol.ini";
   const char *data_spheresGL="gl_s3d%05d.csv";
   const char *data_dimersGL="gl_d3d%05d.csv";
-  
+
   // Prepare control file for data_visGL program
   if((f = fopen(data_visGL, "w")) == NULL) {
     fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
@@ -216,14 +216,14 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
   fprintf(f, "Input lines per file    : %d\n", ns);
   fprintf(f, "Structure index         : %d\n", strn);
   fprintf(f, "(# not used          #) : %d\n", 0);
-  fprintf(f, "Box dimensions          : %.16le %.16le %.16le\n", 
+  fprintf(f, "Box dimensions          : %.16le %.16le %.16le\n",
           box[0], box[1], box[2]);
   fprintf(f, "(# not used          #) : %.16le\n", 0e0);
   fprintf(f, "(# not used          #) : %.16le\n", 0e0);
-  
+
   // Close data_visGL
   fclose(f);
-  
+
   // Open file for spheres data
   sprintf(gl_f_out, data_spheresGL, strn);
   fprintf(stdout," Writting sphere data to file %s (visualization)\n",gl_f_out);
@@ -232,20 +232,20 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
             __func__, gl_f_out);
     return EXIT_FAILURE;
   }
-  
+
   // Export structure data to data_spheresGL
   for(i=0; i<ns; i++){
-    if(fprintf(f, exp_form, i, 
-        sph[i].r[0], sph[i].r[1], sph[i].r[2], 
+    if(fprintf(f, exp_form, i,
+        sph[i].r[0], sph[i].r[1], sph[i].r[2],
         sph[i].d, sph[i].type ) == EOF){
       fprintf(stderr,"  [%s]: error: exporting positions failed\n", __func__);
       return EXIT_FAILURE;
     }
   }
-  
+
   // Close data_spheresGL
   fclose(f);
-  
+
   // Open file for dimer data
   sprintf(gl_f_out, data_dimersGL, strn);
   fprintf(stdout," Writting dimer  data to file %s (visualization)\n",gl_f_out);
@@ -254,10 +254,10 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
             __func__, gl_f_out);
     return EXIT_FAILURE;
   }
-    
+
   // Export structure data to data_dimersGL
   for(i=0; i<nd; i++){
-    if(fprintf(f, exp_form_d, i, 
+    if(fprintf(f, exp_form_d, i,
         dim[i].R[0], dim[i].R[1], dim[i].R[2],
         dim[i].O[0], dim[i].O[1], dim[i].O[2],
         dim[i].L, dim[i].type ) == EOF){
@@ -265,9 +265,9 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
       return EXIT_FAILURE;
     }
   }
-  
+
   // Close data_dimersGL
   fclose(f);
-  
+
   return 0;
 }

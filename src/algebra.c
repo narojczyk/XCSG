@@ -16,7 +16,7 @@ extern const double one;
 
 /*
  * vdotu(v,u)
- * 
+ *
  * Returns the dot product of two vectors v*u
  */
 double vdotu(double v[3], double u[3])
@@ -36,9 +36,9 @@ void vector(double p[3], double q[3], double pq[3], double box[3])
   for (i=0; i<3; i++){
     // Calculat distance between p and q
     pq[i] = q[i] - p[i];
-    
+
     // Apply periodic boundaries
-    pq[i] = pq[i] - box[i] * round( pq[i]/box[i] );    
+    pq[i] = pq[i] - box[i] * round( pq[i]/box[i] );
   }
 }
 
@@ -55,7 +55,7 @@ double distance(double p[3], double q[3], double box[3])
 {
   int i;
   double pq[3];
-    
+
   for (i=0; i<3; i++){
     // Calculat absolute distance between p and q
     pq[i] = q[i] - p[i];
@@ -76,7 +76,7 @@ double distance_absolute(double p[3], double q[3])
 {
   int i;
   double pq[3];
-    
+
   for (i=0; i<3; i++){
     // Calculat absolute distance between p and q
     pq[i] = q[i] - p[i];
