@@ -645,6 +645,8 @@ void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
         if( sph[i].dim_ind >= 0 ){
           dim[ sph[i].dim_ind ].type = 2;
         }
+        // Assign the sphere the respective diameter
+        sph[i].d = ssd;
         // Escape the j-loop if sphere is found to lie on the plane
         break;
       }
