@@ -261,8 +261,8 @@ int main(int argc, char *argv[])
     if(i_make_slit){
       for(i=0; i<i_n_slits; i++){
         // Test slit data
-        if(slits[i].nm[0]+slits[i].nm[1]+slits[i].nm[2] != 0){
-          fprintf(stdout, " Inserting %d slit(s)\n", i_n_slits);
+        if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
+          fprintf(stdout, " Inserting slit %d\n", i);
           make_slit(dimers, spheres, cube_edge, slits[i].thickness, slits[i].os,
                     slits[i].sph_d, slits[i].nm, Ns);
         }else{

@@ -5,9 +5,9 @@ char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 // char* author1 = "Mikolaj Kowalik <kowalik@ifmpan.poznan.pl>";
 char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 char* buildAt = "darkwater";
-char* build = "Mon Apr 23 13:44:29 CEST 2018";
+char* build = "Wed May 30 13:37:05 CEST 2018";
 
-char* fccdcgen_c_SHA1 = "51ce32586ec1e9695c1b304c9844f6ab33588c5f";
+char* fccdcgen_c_SHA1 = "79f52958229116b419fef39ce96a6096aff4d487";
 char* globals_h_SHA1 = "69c569b96cb0820201788994bebc2ddbad1dbf35";
 char* mt19937_h_SHA1 = "08961c2d0bfffac380ab1ee575c0e530c95d762d";
 char* mt19937_64_h_SHA1 = "b442092d46c546522b41f0e9995901f78d6d1d6e";
