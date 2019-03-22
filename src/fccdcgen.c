@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
       for(i=0; i<i_n_channels; i++){
         // Test channel data
         if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 || channels[i].nm[2] != 0){
-          fprintf(stdout, " Inserting %d channel(s)\n", i_n_channels);
+          fprintf(stdout, " Inserting channel %d\n", i);
           make_channel(dimers, spheres, channels[i].nm, channels[i].radius,
                      cube_edge, channels[i].os, channels[i].sph_d, Ns);
         }else{
