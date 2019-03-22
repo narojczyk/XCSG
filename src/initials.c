@@ -135,7 +135,7 @@ void print_version(int status)
 
   fprintf(stdout, "  Version control:\t");
   fprintf(stdout, "  sources checksum's (SHA1)\n");
-  fprintf(stdout, "  %s  %s\n", fccdcgen_c_SHA1, "fccdcgen.c");
+  fprintf(stdout, "  %s  %s\n", mms_c_SHA1, "mms.c");
   #ifdef USE_64BIT_MT19937
     fprintf(stdout, "  %s  %s\n", mt19937_64_h_SHA1, "mt19937_64.h");
   #endif

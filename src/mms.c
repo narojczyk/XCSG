@@ -1,5 +1,5 @@
 /*
- * fccdcgen
+ * mms
  * f.c.c. structure of DC dimers generator/translator
  * Author: Jakub Narojczyk <narojczyk@ifmpan.poznan.pl>
  * Author: Mikolaj Kowalik <kowalik@ifmpan.poznan.pl>
