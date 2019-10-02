@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
   int low_on_dimers = 0;
   int flip_count = 0;
 
-  double cube_edge[3];
+  double box_edge[3];
 
   int fsi, fsn, fsi_chances;
 
@@ -129,9 +129,9 @@ int main(int argc, char *argv[])
   Nd = Ns / 2;
 
   // Calculate cube edge
-  cube_edge[0] = i_edge_fcc_N[0] * sqrt(two);
-  cube_edge[1] = i_edge_fcc_N[1] * sqrt(two);
-  cube_edge[2] = i_edge_fcc_N[2] * sqrt(two);
+  box_edge[0] = i_edge_fcc_N[0] * sqrt(two);
+  box_edge[1] = i_edge_fcc_N[1] * sqrt(two);
+  box_edge[2] = i_edge_fcc_N[2] * sqrt(two);
 
   // Summary of configuration variables
   fprintf(stdout,"\tConfig summary\n");
@@ -143,14 +143,14 @@ int main(int argc, char *argv[])
 
   fprintf(stdout,"\n\tOther parameters\n");
   fprintf(stdout," Coordinates range    : %.16le %.16le (x)\n",
-          -cube_edge[0]/two,cube_edge[0]/two);
+          -box_edge[0]/two,box_edge[0]/two);
   fprintf(stdout,"                        %.16le %.16le (y)\n",
-          -cube_edge[1]/two,cube_edge[1]/two);
+          -box_edge[1]/two,box_edge[1]/two);
   fprintf(stdout,"                        %.16le %.16le (z)\n",
-          -cube_edge[2]/two,cube_edge[2]/two);
-  fprintf(stdout," Box dimensions       : %.16le (x)\n", cube_edge[0]);
-  fprintf(stdout,"                        %.16le (y)\n", cube_edge[1]);
-  fprintf(stdout,"                        %.16le (z)\n", cube_edge[2]);
+          -box_edge[2]/two,box_edge[2]/two);
+  fprintf(stdout," Box dimensions       : %.16le (x)\n", box_edge[0]);
+  fprintf(stdout,"                        %.16le (y)\n", box_edge[1]);
+  fprintf(stdout,"                        %.16le (z)\n", box_edge[2]);
   fprintf(stdout," Number of dimers     : %d\n",Nd);
   fprintf(stdout," Number of spheres    : %d\n",Ns);
   fprintf(stdout," Number of channels   : %d\n",i_n_channels);
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
-      if(load_dcsgen(f, dimers, cube_edge, Nd) != Nd){
+      if(load_dcsgen(f, dimers, box_edge, Nd) != Nd){
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
@@ -216,11 +216,11 @@ int main(int argc, char *argv[])
 
       // Generate sphere positions for all dimers
       for(i=0; i<Nd; i++){
-        update_sphere_positions(dimers, spheres, cube_edge, i);
+        update_sphere_positions(dimers, spheres, box_edge, i);
       }
 
       // Find neighbors for spheres
-      if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
+      if(find_ngb_spheres(spheres, Ns, box_edge) != 0){
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
       sph_set_fcc( spheres, Ns, i_edge_fcc_N);
 
       // Find neighbors for spheres
-      if(find_ngb_spheres(spheres, Ns, cube_edge) != 0){
+      if(find_ngb_spheres(spheres, Ns, box_edge) != 0){
         exit_status = EXIT_FAILURE;
         goto cleanup;
       }
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
         if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 || channels[i].nm[2] != 0){
           fprintf(stdout, " Inserting channel %d\n", i);
           make_channel(dimers, spheres, channels[i].nm, channels[i].radius,
-                     cube_edge, channels[i].os, channels[i].sph_d, Ns);
+                     box_edge, channels[i].os, channels[i].sph_d, Ns);
         }else{
           fprintf(stderr,
                   " [ERR] Missing normal vector for channel %d, skipping\n",
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
         // Test slit data
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, " Inserting slit %d\n", i);
-          make_slit(dimers, spheres, cube_edge, slits[i].thickness, slits[i].os,
+          make_slit(dimers, spheres, box_edge, slits[i].thickness, slits[i].os,
                     slits[i].sph_d, slits[i].nm, Ns);
         }else{
           fprintf(stderr,
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 
         // Create a valid dimer from the pair of spheres
         if( fsi != -1 && fsn != -1){
-          make_dimer(dimers, spheres, cube_edge, fsi, fsn, Nd);
+          make_dimer(dimers, spheres, box_edge, fsi, fsn, Nd);
           // Update free spheres count
           Ns3 -= 2;
         }
@@ -359,7 +359,7 @@ int main(int argc, char *argv[])
                   spheres[zip_init_sph].type, zip_init_sph);
 
         fprintf(stdout," completed after %7d steps (%d left)\n",
-                  zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, Ns),
+                  zipper(dimers, spheres, box_edge, Nd, zip_init_sph, Ns),
                   --zip_Ns3_runs);
       }
 
@@ -402,11 +402,11 @@ int main(int argc, char *argv[])
     if( !validate_distrib(Odistrib, Nd-Nd2, flip_count) && !low_on_dimers ){
       do{
         // Find a valid dimer configuration to flip orientations
-        find_valid_cluster(dimers, spheres, cube_edge, Nd, valid_dimer_pair);
+        find_valid_cluster(dimers, spheres, box_edge, Nd, valid_dimer_pair);
 
         // Flip dimers
         if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
-          flip_dimers(dimers, spheres, cube_edge, Odistrib,
+          flip_dimers(dimers, spheres, box_edge, Odistrib,
                       valid_dimer_pair[0], valid_dimer_pair[1]);
         }
 
@@ -418,7 +418,7 @@ int main(int argc, char *argv[])
             zip_init_sph = (zip_init_sph < Ns ? zip_init_sph : Ns - 1);
           }while(spheres[zip_init_sph].type != 1);
           fprintf(stdout," Zipper %7d steps; distr.:",
-            zipper(dimers, spheres, cube_edge, Nd, zip_init_sph, 100*Ns));
+            zipper(dimers, spheres, box_edge, Nd, zip_init_sph, 100*Ns));
           // Display distribution after zipper
           test_dimer_distribution(dimers,  Odistrib, Nd);
           display_dimer_distribution(Odistrib);
@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
     display_dimer_distribution(Odistrib);
 
     // Generate required output files for structure 's'
-    if( exp_str_data(dimers, spheres, cube_edge, Ns, Nd, s) != 0 ){
+    if( exp_str_data(dimers, spheres, box_edge, Ns, Nd, s) != 0 ){
       exit_status = EXIT_FAILURE;
       goto cleanup;
     }
