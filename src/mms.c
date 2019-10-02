@@ -326,8 +326,7 @@ int main(int argc, char *argv[])
 
     // Eliminate remaining free spheres (if any) using zipper
     if(Ns3 > 1 && i_fs_connect == 1){
-      fprintf(stdout, "\n\n Connecting remaining free spheres with zipper\n",
-              zip_Ns3_runs);
+      fprintf(stdout, "\n\n Connecting remaining free spheres with zipper\n");
 
       // Check if there are even number of type-3 spheres
       Ns3_odd=0;
