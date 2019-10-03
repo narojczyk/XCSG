@@ -38,11 +38,7 @@ int main(int argc, char *argv[])
   SLI *slits = NULL;
 
   char *f_ini = NULL;
-//   char f_inp[15];
 
-//   const char *fo_iDC = "initdc3d.%04d";
-
-//   int *spFScount = NULL;
   int exit_status;
   int Ns, Nd, Nd2, Ns3, Ns3_odd;
   int zip_Ns3_runs=0, zip_init_sph=-1;
@@ -180,7 +176,6 @@ int main(int argc, char *argv[])
   // Allocate memory for spheres and dimers
   spheres = malloc( Ns * sizeof(SPH));
   dimers  = malloc( Nd * sizeof(DIM3D));
-//   spFScount = malloc( Ns * sizeof(int));
 
   // Loop over selected set of structures
   for(s=i_iDCfrom; s<=i_iDCto; s++){
@@ -188,42 +183,10 @@ int main(int argc, char *argv[])
     // Clean allocated memory
     memory_clean_spheres(spheres, Ns);
     memory_clean_dimers(dimers, Nd);
-    // memory for spFScount is cleared on first use
 
     fprintf(stdout,"\n ***\tProcessing structure %d\n",s);
-    /*
-    // Load input structure or generate a new one depending on the ini settings
-    if(i_load_DC_from_file == 1){
-      sprintf(f_inp, fo_iDC, s);
-      fprintf(stdout," Reading structure from file %s\n",f_inp);
-
-      // Load existing DC structure
-      if((f = fopen(f_inp, "r")) == NULL) {
-        fprintf(stderr, "  [%s]: error: cannot open structure file %s\n",
-                prog_name, f_inp);
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
-      }
-      if(load_dcsgen(f, dimers, box_edge, Nd) != Nd){
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
-      }
-
-      // Bind dimers to spheres and vice versa
-      bind_spheres_to_dimers(dimers, spheres, Nd);
-
-      // Generate sphere positions for all dimers
-      for(i=0; i<Nd; i++){
-        update_sphere_positions(dimers, spheres, box_edge, i);
-      }
-
-      // Find neighbors for spheres
-      if(find_ngb_spheres(spheres, Ns, box_edge) != 0){
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
-      }
-    }else{*/
     fprintf(stdout," Generating pure f.c.c. structure\n");
+
     // Set fcc structure of spheres
     sph_set_fcc( spheres, Ns, i_edge_fcc_N);
 
@@ -233,11 +196,15 @@ int main(int argc, char *argv[])
       goto cleanup;
     }
 
+    // Assign lattice indexes to all spheres
+    sph_assign_lattice_indexes(spheres, 0, Ns);
+    sph_assign_lattice_indexes(spheres, 1, Ns);
+    sph_assign_lattice_indexes(spheres, 2, Ns);
+
     // Flag all dimers as broken at this point
     for(i=0; i<Nd; i++){
       dimers[i].type = 2;
     }
-//     }
 
     // Make channel
     if(i_make_channel){
@@ -440,7 +407,6 @@ int main(int argc, char *argv[])
 
 cleanup:
   // Free resources
-//   free(spFScount);
   free(spheres);
   free(dimers);
   free(slits);

@@ -7,6 +7,7 @@ typedef struct
   int ngb[12];      // Neighbors list
 //   TODO: possibly change the following to pointer to DIM array element
   int dim_ind;      // Index of dimer the sphere belongs to
+  int lattice_ind[3]; //sphere lattice coordinates
   double r[3];      // Position vector
   double d;         // Sphere diameter
 } SPH;

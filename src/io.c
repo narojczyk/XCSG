@@ -111,7 +111,8 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
 int export_spheres(FILE *file, SPH *sph, int ns)
 {
   const char *exp_f_sph_0 = "%5d %2d % .16le % .16le % .16le %.16le ";
-  const char *exp_f_sph_1 = "%5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d\n";
+  const char *exp_f_sph_1 = "%5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d  ";
+  const char *exp_f_sph_2 = "%2d %2d %2d\n";
   int i;
 
   for(i=0; i<ns; i++){
@@ -119,7 +120,7 @@ int export_spheres(FILE *file, SPH *sph, int ns)
     if(fprintf(file, exp_f_sph_0,
         i, sph[i].type,
         sph[i].r[0], sph[i].r[1], sph[i].r[2], sph[i].d) == EOF){
-      fprintf(stderr,"  [%s]: error: exporting sphere data failed\n", __func__);
+      fprintf(stderr,"  [%s]: error: exporting sphere data-1 failed\n", __func__);
       return EXIT_FAILURE;
     }
 
@@ -128,62 +129,18 @@ int export_spheres(FILE *file, SPH *sph, int ns)
         sph[i].ngb[0], sph[i].ngb[1], sph[i].ngb[2], sph[i].ngb[3],
         sph[i].ngb[4], sph[i].ngb[5], sph[i].ngb[6], sph[i].ngb[7],
         sph[i].ngb[8], sph[i].ngb[9], sph[i].ngb[10], sph[i].ngb[11]) == EOF){
-      fprintf(stderr,"  [%s]: error: exporting sphere data failed\n", __func__);
+      fprintf(stderr,"  [%s]: error: exporting sphere data-2 failed\n", __func__);
       return EXIT_FAILURE;
     }
+
+    // Write sphere lattice indexes
+    if(fprintf(file, exp_f_sph_2,
+      sph[i].lattice_ind[0], sph[i].lattice_ind[1], sph[i].lattice_ind[2]) == EOF){
+      fprintf(stderr,"  [%s]: error: exporting sphere data-3 failed\n", __func__);
+    return EXIT_FAILURE;
+      }
   }
   return 0;
-}
-
-/*
- * load_dcsgen()
- * Load initial DC configuration from dcsgen, program by Mikolaj Kowalik
- */
-int load_dcsgen(FILE *file, DIM3D *dim, double box[3], int nd)
-{
-  // Template structure instance for data input
-  DIM3D tm;
-  int i, j;
-
-  // Initiate fields not read from file with defaults
-  tm.type = 1;
-  tm.sph_ind[0] = tm.sph_ind[1] = -1;
-  for(i=0; i<22; i++){
-    tm.ngb[i][0] = -1;
-    tm.ngb[i][1] = -1;
-  }
-  tm.L = 1e0;
-
-  while(fscanf(file, "%d %*d %*d %lf %lf %lf %lf %lf %lf",
-               &i, tm.R, tm.R + 1, tm.R + 2, tm.O, tm.O + 1, tm.O + 2) != EOF) {
-    // Decrement 'i' to count from 0
-    if(--i < nd){
-      for(j=0; j<3; j++){
-        // Scale molecule positions to box dimensions
-        tm.R[j] *= box[j];
-      }
-      // Copy data from template to data structure
-      dim[i] = tm;
-    }
-  }
-
-  // Print errors when input structure size is different than ini parameters
-  if(++i != nd) {
-    fprintf(stderr, "  [%s]: error: input structure ", __func__);
-    if(i > nd) {
-      fprintf(stderr, "too large;\n");
-    } else if(i < nd) {
-    fprintf(stderr, "too small;\n");
-    }
-
-    fprintf(stderr,
-      "  [%s]: error: input file contains %d molecules,\n", __func__, i);
-    fprintf(stderr,
-      "  [%s]: error: allocated memory for %d molecules\n", __func__, nd);
-  }
-
-  // Return the number of data lines imported
-  return i;
 }
 
 /*

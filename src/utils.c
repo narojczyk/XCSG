@@ -23,6 +23,59 @@ extern const double zero;
 extern const double one;
 extern const double two;
 
+void bouble_sort_double(double *array, int s, int ascending){
+  int sorted=1;
+  int i,j;
+  double tmp;
+
+  if( ascending == 0){
+    // Sort in descending order
+    // Before starting, check if the array is sorted.
+    for(i=0; i<s-1; i++){
+      if(array[i] < array[i+1]){
+        sorted = 0;
+        break;
+      }
+    }
+
+    // Start sorting if required
+    if(sorted != 1){
+      for(j=0;j<s;j++){
+        for(i=0;i<s-1;i++){
+          if(array[i] < array[i+1]){
+            tmp = array[i+1];
+            array[i+1] = array[i];
+            array[i] = tmp;
+          }
+        }
+      }
+    }
+  }else{
+    // Sort in ascending order
+    // Before starting, check if the array is sorted.
+    for(i=1; i<s; i++){
+      if(array[i-1] > array[i]){
+        sorted = 0;
+        break;
+      }
+    }
+
+    // Start sorting if required
+    if(sorted != 1){
+      for(j=0;j<s;j++){
+        for(i=1;i<s;i++){
+          if(array[i-1] > array[i]){
+            tmp = array[i-1];
+            array[i-1] = array[i];
+            array[i] = tmp;
+          }
+        }
+      }
+    }
+  }
+
+}
+
 int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
 {
   int nseek = 0;
@@ -470,6 +523,9 @@ void memory_clean_spheres(SPH *sph, int ns)
   template.r[0] = zero;
   template.r[1] = zero;
   template.r[2] = zero;
+  template.lattice_ind[0] = -1;
+  template.lattice_ind[1] = -1;
+  template.lattice_ind[2] = -1;
   template.d = one;
 
   for(i=0; i<12; i++){
