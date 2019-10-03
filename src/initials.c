@@ -46,7 +46,7 @@ static struct option long_opts[] = {
 void print_greetings()
 {
   fputs("\n\
-  Generate a D.C. phase of dimers (with inclusions) on the f.c.c. lattice\n\
+  Generate monomer, multimer or mixed strutures with optional inclusions\n\
   Institute of Molecular Physics, Polish Academy of Sciences\n\n", stdout);
 }
 
