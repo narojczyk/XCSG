@@ -17,30 +17,41 @@
  * Use export_spheres(), export_dimers(), and export_to_GLviewer() to write the
  * complete set of informations for the final structure.
  */
-int exp_str_data(DIM3D *dim, SPH *sph, double box[3], int ns, int nd, int strn)
+int exp_str_data(DIM3D *dim, SPH *sph, double box[3], 
+                 int ns, int nd, int ns3, int nd2, int strn)
 {
   FILE *file;
-  char f_out[15];
-  const char *fo_exp_dim = "d3d%05d.csv";
-  const char *fo_exp_sph = "s3d%05d.csv";
+  char f_out[128];
+  const char *fo_exp_inf = "s3d0_summary_%05d.ini";
+  const char *fo_exp_sph = "s3d1_monomers_%05d.csv";
+  const char *fo_exp_dim = "s3d2_dimers_%05d.csv";
 
-  // Set the file name for dimer data and open the file for write
-  sprintf(f_out, fo_exp_dim, strn);
-  fprintf(stdout,"\n Writting dimer  data to file %s\n",f_out);
+  // Set the file name for info data and open the file for write
+  sprintf(f_out, fo_exp_inf, strn);
+  fprintf(stdout,"\n Writting ini data to file    %s\n",f_out);
 
   if((file = fopen(f_out, "w")) == NULL) {
     fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
             __func__, f_out);
     return EXIT_FAILURE;
   }
-  // Export dimer datat to file
-  export_dimers(file, dim, nd);
+  // Export str. descrip. data to file
+  fprintf(file,"Number of spheres       : %d\n", ns);
+  // TODO: this is valid only for dimers
+  fprintf(file,"Number of particles     : %d\n", nd + nd2); 
+  fprintf(file,"Number of x-mers        : %d %d\n",2*nd2, nd - nd2);
+  // TODO: fix this for full box matrix
+  fprintf(file,"Box matrix h00 h01 h02  : %.16le %.16le %.16le\n",
+          box[0], 0e0, 0e0);
+  fprintf(file,"Box matrix     h11 h12  : %.16le %.16le\n",
+          box[1], 0e0);
+  fprintf(file,"Box matrix         h22  : %.16le\n", box[2]);
   fclose(file);
-
+  
   // Set the file name for dimer data and open the file for write
   sprintf(f_out, fo_exp_sph, strn);
   fprintf(stdout," Writting sphere data to file %s\n",f_out);
-
+  
   if((file = fopen(f_out, "w")) == NULL) {
     fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
             __func__, f_out);
@@ -50,6 +61,18 @@ int exp_str_data(DIM3D *dim, SPH *sph, double box[3], int ns, int nd, int strn)
   export_spheres(file, sph, ns);
   fclose(file);
 
+  // Set the file name for dimer data and open the file for write
+  sprintf(f_out, fo_exp_dim, strn);
+  fprintf(stdout," Writting dimer data to file  %s\n\n",f_out);
+
+  if((file = fopen(f_out, "w")) == NULL) {
+    fprintf(stderr, "  [%s]: error: cannot open config file %s\n",
+            __func__, f_out);
+    return EXIT_FAILURE;
+  }
+  // Export dimer datat to file
+  export_dimers(file, dim, nd);
+  fclose(file);
 
 #ifdef DATA_VISGL_OUTPUT
   // Export data in data_visGL format
@@ -69,14 +92,15 @@ int exp_str_data(DIM3D *dim, SPH *sph, double box[3], int ns, int nd, int strn)
 int export_dimers(FILE *file, DIM3D *dim, int nd)
 {
   const char *exp_f_dim =
-  "%5d  %2d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %5d %5d\n";
+  "%5d  %3d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %5d %5d\n";
   int i,k=0;
 
   for(i=0; i<nd; i++){
     // Export information about molecule
     if(dim[i].type == 1){
       if(fprintf(file, exp_f_dim,
-          k++, dim[i].type,
+//           k++, dim[i].type,
+          k++, 2,
           dim[i].R[0], dim[i].R[1], dim[i].R[2],
           dim[i].O[0], dim[i].O[1], dim[i].O[2],
           dim[i].L,
@@ -86,7 +110,7 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
       }
     }
   }
-
+/*
   for(i=0; i<nd; i++){
     // Export information about molecule
     if(dim[i].type == 2){
@@ -100,7 +124,7 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
         return EXIT_FAILURE;
       }
     }
-  }
+  }*/
   return 0;
 }
 
@@ -110,15 +134,25 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
  */
 int export_spheres(FILE *file, SPH *sph, int ns)
 {
-  const char *exp_f_sph_0 = "%5d %2d % .16le % .16le % .16le %.16le ";
+  const char *exp_f_sph_0 = "%5d %3d % .16le % .16le % .16le %.16le ";
   const char *exp_f_sph_1 = "%5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d  ";
-  const char *exp_f_sph_2 = "%2d %2d %2d\n";
+  const char *exp_f_sph_2 = "  %2d %2d %2d\n";
   int i;
-
+  int newtype;
   for(i=0; i<ns; i++){
+    // Modify type for new program
+    if(sph[i].type == 3){
+      newtype = 1;
+    }else if(sph[i].type == 2){
+      newtype = 101;
+    }else if(sph[i].type == 1){
+      newtype = 2;
+    }else{
+      newtype = -1;
+    }
     // Write sphere positions and properties
     if(fprintf(file, exp_f_sph_0,
-        i, sph[i].type,
+        i, newtype,
         sph[i].r[0], sph[i].r[1], sph[i].r[2], sph[i].d) == EOF){
       fprintf(stderr,"  [%s]: error: exporting sphere data-1 failed\n", __func__);
       return EXIT_FAILURE;

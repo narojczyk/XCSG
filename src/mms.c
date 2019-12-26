@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
     display_dimer_distribution(Odistrib);
 
     // Generate required output files for structure 's'
-    if( exp_str_data(dimers, spheres, box_edge, Ns, Nd, s) != 0 ){
+    if( exp_str_data(dimers, spheres, box_edge, Ns, Nd, Ns3, Nd2, s) != 0 ){
       exit_status = EXIT_FAILURE;
       goto cleanup;
     }
