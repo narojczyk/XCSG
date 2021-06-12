@@ -5,10 +5,7 @@ CC = gcc
 CFLAGS = -std=gnu99 -Wall
 
 # Optimalisation flags
-#CFLAGS += -O2 -march=native -mtune=native # default
-#CFLAGS += -O2 -march=core-avx2	 # intel cpu family 6 gcc > 4.8.2
-CFLAGS += -O2 -march=sandybridge # intel cpu family 6 gcc > 4.9.2, boneyard
-#CFLAGS += -O2 -march=haswell     # intel cpu family 6 gcc > 4.9.2, inula 
+CFLAGS += -O2 -march=native -mtune=native
 
 # Linker flags (i.e. external libraries used by the project).
 LDFLAGS = -lm
