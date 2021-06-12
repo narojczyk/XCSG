@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "Computing source files SHA1 checksums"
-eval "sed -i 's/build\ =.*\"/build\ =\ \"`date`\"/' checksum.h"
+chkFile="checksum.h"
+
 
 builderName=`git config user.name 2>/dev/null`
 if [ $? -ne 0 ]; then
@@ -14,18 +15,37 @@ fi
 
 buildHost=`uname -n`
 
-src_base=(`ls -1 *.[ch] | grep -v checksum.h`)
+buildVersion=`git tag -l | tail -n 1 | sed 's/^v//'`
+if [ $? -ne 0 ]; then
+  buildVersion="untagged in git"
+fi
+
+comitDate=`git log -1 --format=%ci 2>/dev/null`
+if [ $? -ne 0 ]; then
+  comitDate="no git repository found"
+fi
+
+comitId=`git rev-parse HEAD 2>/dev/null`
+if [ $? -ne 0 ]; then
+  comitId="no git repository found"
+fi
+
+src_base=(`ls -1 *.[ch] | grep -v $chkFile`)
 N=${#src_base[@]}
 
-eval "sed -i 's/builder.*$/builder\ =\ \"$builderName\ <$builderMail>\";/' checksum.h"
-eval "sed -i 's/buildAt.*$/buildAt\ =\ \"$buildHost\";/' checksum.h"
+eval "sed -i 's/builder.*$/builder\ =\ \"$builderName\ <$builderMail>\";/' $chkFile"
+eval "sed -i 's/buildAt.*$/buildAt\ =\ \"$buildHost\";/' $chkFile"
+eval "sed -i 's/build\ =.*\"/build\ =\ \"`date`\"/' $chkFile"
+eval "sed -i 's/code_version.*$/code_version\ =\ \"$buildVersion\";/' $chkFile"
+eval "sed -i 's/code_comit_id.*$/code_comit_id\ =\ \"$comitId\";/' $chkFile"
+eval "sed -i 's/code_comit_date.*$/code_comit_date\ =\ \"$comitDate\";/' $chkFile"
 
 i=0
 while [ $i -lt $N ]
 do
   var_name=`echo ${src_base[$i]} | sed 's/\.\([ch]\)/_\1_SHA1/'`
 
-  ln=`cat -n checksum.h|grep $var_name |sed 's/\tch.*//'|sed 's/\ \ *//'`
+  ln=`cat -n $chkFile|grep $var_name |sed 's/\tch.*//'|sed 's/\ \ *//'`
 #   printf " %-18s\t%d\n" $var_name $ln; echo
 
   if [ $ln ]
@@ -33,7 +53,7 @@ do
     chk_string=`sha1sum ${src_base[$i]} | sed 's/\ .*//'`
 #     echo " ${src_base[$i]} $chk_string"
 
-    eval "sed -i '${ln}s/\".*\"/\"${chk_string}\"/'" checksum.h
+    eval "sed -i '${ln}s/\".*\"/\"${chk_string}\"/'" $chkFile
   fi
 
   (( i++ ))

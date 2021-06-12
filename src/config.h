@@ -20,12 +20,12 @@
  * Any TWO of the following #define's should be ALWAYS COMMENTED OUT
  */
 // Uncoment the following to use the standard dran48 r.n.g.
-// #define USE_DRAND48
+// #define PRNG_DRAND48
 
 // Uncoment the following to use the 32bit implementation of MT 19937 r.n.g.
-#define USE_32BIT_MT19937
+#define PRNG_32BIT_MT19937
 
 // Uncoment the following to use the 64bit implementation of MT 19937 r.n.g.
-// #define USE_64BIT_MT19937
+// #define PRNG_64BIT_MT19937
 
 #endif

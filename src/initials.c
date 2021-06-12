@@ -92,70 +92,94 @@ void print_info(int status)
  */
 void print_version(int status)
 {
+  const char *fmt_version = "  %s version %s\n";
+  const char *fmt_comit_id = "  git comit ID: %s\n";
+  const char *fmt_comit_date = "  committed on: %s\n\n";
+  const char *fmt_sha1 = "  %s  %s\n";
+  const char *fmt_greet   = "  %-12s\t%s\n";
+  const char *fmt_bullets = "  * %-34s: ";
+  const char *fmt_category= "\n  %s:\n";
+
+
+  #ifdef DATA_VISGL_OUTPUT
+    const char *datavisGL = "Yes";
+  #else
+    const char *datavisGL = "No";
+  #endif
+
+  #ifdef PRNG_64BIT_MT19937
+    const char *prng_type = "64bit MT19937";
+  #endif
+
+  #ifdef PRNG_32BIT_MT19937
+    const char *prng_type = "32bit MT19937";
+  #endif
+
+  #ifdef PRNG_DRAND48
+    const char *prng_type = "Drand48";
+  #endif
+
+  #ifdef VERBOSE_MDOE
+    const char *verbose_mode = "Yes";
+  #else
+    const char *verbose_mode = "No";
+  #endif
+
+  #ifdef DEBUG_MODE
+    const char *debug_mode = "Yes";
+  #else
+    const char *debug_mode = "No";
+  #endif
+
+  fprintf(stdout, fmt_version,  prog_name, code_version);
+  fprintf(stdout, fmt_comit_id,  code_comit_id);
+  fprintf(stdout, fmt_comit_date,  code_comit_date);
   print_greetings();
 
-//   fprintf(stdout, "  Created by:\t%s\n\t\t%s\n", author0, author1);
-  fprintf(stdout, "  Created by:\t%s\n", author0);
-  fprintf(stdout, "  Build by:\t%s\n", builder);
-  fprintf(stdout, "  Build date:\t%s\n", build);
-  fprintf(stdout, "  Build host:\t%s\n\n", buildAt);
+  fprintf(stdout, fmt_greet, "Created by:", author0);
+  fprintf(stdout, fmt_greet, "Build by", builder);
+  fprintf(stdout, fmt_greet, "Build date:", build);
+  fprintf(stdout, fmt_greet, "Build host:", buildAt);
 
-  fprintf(stdout, "  Try '-i' or '--info' for usage details\n\n");
+  fprintf(stdout, "  Try './%s -i' or '--info' for usage details\n", prog_name);
 
-  fprintf(stdout, "  Program build-in features:\n");
+  fprintf(stdout, fmt_category, "Program build-in features");
 
-  fprintf(stdout, "  * verbose output for debugging      : ");
-  #ifdef DEBUG_MODE
-    fprintf(stdout, "Yes\n");
-  #else
-    fprintf(stdout, "No\n");
-  #endif
+  fprintf(stdout, fmt_bullets, "Data_visGL output files");
+  fprintf(stdout, "%s\n", datavisGL);
 
-    fprintf(stdout, "  * use 64bit MT19937 random num. gen.: ");
-  #ifdef USE_64BIT_MT19937
-    fprintf(stdout, "Yes\n");
-  #else
-    fprintf(stdout, "No\n");
-  #endif
+  fprintf(stdout, fmt_bullets, "PRGN");
+  fprintf(stdout, "%s\n", prng_type);
 
-    fprintf(stdout, "  * use 32bit MT19937 random num. gen.: ");
-  #ifdef USE_32BIT_MT19937
-    fprintf(stdout, "Yes\n");
-  #else
-    fprintf(stdout, "No\n");
-  #endif
+  fprintf(stdout, fmt_bullets, "Verbose mode");
+  fprintf(stdout, "%s\n", verbose_mode);
 
-    fprintf(stdout, "  * use drand48 random num. gen.      : ");
-  #ifdef USE_DRAND48
-    fprintf(stdout, "Yes\n");
-  #else
-    fprintf(stdout, "No\n");
-  #endif
+  fprintf(stdout, fmt_bullets, "Enable debugging code");
+  fprintf(stdout, "%s\n", debug_mode);
+
   fprintf(stdout, "\n");
 
-  fprintf(stdout, "  Version control:\t");
-  fprintf(stdout, "  sources checksum's (SHA1)\n");
-  fprintf(stdout, "  %s  %s\n", mms_c_SHA1, "mms.c");
-  #ifdef USE_64BIT_MT19937
-    fprintf(stdout, "  %s  %s\n", mt19937_64_h_SHA1, "mt19937_64.h");
-  #endif
-  #ifdef USE_32BIT_MT19937
-    fprintf(stdout, "  %s  %s\n", mt19937_h_SHA1, "mt19937.h");
-  #endif
-  fprintf(stdout, "  %s  %s\n", config_h_SHA1, "config.h");
-  fprintf(stdout, "  %s  %s\n", data_h_SHA1, "data.h");
-  fprintf(stdout, "  %s  %s\n", globals_h_SHA1, "globals.h");
-  fprintf(stdout, "  %s  %s\n", algebra_h_SHA1, "algebra.h");
-  fprintf(stdout, "  %s  %s\n", algebra_c_SHA1, "algebra.c");
-  fprintf(stdout, "  %s  %s\n", initials_h_SHA1, "initials.h");
-  fprintf(stdout, "  %s  %s\n", initials_c_SHA1, "initials.c");
-  fprintf(stdout, "  %s  %s\n", io_h_SHA1, "io.h");
-  fprintf(stdout, "  %s  %s\n", io_c_SHA1, "io.c");
-  fprintf(stdout, "  %s  %s\n", structure_h_SHA1, "structure.h");
-  fprintf(stdout, "  %s  %s\n", structure_c_SHA1, "structure.c");
-  fprintf(stdout, "  %s  %s\n", utils_h_SHA1, "utils.h");
-  fprintf(stdout, "  %s  %s\n", utils_c_SHA1, "utils.c");
-
+  fprintf(stdout, "  Version control:\t  sources checksum's (SHA1)\n");
+  fprintf(stdout, fmt_sha1, mms_c_SHA1,         "mms.c");
+  fprintf(stdout, fmt_sha1, config_h_SHA1,      "config.h");
+  fprintf(stdout, fmt_sha1, data_h_SHA1,        "data.h");
+  fprintf(stdout, fmt_sha1, globals_h_SHA1,     "globals.h");
+#ifdef PRNG_64BIT_MT19937
+  fprintf(stdout, fmt_sha1, mt19937_64_h_SHA1,  "mt19937_64.h");
+#endif
+#ifdef PRNG_32BIT_MT19937
+  fprintf(stdout, fmt_sha1, mt19937_h_SHA1,     "mt19937.h");
+#endif
+  fprintf(stdout, fmt_sha1, algebra_h_SHA1,     "algebra.h");
+  fprintf(stdout, fmt_sha1, algebra_c_SHA1,     "algebra.c");
+  fprintf(stdout, fmt_sha1, initials_h_SHA1,    "initials.h");
+  fprintf(stdout, fmt_sha1, initials_c_SHA1,    "initials.c");
+  fprintf(stdout, fmt_sha1, io_h_SHA1,          "io.h");
+  fprintf(stdout, fmt_sha1, io_c_SHA1,          "io.c");
+  fprintf(stdout, fmt_sha1, structure_h_SHA1,   "structure.h");
+  fprintf(stdout, fmt_sha1, structure_c_SHA1,   "structure.c");
+  fprintf(stdout, fmt_sha1, utils_h_SHA1,       "utils.h");
+  fprintf(stdout, fmt_sha1, utils_c_SHA1,       "utils.c");
   exit(status);
 }
 
@@ -261,9 +285,13 @@ int parse_channels(FILE *file, CHA ch_tab[])
   double c_nor[3] = {0e0, 0e0, 0e0};
   double c_r = 0e0;
   double s_d = 0e0;
+  unsigned char binc;
 
-  // Skip first line in the file
-  fscanf(file, "%*[^\n]\n", NULL);
+  // Skip the header line in file
+  // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
+  do{
+    binc = fgetc(file);
+  }while (binc != '\n');
 
   // Read data from the file
   for(i=0; i<i_n_channels; i++){
@@ -309,9 +337,13 @@ int parse_slits(FILE *file, SLI sl_tab[])
   double sl_nor[3] = {0e0, 0e0, 0e0};
   double sl_th = 0e0;
   double s_d = 0e0;
+  unsigned char binc;
 
-  // Skip first line in the file
-  fscanf(file, "%*[^\n]\n", NULL);
+  // Skip the header line in file
+  // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
+  do{
+    binc = fgetc(file);
+  }while (binc != '\n');
 
   // Read data from the file
   for(i=0; i<i_n_slits; i++){

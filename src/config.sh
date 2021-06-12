@@ -16,27 +16,27 @@ else
 fi
 
 if [ $use64MT19937 -eq 1 ]; then
-  sed -i 's/\/\/\ \(#define\ USE_64BIT_MT19937.*$\)/\1/' $cfile
-  sed -i 's/^.*\(#define\ USE_32BIT_MT19937.*$\)/\/\/\ \1/' $cfile
-  sed -i 's/^.*\(#define\ USE_DRAND48.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/\/\/\ \(#define\ PRNG_64BIT_MT19937.*$\)/\1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_32BIT_MT19937.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_DRAND48.*$\)/\/\/\ \1/' $cfile
 else
-  sed -i 's/^.*\(#define\ USE_64BIT_MT19937.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_64BIT_MT19937.*$\)/\/\/\ \1/' $cfile
 fi
 
 if [ $use32MT19937 -eq 1 ]; then
-  sed -i 's/\/\/\ \(#define\ USE_32BIT_MT19937.*$\)/\1/' $cfile
-  sed -i 's/^.*\(#define\ USE_64BIT_MT19937.*$\)/\/\/\ \1/' $cfile
-  sed -i 's/^.*\(#define\ USE_DRAND48.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/\/\/\ \(#define\ PRNG_32BIT_MT19937.*$\)/\1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_64BIT_MT19937.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_DRAND48.*$\)/\/\/\ \1/' $cfile
 else
-  sed -i 's/^.*\(#define\ USE_32BIT_MT19937.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_32BIT_MT19937.*$\)/\/\/\ \1/' $cfile
 fi
 
 if [ $useDRAND48 -eq 1 ] || [ $use32MT19937 -eq 0 -a $use64MT19937 -eq 0 ]; then
-  sed -i 's/\/\/\ \(#define\ USE_DRAND48.*$\)/\1/' $cfile
-  sed -i 's/^.*\(#define\ USE_32BIT_MT19937.*$\)/\/\/\ \1/' $cfile
-  sed -i 's/^.*\(#define\ USE_64BIT_MT19937.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/\/\/\ \(#define\ PRNG_DRAND48.*$\)/\1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_32BIT_MT19937.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_64BIT_MT19937.*$\)/\/\/\ \1/' $cfile
 else
-  sed -i 's/^.*\(#define\ USE_DRAND48.*$\)/\/\/\ \1/' $cfile
+  sed -i 's/^.*\(#define\ PRNG_DRAND48.*$\)/\/\/\ \1/' $cfile
 fi
 
 exit 0

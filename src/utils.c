@@ -9,7 +9,7 @@
 #include <math.h>
 #include "config.h"
 
-#ifdef USE_64BIT_MT19937
+#ifdef PRNG_64BIT_MT19937
   #include "mt19937_64.h"
 #else
   #include "mt19937.h"
@@ -492,8 +492,8 @@ int sph_set_fcc( SPH *sph, int ns, int fcc[3])
     com[0] += sph[i].r[0];
     com[1] += sph[i].r[1];
     com[2] += sph[i].r[2];
-
   }
+
   // Move the center of mass of the new structure to point 0
   for(i=0; i<ns; i++){
     sph[i].r[0] -= com[0]/ns;
@@ -617,15 +617,15 @@ void memory_clean_channels(CHA *cha, int nch)
  */
 double u_RNG()
 {
-#ifdef USE_64BIT_MT19937
+#ifdef PRNG_64BIT_MT19937
   return genrand64_real1();
 #endif
 
-#ifdef USE_32BIT_MT19937
+#ifdef PRNG_32BIT_MT19937
   return genrand_real1();
 #endif
 
-#ifdef USE_DRAND48
+#ifdef PRNG_DRAND48
   return drand48();
 #endif
 
@@ -641,15 +641,15 @@ double u_RNG()
  */
 void init_RNG(unsigned long int s)
 {
-  #ifdef USE_64BIT_MT19937
+  #ifdef PRNG_64BIT_MT19937
     init_genrand64( s );
   #endif
 
-  #ifdef USE_32BIT_MT19937
+  #ifdef PRNG_32BIT_MT19937
     init_genrand( s );
   #endif
 
-  #ifdef USE_DRAND48
+  #ifdef PRNG_DRAND48
     srand48( s );
   #endif
 }
