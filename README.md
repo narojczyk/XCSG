@@ -19,10 +19,10 @@ Project directory should contain:
 
 ## Roadmap
 
-*	Remove reading of initial input structures (MKO format) - obsolete.
 * Add hcp and bcc lattice types.
 * Add >2 multimer particles.
 * Change sphere types ID's with respect to monomers they form (1 - 8) or
   inclusions (100+).
 * Inclusions may be formed by multimers.
-
+* Finite size inclusions
+* Rename to Multimer Crystal Structures (MCS)
