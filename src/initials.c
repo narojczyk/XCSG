@@ -65,7 +65,7 @@ void print_help(int status)
     Option list:\n\
       -h, --help     print this information\n\
       -i, --info     print detailed usage description\n\
-      -t, --template generate template config file\n\
+      -t, --template generate template config files\n\
       -v, --version  print version and build details\n", stdout);
   }
   exit(status);
@@ -131,6 +131,7 @@ void print_version(int status)
     const char *debug_mode = "No";
   #endif
 
+  fprintf(stdout, "  x-mer Crystal Structure Generator (XCSG)\n");
   fprintf(stdout, fmt_version,  prog_name, code_version);
   fprintf(stdout, fmt_comit_id,  code_comit_id);
   fprintf(stdout, fmt_comit_date,  code_comit_date);
@@ -160,7 +161,7 @@ void print_version(int status)
   fprintf(stdout, "\n");
 
   fprintf(stdout, "  Version control:\t  sources checksum's (SHA1)\n");
-  fprintf(stdout, fmt_sha1, mms_c_SHA1,         "mms.c");
+  fprintf(stdout, fmt_sha1, xcsg_c_SHA1,         "xcsg.c");
   fprintf(stdout, fmt_sha1, config_h_SHA1,      "config.h");
   fprintf(stdout, fmt_sha1, data_h_SHA1,        "data.h");
   fprintf(stdout, fmt_sha1, globals_h_SHA1,     "globals.h");
@@ -210,7 +211,7 @@ void generate_template_config(int status)
   fprintf(f, "Structures (start end)  : INT INT\n");
   fprintf(f, "Make nano-channel (bool): INT\n");
   fprintf(f, "Make nano-slit    (bool): INT\n");
-  fprintf(f, "Free sph. connect (bool): INT\n");
+  fprintf(f, "Insert dimers DC  (bool): INT\n");
   fprintf(f, "Number of channels      : INT\n");
   fprintf(f, "Channels desc. file name: STRING\n");
   fprintf(f, "Number of slits         : INT\n");

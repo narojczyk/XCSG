@@ -11,7 +11,7 @@ CFLAGS += -O2 -march=native -mtune=native
 LDFLAGS = -lm
 
 # Output binary.
-binary = mms
+binary = xcsg
 
 # All necessary object files, equivilent of `ls *.c | sed 's/\.c/\.o/'`.
 objfiles = $(patsubst %.c,%.o,$(wildcard *.c))
@@ -26,7 +26,7 @@ initials.o  : config.h initials.h
 utils.o     : config.h data.h mt19937.h mt19937_64.h algebra.h utils.h 
 io.o        : data.h io.h 
 structure.o : data.h utils.h algebra.h structure.h
-mms.o  : config.h data.h globals.h initials.h io.h utils.h structure.h
+xcsg.o  : config.h data.h globals.h initials.h io.h utils.h structure.h
 
 # PHONY - targets that are only actions.
 .PHONY: all clean debug mark

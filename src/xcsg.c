@@ -1,18 +1,17 @@
 /*
- * mms
- * f.c.c. structure of DC dimers generator/translator
+ * x-mer Crystal Structure Generator (XCSG)
  * Author: Jakub Narojczyk <narojczyk@ifmpan.poznan.pl>
+ * (c) 2015-2021
  *
- * The program generates a DC structure of dimers on f.c.c. spheres with the
- * presence of (optional) nano-channel of spheres.
+ * The program generates a crystal structure of f.c.c. spheres. The latter can
+ * be connected into multimer molecules. The structure can also include
+ * additional modifications like nanochannels, nanolayers or point inclusions.
  *
- *
- * (c) 2015
  */
 
 /*
- *
  * TODO:
+ *
  */
 
 #include <libgen.h>
@@ -52,6 +51,14 @@ int main(int argc, char *argv[])
 
   int fsi, fsn, fsi_chances;
 
+  const char *fmt_open_config_failed =
+    " [%s] ERR: cannot open config file: %s\n";
+  const char *fmt_open_inclusion_failed =
+    " [%s] ERR: cannot open inclusion file: %s\n";
+  const char *fmt_missing_inclusion_normal =
+    " [%s] WRN: missing normal vector for %s inc. no %d, skipping\n";
+  const char *fmt_dimer_distr_header =
+    " %-28s %5s %5s %5s %5s %5s %5s\n";
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -64,8 +71,7 @@ int main(int argc, char *argv[])
 
   // Open and parse config file
   if((f = fopen(f_ini, "r")) == NULL) {
-    fprintf(stderr, "  [%s]: error: cannot open config file: %s\n",
-            prog_name, f_ini);
+    fprintf(stderr, fmt_open_config_failed, prog_name, f_ini);
     return EXIT_FAILURE;
   }
   exit_status = parse_config(f);
@@ -86,8 +92,7 @@ int main(int argc, char *argv[])
     memory_clean_channels(channels, i_n_channels);
 
     if((f = fopen(i_Fchannels, "r")) == NULL) {
-      fprintf(stderr, "  [%s]: error: cannot open channels file: %s\n",
-              prog_name, i_Fchannels);
+      fprintf(stderr, fmt_open_inclusion_failed, prog_name, i_Fchannels);
       return EXIT_FAILURE;
     }
     exit_status = parse_channels(f, channels);
@@ -103,8 +108,7 @@ int main(int argc, char *argv[])
     memory_clean_slits(slits, i_n_slits);
 
     if((f = fopen(i_Fslits, "r")) == NULL) {
-      fprintf(stderr, "  [%s]: error: cannot open slits file: %s\n",
-              prog_name, i_Fslits);
+      fprintf(stderr, fmt_open_inclusion_failed, prog_name, i_Fslits);
       return EXIT_FAILURE;
     }
     exit_status = parse_slits(f, slits);
@@ -184,8 +188,8 @@ int main(int argc, char *argv[])
     memory_clean_spheres(spheres, Ns);
     memory_clean_dimers(dimers, Nd);
 
-    fprintf(stdout,"\n ***\tProcessing structure %d\n",s);
-    fprintf(stdout," Generating pure f.c.c. structure\n");
+    fprintf(stdout, "\n ***\tProcessing structure %d\n",s);
+    fprintf(stdout, " Generating pure f.c.c. structure\n");
 
     // Set fcc structure of spheres
     sph_set_fcc( spheres, Ns, i_edge_fcc_N);
@@ -215,8 +219,7 @@ int main(int argc, char *argv[])
           make_channel(dimers, spheres, channels[i].nm, channels[i].radius,
                      box_edge, channels[i].os, channels[i].sph_d, Ns);
         }else{
-          fprintf(stderr,
-                  " [ERR] Missing normal vector for channel %d, skipping\n",
+          fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
                   i_n_channels);
         }
       }
@@ -231,8 +234,7 @@ int main(int argc, char *argv[])
           make_slit(dimers, spheres, box_edge, slits[i].thickness, slits[i].os,
                     slits[i].sph_d, slits[i].nm, Ns);
         }else{
-          fprintf(stderr,
-                  " [ERR] Missing normal vector for channel %d, skipping\n",
+          fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                   i_n_slits);
         }
       }
@@ -348,12 +350,8 @@ int main(int argc, char *argv[])
               ((double) (Nd-Nd2))/6e0);
     }
 
-
-
-    fprintf(stdout," %-28s %5s %5s %5s %5s %5s %5s\n",
-          "Initial distribution:", "[110]", "[i10]", "[101]", "[i01]", "[011]", "[0i1]");
-    // Displayed at the first flip or prior to structure export (if perfect
-    // distribution is alredy present)
+    fprintf(stdout,fmt_dimer_distr_header, "Initial distribution:",
+            "[110]", "[i10]", "[101]", "[i01]", "[011]", "[0i1]");
 
     // Check if the number of dimers in the system is high enough
     low_on_dimers = (((double) Nd - Nd2)/((double) Nd) < 2e-1 ? 1 : 0);

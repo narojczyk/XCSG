@@ -39,5 +39,10 @@ typedef struct
   double sph_d;     // Diameter of spheres in the plane
 } SLI;
 
+typedef struct
+{
+
+} PTINC;
+
 #endif
 /* vim: set tw=80 ts=2 sw=2 et: */

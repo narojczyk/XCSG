@@ -25,4 +25,3 @@ Project directory should contain:
   inclusions (100+).
 * Inclusions may be formed by multimers.
 * Finite size inclusions
-* Rename to Multimer Crystal Structures (MCS)
