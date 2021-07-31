@@ -207,7 +207,7 @@ void generate_template_config(int status)
 
   fprintf(f, "RNG seed                : LUINT\n");
   fprintf(f, "Number of edge fcc cells: INT_x INT_y INT_z\n");
-  fprintf(f, "Load initial DC   (bool): INT\n");
+  fprintf(f, " (deprecated option)    : has no effect\n");
   fprintf(f, "Structures (start end)  : INT INT\n");
   fprintf(f, "Make nano-channel (bool): INT\n");
   fprintf(f, "Make nano-slit    (bool): INT\n");
@@ -384,37 +384,46 @@ int parse_slits(FILE *file, SLI sl_tab[])
  */
 int parse_config(FILE *file)
 {
+  const char *fmt_switch_sanity_check =
+    "  [%s] ERR: %s must be greater than 0\n";
+  const char *fmt_bad_range_values =
+    "  [%s] ERR: Incorrect parameters for structure indexes\n";
+  const char *fmt_lu  = "%*26c %lu\n";
+  const char *fmt_ddd = "%*26c %d %d %d\n";
+  const char *fmt_dd  = "%*26c %d %d\n";
+  const char *fmt_d   = "%*26c %d\n";
+  const char *fmt_s   = "%*26c %s\n";
+  unsigned char binc;
   int exit_code = EXIT_SUCCESS;
 
-  fscanf(file, "%*26c %lu\n",      &i_seed);
-  fscanf(file, "%*26c %d %d %d\n", &i_edge_fcc_N[0], &i_edge_fcc_N[1],
-         &i_edge_fcc_N[2]);
-  fscanf(file, "%*26c %d\n",       &i_load_DC_from_file); // Obsolete, TBR while ini file structure changes
-  fscanf(file, "%*26c %d %d\n",    &i_iDCfrom, &i_iDCto);
-  fscanf(file, "%*26c %d\n",       &i_make_channel);
-  fscanf(file, "%*26c %d\n",       &i_make_slit);
-  fscanf(file, "%*26c %d\n",       &i_fs_connect);
-  fscanf(file, "%*26c %d\n",       &i_n_channels);
-  fscanf(file, "%*26c %s\n",        i_Fchannels);
-  fscanf(file, "%*26c %d\n",       &i_n_slits);
-  fscanf(file, "%*26c %s\n",        i_Fslits);
+  fscanf(file, fmt_lu, &i_seed);
+  fscanf(file, fmt_ddd, &i_edge_fcc_N[0], &i_edge_fcc_N[1], &i_edge_fcc_N[2]);
+  //   fscanf(file, fmt_d,  &i_load_DC_from_file); // deprecated functionality
+  do{ // skip this line
+    binc = fgetc(file);
+  }while (binc != '\n');
+  fscanf(file, fmt_dd, &i_iDCfrom, &i_iDCto);
+  fscanf(file, fmt_d,  &i_make_channel);
+  fscanf(file, fmt_d,  &i_make_slit);
+  fscanf(file, fmt_d,  &i_fs_connect);
+  fscanf(file, fmt_d,  &i_n_channels);
+  fscanf(file, fmt_s,   i_Fchannels);
+  fscanf(file, fmt_d,  &i_n_slits);
+  fscanf(file, fmt_s,   i_Fslits);
 
   // Parameters sanity check
   if(i_iDCto < i_iDCfrom || i_iDCfrom < 0 || i_iDCto < 0){
-    fprintf(stderr," [%s] error: Incorrect parameters for structure indexes\n",
-      __func__);
+    fprintf(stderr, fmt_bad_range_values, __func__);
     exit_code = EXIT_FAILURE;
   }
 
   if(i_make_channel != 0 && i_n_channels < 1){
-    fprintf(stderr," [%s] error: i_n_channels must be greater than 0\n",
-      __func__);
+    fprintf(stderr, fmt_switch_sanity_check, "i_n_channels", __func__);
     exit_code = EXIT_FAILURE;
   }
 
   if(i_make_slit != 0 && i_n_slits < 1){
-    fprintf(stderr," [%s] error: i_n_slits must be greater than 0\n",
-      __func__);
+    fprintf(stderr, fmt_switch_sanity_check, "i_n_slits", __func__);
     exit_code = EXIT_FAILURE;
   }
 
@@ -429,6 +438,9 @@ int parse_config(FILE *file)
 void parse_options(int argc, char *argv[], char**f)
 {
   char optc;
+  const char *fmt_missing_config =
+    "  [%s] ERR: missing config file specification\n";
+
   opterr = 0;
   while ((optc = getopt_long(argc, argv, "hvit", long_opts, &optind)) != -1) {
     switch (optc) {
@@ -458,8 +470,7 @@ void parse_options(int argc, char *argv[], char**f)
    * and exit in such a case, otherwise try to process it.
    */
   if(optind == argc) {
-    fprintf(stderr, "  [%s]: error: missing config file specification\n",
-            prog_name);
+    fprintf(stderr, fmt_missing_config, prog_name);
     print_help(EXIT_FAILURE);
   }
   *f = argv[optind];

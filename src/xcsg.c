@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
   char *f_ini = NULL;
 
-  int exit_status;
+  int exit_status = EXIT_SUCCESS; // Initial assumption.
   int Ns, Nd, Nd2, Ns3, Ns3_odd;
   int zip_Ns3_runs=0, zip_init_sph=-1;
   int Odistrib[6] = {0,0,0,0,0,0};
@@ -46,10 +46,9 @@ int main(int argc, char *argv[])
   int i, s;
   int low_on_dimers = 0;
   int flip_count = 0;
+  int fsi, fsn, fsi_chances;
 
   double box_edge[3];
-
-  int fsi, fsn, fsi_chances;
 
   const char *fmt_open_config_failed =
     " [%s] ERR: cannot open config file: %s\n";
@@ -62,9 +61,6 @@ int main(int argc, char *argv[])
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
-
-  // For now, assume everything will be fine.
-  exit_status = EXIT_SUCCESS;
 
   // Parse command line options and get the config file name
   parse_options(argc, argv, &f_ini);
