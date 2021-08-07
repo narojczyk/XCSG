@@ -41,6 +41,26 @@ typedef struct
 
 typedef struct
 {
+  unsigned long int seed; // Seed for MT19937 p.r.n.g.
+  int fcc_cells[3];       // Number of f.c.c. cells on edge of the box
+  int first;              // Index of first structures to generate
+  int last;               // Index of last structure to generate
+  int mk_channel;         // Bolean [0|1] flag to enable channel inclusion
+  int mk_slit;            // Bolean [0|1] flag to enable slit inclusion
+  int mk_dimers;          // Bolean [0|1] flag to connect free spheres to dimers
+  int num_channels;       // Number of channels described in cfg_channels
+  int num_slits;          // Number of slits described in cfg_slits
+  char cfg_channels[41];  // File name for the channels' parameters
+  char cfg_slits[41];     // File name for the slits' parameters
+} CONFIG;
+
+typedef struct
+{
+
+} MODEL;
+
+typedef struct
+{
 
 } PTINC;
 

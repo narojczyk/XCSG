@@ -16,19 +16,6 @@
 
 extern char *prog_name;
 
-extern unsigned long int i_seed;
-extern int i_edge_fcc_N[3];
-extern int i_ch_layout[3];
-extern int i_load_DC_from_file; // Obsolete, TBR while ini file structure changes
-extern int i_iDCfrom;
-extern int i_iDCto;
-extern int i_make_channel;
-extern int i_make_slit;
-extern int i_fs_connect;
-extern int i_n_channels;
-extern int i_n_slits;
-extern char i_Fchannels[41];
-extern char i_Fslits[41];
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -279,7 +266,7 @@ void generate_template_config(int status)
  * Reads channels' configuration from 'file' and stores data for each channel
  * respectively.
  */
-int parse_channels(FILE *file, CHA ch_tab[])
+int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
 {
   int i=0;
   double c_off[3] = {0e0, 0e0, 0e0};
@@ -295,13 +282,13 @@ int parse_channels(FILE *file, CHA ch_tab[])
   }while (binc != '\n');
 
   // Read data from the file
-  for(i=0; i<i_n_channels; i++){
+  for(i=0; i<num_channels; i++){
     if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
            &c_off[0], &c_off[1], &c_off[2],
            &c_nor[0], &c_nor[1], &c_nor[2], &c_r, &s_d) == EOF){
       fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
       fprintf(stderr,"  %d data lines read; %d data lines expected\n",
-              i, i_n_channels);
+              i, num_channels);
       return EXIT_FAILURE;
     }else{
 
@@ -331,7 +318,7 @@ int parse_channels(FILE *file, CHA ch_tab[])
  * Reads slits' configuration from 'file' and stores data for each slit
  * respectively.
  */
-int parse_slits(FILE *file, SLI sl_tab[])
+int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
 {
   int i=0;
   double sl_off[3] = {0e0, 0e0, 0e0};
@@ -347,13 +334,13 @@ int parse_slits(FILE *file, SLI sl_tab[])
   }while (binc != '\n');
 
   // Read data from the file
-  for(i=0; i<i_n_slits; i++){
+  for(i=0; i<num_slits; i++){
     if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
            &sl_off[0], &sl_off[1], &sl_off[2],
            &sl_nor[0], &sl_nor[1], &sl_nor[2], &sl_th, &s_d) == EOF){
       fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
       fprintf(stderr,"  %d data lines read; %d data lines expected\n",
-              i, i_n_slits);
+              i, num_slits);
       return EXIT_FAILURE;
     }else{
 
@@ -382,10 +369,8 @@ int parse_slits(FILE *file, SLI sl_tab[])
  *
  * Reads configuration option using file descriptor provided.
  */
-int parse_config(FILE *file)
+int parse_config(FILE *file, CONFIG *cfg)
 {
-  const char *fmt_switch_sanity_check =
-    "  [%s] ERR: %s must be greater than 0\n";
   const char *fmt_bad_range_values =
     "  [%s] ERR: Incorrect parameters for structure indexes\n";
   const char *fmt_lu  = "%*26c %lu\n";
@@ -396,38 +381,51 @@ int parse_config(FILE *file)
   unsigned char binc;
   int exit_code = EXIT_SUCCESS;
 
-  fscanf(file, fmt_lu, &i_seed);
-  fscanf(file, fmt_ddd, &i_edge_fcc_N[0], &i_edge_fcc_N[1], &i_edge_fcc_N[2]);
-  //   fscanf(file, fmt_d,  &i_load_DC_from_file); // deprecated functionality
+  fscanf(file, fmt_lu, &cfg->seed);
+  fscanf(file, fmt_ddd,
+         &cfg->fcc_cells[0], &cfg->fcc_cells[1], &cfg->fcc_cells[2]);
   do{ // skip this line
     binc = fgetc(file);
   }while (binc != '\n');
-  fscanf(file, fmt_dd, &i_iDCfrom, &i_iDCto);
-  fscanf(file, fmt_d,  &i_make_channel);
-  fscanf(file, fmt_d,  &i_make_slit);
-  fscanf(file, fmt_d,  &i_fs_connect);
-  fscanf(file, fmt_d,  &i_n_channels);
-  fscanf(file, fmt_s,   i_Fchannels);
-  fscanf(file, fmt_d,  &i_n_slits);
-  fscanf(file, fmt_s,   i_Fslits);
+  fscanf(file, fmt_dd, &cfg->first, &cfg->last);
+  fscanf(file, fmt_d,  &cfg->mk_channel);
+  fscanf(file, fmt_d,  &cfg->mk_slit);
+  fscanf(file, fmt_d,  &cfg->mk_dimers);
+  fscanf(file, fmt_d,  &cfg->num_channels);
+  fscanf(file, fmt_s,   cfg->cfg_channels);
+  fscanf(file, fmt_d,  &cfg->num_slits);
+  fscanf(file, fmt_s,   cfg->cfg_slits);
 
   // Parameters sanity check
-  if(i_iDCto < i_iDCfrom || i_iDCfrom < 0 || i_iDCto < 0){
+  if(cfg->last < cfg->first || cfg->first < 0 || cfg->last < 0){
     fprintf(stderr, fmt_bad_range_values, __func__);
     exit_code = EXIT_FAILURE;
   }
 
-  if(i_make_channel != 0 && i_n_channels < 1){
-    fprintf(stderr, fmt_switch_sanity_check, "i_n_channels", __func__);
-    exit_code = EXIT_FAILURE;
-  }
+  exit_code = config_inclusions_sanity_check(
+    cfg->mk_channel, cfg->num_channels, "num_channels");
 
-  if(i_make_slit != 0 && i_n_slits < 1){
-    fprintf(stderr, fmt_switch_sanity_check, "i_n_slits", __func__);
-    exit_code = EXIT_FAILURE;
-  }
+  exit_code = config_inclusions_sanity_check(
+    cfg->mk_slit, cfg->num_slits, "num_slits");
 
   return exit_code;
+}
+
+/*
+ * config_inclusions_sanity_check()
+ *
+ * Prints error messages for wrong inlcusion parameters
+ */
+int config_inclusions_sanity_check(
+  int mk_inclusion, int num_inclusions, const char *msg)
+{
+  const char *fmt_switch_sanity_check =
+    "  [%s] ERR: %s must be greater than 0\n";
+  if(mk_inclusion != 0 && num_inclusions < 1){
+    fprintf(stderr, fmt_switch_sanity_check, msg, __func__);
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
 }
 
 /*

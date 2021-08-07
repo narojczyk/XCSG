@@ -1,7 +1,7 @@
 #ifndef _IO_H
 #define _IO_H
 
-void display_configuration_summary(SLI *slits, CHA *channels,
+void display_configuration_summary(CONFIG cfg, SLI *slits, CHA *channels,
                                    double box_edge[3], int Ns, int Nd);
 
 int exp_str_data(DIM3D *dim, SPH *sph, double box[3], 

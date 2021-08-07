@@ -30,6 +30,8 @@
 int main(int argc, char *argv[])
 {
   FILE *f;
+  CONFIG cfg;
+
 
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
@@ -70,28 +72,28 @@ int main(int argc, char *argv[])
     fprintf(stderr, fmt_open_config_failed, prog_name, f_ini);
     return EXIT_FAILURE;
   }
-  exit_status = parse_config(f);
+  exit_status = parse_config(f, &cfg);
   fclose(f);
   if(exit_status != EXIT_SUCCESS){
       goto cleanup;
   }
 
   // Allocate memory for channels' data
-  channels = malloc( i_n_channels * sizeof(CHA));
+  channels = malloc( cfg.num_channels * sizeof(CHA));
 
   // Allocate memory for slits' data
-  slits = malloc( i_n_slits * sizeof(SLI));
+  slits = malloc( cfg.num_slits * sizeof(SLI));
 
   // Open and read channel description data
-  if( i_make_channel != 0 ){
+  if( cfg.mk_channel != 0 ){
     // Clean alocated memory for channels
-    memory_clean_channels(channels, i_n_channels);
+    memory_clean_channels(channels, cfg.num_channels);
 
-    if((f = fopen(i_Fchannels, "r")) == NULL) {
-      fprintf(stderr, fmt_open_inclusion_failed, prog_name, i_Fchannels);
+    if((f = fopen(cfg.cfg_channels, "r")) == NULL) {
+      fprintf(stderr, fmt_open_inclusion_failed, prog_name, cfg.cfg_channels);
       return EXIT_FAILURE;
     }
-    exit_status = parse_channels(f, channels);
+    exit_status = parse_channels(f, channels, cfg.num_channels);
     fclose(f);
     if(exit_status != EXIT_SUCCESS){
       goto cleanup;
@@ -99,15 +101,15 @@ int main(int argc, char *argv[])
   }
 
   // Open and read slits description data
-  if( i_make_slit != 0 ){
+  if( cfg.mk_slit != 0 ){
     // Clean alocated memory for channels
-    memory_clean_slits(slits, i_n_slits);
+    memory_clean_slits(slits, cfg.num_slits);
 
-    if((f = fopen(i_Fslits, "r")) == NULL) {
-      fprintf(stderr, fmt_open_inclusion_failed, prog_name, i_Fslits);
+    if((f = fopen(cfg.cfg_slits, "r")) == NULL) {
+      fprintf(stderr, fmt_open_inclusion_failed, prog_name, cfg.cfg_slits);
       return EXIT_FAILURE;
     }
-    exit_status = parse_slits(f, slits);
+    exit_status = parse_slits(f, slits, cfg.num_slits);
     fclose(f);
     if(exit_status != EXIT_SUCCESS){
       goto cleanup;
@@ -115,26 +117,26 @@ int main(int argc, char *argv[])
   }
 
   // Initiate generator with 'seed'
-  init_RNG(i_seed);
+  init_RNG(cfg.seed);
 
   // Set the number of spheres and dimres
-  Ns = 4 * i_edge_fcc_N[0] * i_edge_fcc_N[1] * i_edge_fcc_N[2];
+  Ns = 4 * cfg.fcc_cells[0] * cfg.fcc_cells[1] * cfg.fcc_cells[2];
   Nd = Ns / 2;
 
   // Calculate cube edge
-  box_edge[0] = i_edge_fcc_N[0] * sqrt(two);
-  box_edge[1] = i_edge_fcc_N[1] * sqrt(two);
-  box_edge[2] = i_edge_fcc_N[2] * sqrt(two);
+  box_edge[0] = cfg.fcc_cells[0] * sqrt(two);
+  box_edge[1] = cfg.fcc_cells[1] * sqrt(two);
+  box_edge[2] = cfg.fcc_cells[2] * sqrt(two);
 
   // Summary of configuration variables
-  display_configuration_summary(slits, channels, box_edge, Ns, Nd);
+  display_configuration_summary(cfg, slits, channels, box_edge, Ns, Nd);
 
   // Allocate memory for spheres and dimers
   spheres = malloc( Ns * sizeof(SPH));
   dimers  = malloc( Nd * sizeof(DIM3D));
 
   // Loop over selected set of structures
-  for(s=i_iDCfrom; s<=i_iDCto; s++){
+  for(s=cfg.first; s<=cfg.last; s++){
 
     // Clean allocated memory
     memory_clean_spheres(spheres, Ns);
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, " Generating pure f.c.c. structure\n");
 
     // Set fcc structure of spheres
-    sph_set_fcc( spheres, Ns, i_edge_fcc_N);
+    sph_set_fcc( spheres, Ns, cfg.fcc_cells);
 
     // Find neighbors for spheres
     if(find_ngb_spheres(spheres, Ns, box_edge) != 0){
@@ -163,8 +165,8 @@ int main(int argc, char *argv[])
     }
 
     // Make channel
-    if(i_make_channel){
-      for(i=0; i<i_n_channels; i++){
+    if(cfg.mk_channel){
+      for(i=0; i<cfg.num_channels; i++){
         // Test channel data
         if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 || channels[i].nm[2] != 0){
           fprintf(stdout, " Inserting channel %d\n", i);
@@ -172,14 +174,14 @@ int main(int argc, char *argv[])
                      box_edge, channels[i].os, channels[i].sph_d, Ns);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
-                  i_n_channels);
+                  cfg.num_channels);
         }
       }
     }
 
     // Make slit
-    if(i_make_slit){
-      for(i=0; i<i_n_slits; i++){
+    if(cfg.mk_slit){
+      for(i=0; i<cfg.num_slits; i++){
         // Test slit data
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, " Inserting slit %d\n", i);
@@ -187,7 +189,7 @@ int main(int argc, char *argv[])
                     slits[i].sph_d, slits[i].nm, Ns);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
-                  i_n_slits);
+                  cfg.num_slits);
         }
       }
     }
@@ -208,7 +210,7 @@ int main(int argc, char *argv[])
     // Randomly (where possible) connect all neighbouring free spheres
     // into dimers. In critical cases start with spheres with fewest possible
     // connections
-    if(Ns3 > 1 && i_fs_connect == 1){
+    if(Ns3 > 1 && cfg.mk_dimers == 1){
 
       fprintf(stdout,"\n\n Randomly connecting all possible free spheres\n");
       do{
@@ -246,7 +248,7 @@ int main(int argc, char *argv[])
     }
 
     // Eliminate remaining free spheres (if any) using zipper
-    if(Ns3 > 1 && i_fs_connect == 1){
+    if(Ns3 > 1 && cfg.mk_dimers == 1){
       fprintf(stdout, "\n\n Connecting remaining free spheres with zipper\n");
 
       // Check if there are even number of type-3 spheres

@@ -11,19 +11,10 @@
 #include "io.h"
 
 extern char *prog_name;
-extern unsigned long int i_seed;
-extern int i_edge_fcc_N[3];
-extern int i_iDCfrom;
-extern int i_iDCto;
-extern int i_make_channel;
-extern int i_make_slit;
-extern int i_n_channels;
-extern int i_n_slits;
-extern char i_Fchannels[41];
-extern char i_Fslits[41];
+
 extern const double two;
 
-void display_configuration_summary(SLI *slits, CHA *channels,
+void display_configuration_summary(CONFIG cfg, SLI *slits, CHA *channels,
                                    double box_edge[3], int Ns, int Nd)
 {
   int i;
@@ -39,10 +30,10 @@ void display_configuration_summary(SLI *slits, CHA *channels,
   fprintf(stdout," ### %s - configuration summary\n", prog_name);
   fprintf(stdout,"\n ## Ini file parameters\n");
   fprintf(stdout," System size (cells)  : %d by %d by %d\n",
-          i_edge_fcc_N[0], i_edge_fcc_N[1], i_edge_fcc_N[2]);
-  fprintf(stdout," PRNG seed            : %8lu\n", i_seed);
+          cfg.fcc_cells[0], cfg.fcc_cells[1], cfg.fcc_cells[2]);
+  fprintf(stdout," PRNG seed            : %8lu\n", cfg.seed);
   fprintf(stdout," Structure indices    : from %d to %d (%d files total)\n",
-          i_iDCfrom, i_iDCto, i_iDCto-i_iDCfrom+1);
+          cfg.first, cfg.last, cfg.last-cfg.first+1);
 
   fprintf(stdout,"\n ## Derived parameters\n");
   fprintf(stdout, fmt_sees, "Coordinates ranges",
@@ -54,14 +45,14 @@ void display_configuration_summary(SLI *slits, CHA *channels,
   fprintf(stdout, fmt_ses, "", box_edge[2], "z");
   fprintf(stdout, fmt_sd, "dimers", Nd);
   fprintf(stdout, fmt_sd, "spheres", Ns);
-  fprintf(stdout, fmt_sd, "channels", i_n_channels);
+  fprintf(stdout, fmt_sd, "channels", cfg.num_channels);
 
   fprintf(stdout,"\n ## Inclusions settings\n");
-  if (i_make_channel){
-    fprintf(stdout, fmt_ss, "Channels",i_Fchannels);
+  if (cfg.mk_channel){
+    fprintf(stdout, fmt_ss, "Channels",cfg.cfg_channels);
     fprintf(stdout, fmt_inlusion_data_header,
             "channel", "channel", "radius", "sph. diam.");
-    for(i=0; i<i_n_channels; i++){
+    for(i=0; i<cfg.num_channels; i++){
       fprintf(stdout, fmt_inclusion_data, i,
               channels[i].os[0], channels[i].os[1], channels[i].os[2],
               channels[i].nm[0], channels[i].nm[1], channels[i].nm[2],
@@ -69,12 +60,12 @@ void display_configuration_summary(SLI *slits, CHA *channels,
     }
     fprintf(stdout,"\n");
   }
-  fprintf(stdout, fmt_sd, "layers",i_n_slits);
-  if (i_make_slit){
-    fprintf(stdout, fmt_ss, "Layers", i_Fslits);
+  fprintf(stdout, fmt_sd, "layers", cfg.num_slits);
+  if (cfg.mk_slit){
+    fprintf(stdout, fmt_ss, "Layers", cfg.cfg_slits);
     fprintf(stdout, fmt_inlusion_data_header,
             "layer", "layer", "thick.", "sph. diam.");
-    for(i=0; i<i_n_slits; i++){
+    for(i=0; i<cfg.num_slits; i++){
       fprintf(stdout, fmt_inclusion_data, i,
               slits[i].os[0], slits[i].os[1], slits[i].os[2],
               slits[i].nm[0], slits[i].nm[1], slits[i].nm[2],
