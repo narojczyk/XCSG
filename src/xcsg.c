@@ -127,51 +127,7 @@ int main(int argc, char *argv[])
   box_edge[2] = i_edge_fcc_N[2] * sqrt(two);
 
   // Summary of configuration variables
-  fprintf(stdout,"\tConfig summary\n");
-  fprintf(stdout," System size (cells)  : %d by %d by %d\n",
-          i_edge_fcc_N[0], i_edge_fcc_N[1], i_edge_fcc_N[2]);
-  fprintf(stdout," MT19937 seed         : %8lu\n", i_seed);
-  fprintf(stdout," Str. index range     : %d to %d (total %d files)\n",
-          i_iDCfrom, i_iDCto, i_iDCto-i_iDCfrom+1);
-
-  fprintf(stdout,"\n\tOther parameters\n");
-  fprintf(stdout," Coordinates range    : %.16le %.16le (x)\n",
-          -box_edge[0]/two,box_edge[0]/two);
-  fprintf(stdout,"                        %.16le %.16le (y)\n",
-          -box_edge[1]/two,box_edge[1]/two);
-  fprintf(stdout,"                        %.16le %.16le (z)\n",
-          -box_edge[2]/two,box_edge[2]/two);
-  fprintf(stdout," Box dimensions       : %.16le (x)\n", box_edge[0]);
-  fprintf(stdout,"                        %.16le (y)\n", box_edge[1]);
-  fprintf(stdout,"                        %.16le (z)\n", box_edge[2]);
-  fprintf(stdout," Number of dimers     : %d\n",Nd);
-  fprintf(stdout," Number of spheres    : %d\n",Ns);
-  fprintf(stdout," Number of channels   : %d\n",i_n_channels);
-  if (i_make_channel){
-    fprintf(stdout," Channels data from   : %s\n",i_Fchannels);
-    fprintf(stdout," No.\t channell offset\t\t chanel normal\t\tradius"
-      "\tsph. diameter\n");
-    for(i=0; i<i_n_channels; i++){
-      fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
-              channels[i].os[0], channels[i].os[1], channels[i].os[2],
-              channels[i].nm[0], channels[i].nm[1], channels[i].nm[2],
-              channels[i].radius, channels[i].sph_d);
-    }
-    fprintf(stdout,"\n");
-  }
-  fprintf(stdout," Number of slits      : %d\n",i_n_slits);
-  if (i_make_slit){
-    fprintf(stdout," Slit data from       : %s\n",i_Fslits);
-    fprintf(stdout," No.\tslit offset\t\t\tslit normal\t\tthick."
-      "\t sph. diam.\n");
-    for(i=0; i<i_n_slits; i++){
-      fprintf(stdout," %d | %lf %lf %lf | %lf %lf %lf | %lf | %lf\n", i,
-              slits[i].os[0], slits[i].os[1], slits[i].os[2],
-              slits[i].nm[0], slits[i].nm[1], slits[i].nm[2],
-              slits[i].thickness, slits[i].sph_d);
-    }
-    fprintf(stdout,"\n");
-  }
+  display_configuration_summary(slits, channels, box_edge, Ns, Nd);
 
   // Allocate memory for spheres and dimers
   spheres = malloc( Ns * sizeof(SPH));
