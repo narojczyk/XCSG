@@ -52,10 +52,13 @@ typedef struct
   int num_slits;          // Number of slits described in cfg_slits
   char cfg_channels[41];  // File name for the channels' parameters
   char cfg_slits[41];     // File name for the slits' parameters
+  char symmetry[8];       // Symmetry of the generated structure
 } CONFIG;
 
 typedef struct
 {
+  int Nmon;     // Number of monomers forming system (based on structure) //old: Ns
+  int Ndim;     // Maximum possible number of dimers (based on Nmon) // old: Nd
 
 } MODEL;
 

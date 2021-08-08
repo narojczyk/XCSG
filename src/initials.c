@@ -192,17 +192,17 @@ void generate_template_config(int status)
     exit(1);
   }
 
-  fprintf(f, "RNG seed                : LUINT\n");
-  fprintf(f, "Number of edge fcc cells: INT_x INT_y INT_z\n");
-  fprintf(f, " (deprecated option)    : has no effect\n");
-  fprintf(f, "Structures (start end)  : INT INT\n");
-  fprintf(f, "Make nano-channel (bool): INT\n");
-  fprintf(f, "Make nano-slit    (bool): INT\n");
-  fprintf(f, "Insert dimers DC  (bool): INT\n");
-  fprintf(f, "Number of channels      : INT\n");
-  fprintf(f, "Channels desc. file name: STRING\n");
-  fprintf(f, "Number of slits         : INT\n");
-  fprintf(f, "Slits descrip. file name: STRING\n");
+  fprintf(f, "RNG seed                 : LUINT\n");
+  fprintf(f, "Number of edge fcc cells : INT_x INT_y INT_z\n");
+  fprintf(f, "Generated symmetry       : STRING\n");
+  fprintf(f, "Structures (start end)   : INT INT\n");
+  fprintf(f, "Make nano-channel (bool) : INT\n");
+  fprintf(f, "Make nano-slit    (bool) : INT\n");
+  fprintf(f, "Insert dimers DC  (bool) : INT\n");
+  fprintf(f, "Number of channels       : INT\n");
+  fprintf(f, "Channels desc. file name : STRING\n");
+  fprintf(f, "Number of slits          : INT\n");
+  fprintf(f, "Slits descrip. file name : STRING\n");
 
   if(fclose(f)==0) {
     fprintf(stdout," Main  program template config file written to: %s\n",
@@ -378,15 +378,12 @@ int parse_config(FILE *file, CONFIG *cfg)
   const char *fmt_dd  = "%*26c %d %d\n";
   const char *fmt_d   = "%*26c %d\n";
   const char *fmt_s   = "%*26c %s\n";
-  unsigned char binc;
   int exit_code = EXIT_SUCCESS;
 
   fscanf(file, fmt_lu, &cfg->seed);
   fscanf(file, fmt_ddd,
          &cfg->fcc_cells[0], &cfg->fcc_cells[1], &cfg->fcc_cells[2]);
-  do{ // skip this line
-    binc = fgetc(file);
-  }while (binc != '\n');
+  fscanf(file, fmt_s,   cfg->symmetry);
   fscanf(file, fmt_dd, &cfg->first, &cfg->last);
   fscanf(file, fmt_d,  &cfg->mk_channel);
   fscanf(file, fmt_d,  &cfg->mk_slit);

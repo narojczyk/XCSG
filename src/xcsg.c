@@ -78,17 +78,16 @@ int main(int argc, char *argv[])
       goto cleanup;
   }
 
-  // Allocate memory for channels' data
+  // Allocate and clean memory for channels' data
   channels = malloc( cfg.num_channels * sizeof(CHA));
+  memory_clean_channels(channels, cfg.num_channels);
 
-  // Allocate memory for slits' data
+  // Allocate and clean memory for slits' data
   slits = malloc( cfg.num_slits * sizeof(SLI));
+  memory_clean_slits(slits, cfg.num_slits);
 
   // Open and read channel description data
   if( cfg.mk_channel != 0 ){
-    // Clean alocated memory for channels
-    memory_clean_channels(channels, cfg.num_channels);
-
     if((f = fopen(cfg.cfg_channels, "r")) == NULL) {
       fprintf(stderr, fmt_open_inclusion_failed, prog_name, cfg.cfg_channels);
       return EXIT_FAILURE;
@@ -102,9 +101,6 @@ int main(int argc, char *argv[])
 
   // Open and read slits description data
   if( cfg.mk_slit != 0 ){
-    // Clean alocated memory for channels
-    memory_clean_slits(slits, cfg.num_slits);
-
     if((f = fopen(cfg.cfg_slits, "r")) == NULL) {
       fprintf(stderr, fmt_open_inclusion_failed, prog_name, cfg.cfg_slits);
       return EXIT_FAILURE;
@@ -119,8 +115,10 @@ int main(int argc, char *argv[])
   // Initiate generator with 'seed'
   init_RNG(cfg.seed);
 
-  // Set the number of spheres and dimres
-  Ns = 4 * cfg.fcc_cells[0] * cfg.fcc_cells[1] * cfg.fcc_cells[2];
+  // Set the number of monomers in the system
+  Ns = number_of_spheres(cfg.symmetry, cfg.fcc_cells);
+
+  // Maximum number of dimers for the structure
   Nd = Ns / 2;
 
   // Calculate cube edge

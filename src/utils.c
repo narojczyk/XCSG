@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "config.h"
 
@@ -22,6 +23,17 @@
 extern const double zero;
 extern const double one;
 extern const double two;
+
+int number_of_spheres(const char *symmetry, int *cells){
+  const char *fcc = "fcc";
+  int size_fcc = strlen(fcc);
+  int size_symmetry = strlen(symmetry);
+
+  if(size_symmetry == size_fcc && !strncmp(symmetry, fcc, size_fcc)){
+    return 4 * cells[0] * cells[1] * cells[2];
+  }
+  return 0;
+}
 
 void bouble_sort_double(double *array, int s, int ascending){
   int sorted=1;
