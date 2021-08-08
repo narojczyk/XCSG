@@ -13,15 +13,17 @@
 extern char *prog_name;
 
 extern const double two;
+extern const double one;
 
-void display_configuration_summary(CONFIG cfg, SLI *slits, CHA *channels,
-                                   double box_edge[3], int Ns, int Nd)
-{
+void display_configuration_summary(CONFIG cfg, MODEL md, SLI *slits,
+                                   CHA *channels){
   int i;
-  const char *fmt_sees = " %-21s: %.16le %.16le (%1s)\n";
-  const char *fmt_ses  = " %-21s: %.16le (%1s)\n";
-  const char *fmt_sd   = " Number of %-11s: %d\n";
-  const char *fmt_ss   = " %-8s data from   : %s\n";
+  const char *fmt_sees = " %-23s: %.16le %.16le (%1s)\n";
+  const char *fmt_ses  = " %-23s: %.16le (%1s)\n";
+  const char *fmt_sd   = " Max number of %-9s: %d\n";
+  const char *fmt_ssDat   = " %-10s data from   : %s\n";
+  const char *fmt_ss   = " %-23s: %s\n";
+  const char *fmt_slu  = " %-23s: %8lu\n";
   const char *fmt_inlusion_data_header =
     " No.| %s offset\t\t  | %s normal\t       | %s\t  | %s\n";
   const char *fmt_inclusion_data =
@@ -29,27 +31,29 @@ void display_configuration_summary(CONFIG cfg, SLI *slits, CHA *channels,
 
   fprintf(stdout," # %s - configuration summary\n", prog_name);
   fprintf(stdout,"\n ## Ini file parameters\n");
-  fprintf(stdout," System size (cells)  : %d by %d by %d\n",
+  fprintf(stdout," System size (cells)    : %d by %d by %d\n",
           cfg.cells[0], cfg.cells[1], cfg.cells[2]);
-  fprintf(stdout," PRNG seed            : %8lu\n", cfg.seed);
-  fprintf(stdout," Structure indices    : from %d to %d (%d files total)\n",
+  fprintf(stdout, fmt_ss, "Symmetry", cfg.symmetry);
+  fprintf(stdout," Structure indices      : from %d to %d (%d files total)\n",
           cfg.first, cfg.last, cfg.last-cfg.first+1);
+  fprintf(stdout, fmt_sd, "channels", cfg.num_channels);
+  fprintf(stdout, fmt_sd, "layers", cfg.num_slits);
+  fprintf(stdout, fmt_slu, "PRNG seed", cfg.seed);
 
   fprintf(stdout,"\n ## Derived parameters\n");
   fprintf(stdout, fmt_sees, "Coordinates ranges",
-          -box_edge[0]/two,box_edge[0]/two, "x");
-  fprintf(stdout, fmt_sees, "", -box_edge[1]/two,box_edge[1]/two, "y");
-  fprintf(stdout, fmt_sees, "", -box_edge[2]/two,box_edge[2]/two, "z");
-  fprintf(stdout, fmt_ses, "Box dimensions", box_edge[0], "x");
-  fprintf(stdout, fmt_ses, "", box_edge[1], "y");
-  fprintf(stdout, fmt_ses, "", box_edge[2], "z");
-  fprintf(stdout, fmt_sd, "dimers", Nd);
-  fprintf(stdout, fmt_sd, "spheres", Ns);
-  fprintf(stdout, fmt_sd, "channels", cfg.num_channels);
+          -md.box[0]/two, md.box[0]/two, "x");
+  fprintf(stdout, fmt_sees, "", -md.box[1]/two,md.box[1]/two, "y");
+  fprintf(stdout, fmt_sees, "", -md.box[2]/two,md.box[2]/two, "z");
+  fprintf(stdout, fmt_ses, "Box dimensions", md.box[0], "x");
+  fprintf(stdout, fmt_ses, "", md.box[1], "y");
+  fprintf(stdout, fmt_ses, "", md.box[2], "z");
+  fprintf(stdout, fmt_sd, "dimers", md.Nsph);
+  fprintf(stdout, fmt_sd, "spheres", md.Ndim);
 
   fprintf(stdout,"\n ## Inclusions settings\n");
   if (cfg.mk_channel){
-    fprintf(stdout, fmt_ss, "Channels",cfg.cfg_channels);
+    fprintf(stdout, fmt_ssDat, "Channels",cfg.cfg_channels);
     fprintf(stdout, fmt_inlusion_data_header,
             "channel", "channel", "radius", "sph. diam.");
     for(i=0; i<cfg.num_channels; i++){
@@ -60,9 +64,9 @@ void display_configuration_summary(CONFIG cfg, SLI *slits, CHA *channels,
     }
     fprintf(stdout,"\n");
   }
-  fprintf(stdout, fmt_sd, "layers", cfg.num_slits);
+
   if (cfg.mk_slit){
-    fprintf(stdout, fmt_ss, "Layers", cfg.cfg_slits);
+    fprintf(stdout, fmt_ssDat, "Layers", cfg.cfg_slits);
     fprintf(stdout, fmt_inlusion_data_header,
             "layer", "layer", "thick.", "sph. diam.");
     for(i=0; i<cfg.num_slits; i++){
@@ -76,25 +80,27 @@ void display_configuration_summary(CONFIG cfg, SLI *slits, CHA *channels,
 }
 
 /*
-void print_inclusion_data(const char *fmt_ss, const char *fmt_inclusion_data,
-                          const char *inc_header,
-                          const char *inc_type, const char *inc_size,
-                          char fileName[], int n_inclusions
-                          double os[3], double nm[3], double thickness,
-                          double sph_d)
+ * display_stats()
+ */
+void display_stats(MODEL md, int bd, int is, int fs)
 {
-  int i;
-  fprintf(stdout, fmt_ss, inc_header, fileName);
-    fprintf(stdout, fmt_inlusion_data_header,
-            inc_type, inc_type, inc_size, "sph. diam.");
-    for(i=0; i<n_inclusions; i++){
-      fprintf(stdout, fmt_inclusion_data, i,
-              os[0], os[1], os[2],
-              nm[0], nm[1], nm[2],
-              thickness, sph_d);
-    }
-    fprintf(stdout,"\n");
-}*/
+  const char *fmt_sde = " %-17s (if any): %4d %6.2lf %%\n";
+  int vd = md.Ndim - bd;
+  int ns = md.Nsph;
+
+  double hvd = (double) (100 * vd); // (hekto vd)
+  double hfs = (double) (100 * fs); // (hekto fs)
+  double his = (double) (100 * is); // (hekto is)
+  double hbd = (double) (100 * bd); // (hekto bd)
+  double ns_db = one*ns;
+  double ns_2_db = two*ns;
+
+  fprintf(stdout, fmt_sde, "Free spheres", fs, hfs/ns_db );
+  fprintf(stdout, fmt_sde, "Inclusion spheres", is, his/ns_db);
+  fprintf(stdout, fmt_sde, "Dimers valid", vd, hvd/ns_2_db );
+  fprintf(stdout, fmt_sde, "Dimers broken", bd, hbd/ns_2_db );
+//   fprintf(stdout, fmt_sde, "Dimers spheres", 2 * vd, (2e2*(vd))/ns_db );
+}
 
 /*
  * export_structure_data()

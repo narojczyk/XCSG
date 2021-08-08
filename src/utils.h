@@ -1,8 +1,8 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-int container_dimensions(MODEL *md, const char *symmetry, int *cells);
-int number_of_spheres(const char *symmetry, int *cells);
+int container_dimensions(MODEL *md, CONFIG cf);
+int number_of_spheres(CONFIG cf);
 int find_ngb_spheres(SPH sph[], int ns, double box[3]);
 int brake_dimers(DIM3D *dim, SPH *sph, int nd);
 int sph_set_fcc( SPH *sph, int ns, int fcc[3]);
@@ -24,7 +24,6 @@ void update_dimer_parameters_dev(DIM3D *dim, SPH *sph, double box[3], int d);
 void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd);
 void init_MT19937(unsigned long int s);
 void init_RNG(unsigned long int s);
-void display_stats(int vd, int bd, int is, int fs, int ns);
 void bouble_sort_double(double *array, int s, int ascending);
 
 double u_RNG();

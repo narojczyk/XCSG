@@ -58,6 +58,10 @@ int main(int argc, char *argv[])
     " [%s] WRN: missing normal vector for %s inc. no %d, skipping\n";
   const char *fmt_dimer_distr_header =
     " %-28s %5s %5s %5s %5s %5s %5s\n";
+  const char *fmt_wrong_number_of_spheres =
+    " [%s] ERR: failed to calculate the number of spheres\n";
+  const char *fmt_wrong_container_dimensions =
+    " [%s] ERR: failed to calculate continer dimensions\n";
 
   // Extract program name from the path.
   prog_name = basename(argv[0]);
@@ -113,21 +117,22 @@ int main(int argc, char *argv[])
   // Initiate generator with 'seed'
   init_RNG(cfg.seed);
 
-  // Set the number of monomers in the system
-  mdl.Nsph = number_of_spheres(cfg.symmetry, cfg.cells);
-
-  // Maximum number of dimers for the structure
+  // Set the number of monomers, dimers, and possibly, further-mers
+  mdl.Nsph = number_of_spheres(cfg);
+  if(mdl.Nsph == EXIT_FAILURE){
+    fprintf(stderr, fmt_wrong_number_of_spheres, prog_name);
+    goto cleanup;
+  }
   mdl.Ndim = mdl.Nsph / 2;
 
   // Calculate container dimensions
-  container_dimensions(&mdl, cfg.symmetry, cfg.cells);
- /* // TODO: Deprecate this
-  box_edge[0] = mdl.box[0];
-  box_edge[1] = mdl.box[1];
-  box_edge[2] = mdl.box[2];*/
+  if(container_dimensions(&mdl, cfg) == EXIT_FAILURE){
+    fprintf(stderr, fmt_wrong_container_dimensions, prog_name);
+    goto cleanup;
+  }
 
   // Summary of configuration variables
-  display_configuration_summary(cfg, slits, channels, mdl.box, mdl.Nsph, mdl.Ndim);
+  display_configuration_summary(cfg, mdl, slits, channels);
 
   // Allocate memory for spheres and dimers
   spheres = malloc( mdl.Nsph * sizeof(SPH));
@@ -144,7 +149,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, " Generating pure f.c.c. structure\n");
 
     // Set fcc structure of spheres
-    sph_set_fcc( spheres, mdl.Nsph, cfg.cells);
+    sph_set_fcc(spheres, mdl.Nsph, cfg.cells);
 
     // Find neighbors for spheres
     if(find_ngb_spheres(spheres, mdl.Nsph, mdl.box) != 0){
@@ -153,9 +158,10 @@ int main(int argc, char *argv[])
     }
 
     // Assign lattice indexes to all spheres
-    sph_assign_lattice_indexes(spheres, 0, mdl.Nsph);
-    sph_assign_lattice_indexes(spheres, 1, mdl.Nsph);
-    sph_assign_lattice_indexes(spheres, 2, mdl.Nsph);
+    exit_status = sph_assign_lattice_indexes(spheres, mdl.Nsph);
+    if(exit_status != EXIT_SUCCESS){
+      goto cleanup;
+    }
 
     // Flag all dimers as broken at this point
     for(i=0; i<mdl.Ndim; i++){
@@ -203,7 +209,7 @@ int main(int argc, char *argv[])
     Ns3 = count_typeX_spheres(spheres, 3, mdl.Nsph);
 
     // Display current statistics
-    display_stats(mdl.Ndim-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, mdl.Nsph);
+    display_stats(mdl, Nd2, 2 * Nd2 - Ns3, Ns3);
 
     // Randomly (where possible) connect all neighbouring free spheres
     // into dimers. In critical cases start with spheres with fewest possible
@@ -242,7 +248,7 @@ int main(int argc, char *argv[])
       Ns3 = count_typeX_spheres(spheres, 3, mdl.Nsph);
 
       // Display current statistics
-      display_stats(mdl.Ndim-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, mdl.Nsph);
+      display_stats(mdl, Nd2, 2 * Nd2 - Ns3, Ns3);
     }
 
     // Eliminate remaining free spheres (if any) using zipper
@@ -290,7 +296,7 @@ int main(int argc, char *argv[])
       Nd2 = count_typeX_dimers(dimers, 2, mdl.Ndim);
 
       // Display current statistics
-      display_stats(mdl.Ndim-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, mdl.Nsph);
+      display_stats(mdl, Nd2,2 * Nd2 - Ns3, Ns3);
     }   // Done eliminating type-3 spheres
 
     // Check and display structure parameters after inclusions setup (if any)

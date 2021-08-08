@@ -27,27 +27,28 @@ extern const double two;
 const char *fcc = "fcc";
 
 
-int container_dimensions(MODEL *md, const char *symmetry, int *cells){
+int container_dimensions(MODEL *md, CONFIG cf){
   int len_fcc = strlen(fcc);
-  int i, size_symmetry = strlen(symmetry);
+  int i, size_symmetry = strlen(cf.symmetry);
 
-  if(size_symmetry == len_fcc && !strncmp(symmetry, fcc, len_fcc)){
+  if(size_symmetry == len_fcc && !strncmp(cf.symmetry, fcc, len_fcc)){
     for(i=0; i<3; i++){
-      md->box[i] = cells[i] * sqrt(two);
+      md->box[i] = cf.cells[i] * sqrt(two);
     }
-    return 0;
+    return EXIT_SUCCESS;
   }
-  return 1;
+  return EXIT_FAILURE;
 }
 
-int number_of_spheres(const char *symmetry, int *cells){
+int number_of_spheres(CONFIG cf){
   int len_fcc = strlen(fcc);
-  int size_symmetry = strlen(symmetry);
+  int size_symmetry = strlen(cf.symmetry);
 
-  if(size_symmetry == len_fcc && !strncmp(symmetry, fcc, len_fcc)){
-    return 4 * cells[0] * cells[1] * cells[2];
+  // Variant for f.c.c. structure
+  if(size_symmetry == len_fcc && !strncmp(cf.symmetry, fcc, len_fcc)){
+    return 4 * cf.cells[0] * cf.cells[1] * cf.cells[2];
   }
-  return 0;
+  return EXIT_FAILURE;
 }
 
 void bouble_sort_double(double *array, int s, int ascending){
@@ -680,20 +681,5 @@ void init_RNG(unsigned long int s)
     srand48( s );
   #endif
 }
-
-void display_stats(int vd, int bd, int is, int fs, int ns)
-{
-    fprintf(stdout, " Dimers valid      (if any): %4d %6.2lf %%\n",
-            vd, (1e2*vd)/(2e0*ns) );
-    fprintf(stdout, " Dimers broken     (if any): %4d %6.2lf %%\n",
-            bd, (1e2*bd)/(2e0*ns) );
-    fprintf(stdout, " Dimers spheres    (if any): %4d %6.2lf %%\n",
-            2 * (vd), (2e2*(vd))/(1e0*ns) );
-    fprintf(stdout, " Inclusion spheres (if any): %4d %6.2lf %%\n",
-            is, (1e2*(is))/(1e0*ns));
-    fprintf(stdout, " Free spheres      (if any): %4d %6.2lf %%\n",
-            fs, (1e2*fs)/(1e0*ns) );
-}
-
 
 /* vim: set tw=80 ts=2 sw=2 et: */
