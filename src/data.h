@@ -42,7 +42,7 @@ typedef struct
 typedef struct
 {
   unsigned long int seed; // Seed for MT19937 p.r.n.g.
-  int fcc_cells[3];       // Number of f.c.c. cells on edge of the box
+  int cells[3];           // Number of f.c.c. cells on edge of the box
   int first;              // Index of first structures to generate
   int last;               // Index of last structure to generate
   int mk_channel;         // Bolean [0|1] flag to enable channel inclusion
@@ -59,6 +59,7 @@ typedef struct
 {
   int Nmon;     // Number of monomers forming system (based on structure) //old: Ns
   int Ndim;     // Maximum possible number of dimers (based on Nmon) // old: Nd
+  double box[3];  // Size of the container for the structure  //old: box_edge
 
 } MODEL;
 

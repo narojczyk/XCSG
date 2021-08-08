@@ -27,10 +27,10 @@ void display_configuration_summary(CONFIG cfg, SLI *slits, CHA *channels,
   const char *fmt_inclusion_data =
     " %2d | %lf %lf % lf | %lf %lf %lf | %lf | %lf\n";
 
-  fprintf(stdout," ### %s - configuration summary\n", prog_name);
+  fprintf(stdout," # %s - configuration summary\n", prog_name);
   fprintf(stdout,"\n ## Ini file parameters\n");
   fprintf(stdout," System size (cells)  : %d by %d by %d\n",
-          cfg.fcc_cells[0], cfg.fcc_cells[1], cfg.fcc_cells[2]);
+          cfg.cells[0], cfg.cells[1], cfg.cells[2]);
   fprintf(stdout," PRNG seed            : %8lu\n", cfg.seed);
   fprintf(stdout," Structure indices    : from %d to %d (%d files total)\n",
           cfg.first, cfg.last, cfg.last-cfg.first+1);

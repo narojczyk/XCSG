@@ -24,12 +24,27 @@ extern const double zero;
 extern const double one;
 extern const double two;
 
+const char *fcc = "fcc";
+
+
+int container_dimensions(MODEL *md, const char *symmetry, int *cells){
+  int len_fcc = strlen(fcc);
+  int i, size_symmetry = strlen(symmetry);
+
+  if(size_symmetry == len_fcc && !strncmp(symmetry, fcc, len_fcc)){
+    for(i=0; i<3; i++){
+      md->box[i] = cells[i] * sqrt(two);
+    }
+    return 0;
+  }
+  return 1;
+}
+
 int number_of_spheres(const char *symmetry, int *cells){
-  const char *fcc = "fcc";
-  int size_fcc = strlen(fcc);
+  int len_fcc = strlen(fcc);
   int size_symmetry = strlen(symmetry);
 
-  if(size_symmetry == size_fcc && !strncmp(symmetry, fcc, size_fcc)){
+  if(size_symmetry == len_fcc && !strncmp(symmetry, fcc, len_fcc)){
     return 4 * cells[0] * cells[1] * cells[2];
   }
   return 0;

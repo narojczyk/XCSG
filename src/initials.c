@@ -382,7 +382,7 @@ int parse_config(FILE *file, CONFIG *cfg)
 
   fscanf(file, fmt_lu, &cfg->seed);
   fscanf(file, fmt_ddd,
-         &cfg->fcc_cells[0], &cfg->fcc_cells[1], &cfg->fcc_cells[2]);
+         &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
   fscanf(file, fmt_s,   cfg->symmetry);
   fscanf(file, fmt_dd, &cfg->first, &cfg->last);
   fscanf(file, fmt_d,  &cfg->mk_channel);

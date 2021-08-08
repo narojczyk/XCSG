@@ -79,11 +79,11 @@ int main(int argc, char *argv[])
   }
 
   // Allocate and clean memory for channels' data
-  channels = malloc( cfg.num_channels * sizeof(CHA));
+  channels = malloc(cfg.num_channels * sizeof(CHA));
   memory_clean_channels(channels, cfg.num_channels);
 
   // Allocate and clean memory for slits' data
-  slits = malloc( cfg.num_slits * sizeof(SLI));
+  slits = malloc(cfg.num_slits * sizeof(SLI));
   memory_clean_slits(slits, cfg.num_slits);
 
   // Open and read channel description data
@@ -116,15 +116,17 @@ int main(int argc, char *argv[])
   init_RNG(cfg.seed);
 
   // Set the number of monomers in the system
-  Ns = number_of_spheres(cfg.symmetry, cfg.fcc_cells);
+  Ns = number_of_spheres(cfg.symmetry, cfg.cells);
 
   // Maximum number of dimers for the structure
   Nd = Ns / 2;
 
-  // Calculate cube edge
-  box_edge[0] = cfg.fcc_cells[0] * sqrt(two);
-  box_edge[1] = cfg.fcc_cells[1] * sqrt(two);
-  box_edge[2] = cfg.fcc_cells[2] * sqrt(two);
+  // Calculate container dimensions
+  container_dimensions(&mod, cfg.symmetry, cfg.cells);
+  // TODO: Deprecate this
+  box_edge[0] = cfg.box[0];
+  box_edge[1] = cfg.box[1];
+  box_edge[2] = cfg.box[2];
 
   // Summary of configuration variables
   display_configuration_summary(cfg, slits, channels, box_edge, Ns, Nd);
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, " Generating pure f.c.c. structure\n");
 
     // Set fcc structure of spheres
-    sph_set_fcc( spheres, Ns, cfg.fcc_cells);
+    sph_set_fcc( spheres, Ns, cfg.cells);
 
     // Find neighbors for spheres
     if(find_ngb_spheres(spheres, Ns, box_edge) != 0){
