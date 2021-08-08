@@ -33,7 +33,7 @@ static struct option long_opts[] = {
 void print_greetings()
 {
   fputs("\n\
-  Generate monomer, multimer or mixed strutures with optional inclusions\n\
+  Generate monomer, multimer or mixed strutures with optional inclusions.\n\
   Institute of Molecular Physics, Polish Academy of Sciences\n\n", stdout);
 }
 
@@ -118,7 +118,7 @@ void print_version(int status)
     const char *debug_mode = "No";
   #endif
 
-  fprintf(stdout, "  x-mer Crystal Structure Generator (XCSG)\n");
+  fprintf(stdout, "  X-mer Crystal Structure Generator (XCSG)\n");
   fprintf(stdout, fmt_version,  prog_name, code_version);
   fprintf(stdout, fmt_comit_id,  code_comit_id);
   fprintf(stdout, fmt_comit_date,  code_comit_date);
