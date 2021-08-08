@@ -1,27 +1,29 @@
-# MultiMer Structures (MMS)
+# (XCSG) X-mer Crystal Structure Generator
 
-Program generates a structure at close packing, composed from monomers,
-multimers or their mixtures. Particles can form arbitrary lattices. The
-structure may include additional inclusions composed by yet another types of
-particles. The inclusions may be take the form of channels, layers (at any
-orientation) or any of their combinations.
+Program generates an f.c.c. monomer crystal structure at close packing.
+Monomers (spheres) can be paired into dimers, forming a *Degenerated Crystal*
+(DC) of dimers. Additional inclusions can be introduced into the structure.
+The inclusions can form channels or layers of arbitraty orientation and diameter
+or thickness respectively. The layers are filled by monomers, diameters of which
+can be individualy controlled. Multiple inclusions in arbitrary orientations are
+possible.
 
-The project is an extension of the former fccDCgen project
+###### Acknowledgements
+The project builed upon older code by M. Kowalik
 
 
 ## Manifest
 
 Project directory should contain:
 
-*	**src**
-
+* **src**
 	Subdirectory with source files, a makefile and a shell script it requires.
 
-## Roadmap
+## Project Roadmap
 
-* Add hcp and bcc lattice types.
-* Add >2 multimer particles.
-* Change sphere types ID's with respect to monomers they form (1 - 8) or
-  inclusions (100+).
-* Inclusions may be formed by multimers.
-* Finite size inclusions
+- [ ] Add hcp and bcc lattices.
+- [ ] Add 3+ multimer particles.
+- [ ] Change sphere types ID's with respect to monomers they form (1 - 8) or
+  inclusions (100+). *in progress*
+- [ ] Inclusions may be formed by multimers.
+- [ ] Finite size inclusions. *in progress*
