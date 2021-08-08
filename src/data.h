@@ -57,7 +57,7 @@ typedef struct
 
 typedef struct
 {
-  int Nmon;     // Number of monomers forming system (based on structure) //old: Ns
+  int Nsph;     // Number of monomers forming system (based on structure) //old: Ns
   int Ndim;     // Maximum possible number of dimers (based on Nmon) // old: Nd
   double box[3];  // Size of the container for the structure  //old: box_edge
 

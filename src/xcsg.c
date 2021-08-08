@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 {
   FILE *f;
   CONFIG cfg;
-  MODEL mod;
+  MODEL mdl;
 
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
   char *f_ini = NULL;
 
   int exit_status = EXIT_SUCCESS; // Initial assumption.
-  int Ns, Nd, Nd2, Ns3, Ns3_odd;
+  int Nd2, Ns3, Ns3_odd;
   int zip_Ns3_runs=0, zip_init_sph=-1;
   int Odistrib[6] = {0,0,0,0,0,0};
   int valid_dimer_pair[2];
@@ -49,8 +49,6 @@ int main(int argc, char *argv[])
   int low_on_dimers = 0;
   int flip_count = 0;
   int fsi, fsn, fsi_chances;
-
-  double box_edge[3];
 
   const char *fmt_open_config_failed =
     " [%s] ERR: cannot open config file: %s\n";
@@ -116,51 +114,51 @@ int main(int argc, char *argv[])
   init_RNG(cfg.seed);
 
   // Set the number of monomers in the system
-  Ns = number_of_spheres(cfg.symmetry, cfg.cells);
+  mdl.Nsph = number_of_spheres(cfg.symmetry, cfg.cells);
 
   // Maximum number of dimers for the structure
-  Nd = Ns / 2;
+  mdl.Ndim = mdl.Nsph / 2;
 
   // Calculate container dimensions
-  container_dimensions(&mod, cfg.symmetry, cfg.cells);
-  // TODO: Deprecate this
-  box_edge[0] = cfg.box[0];
-  box_edge[1] = cfg.box[1];
-  box_edge[2] = cfg.box[2];
+  container_dimensions(&mdl, cfg.symmetry, cfg.cells);
+ /* // TODO: Deprecate this
+  box_edge[0] = mdl.box[0];
+  box_edge[1] = mdl.box[1];
+  box_edge[2] = mdl.box[2];*/
 
   // Summary of configuration variables
-  display_configuration_summary(cfg, slits, channels, box_edge, Ns, Nd);
+  display_configuration_summary(cfg, slits, channels, mdl.box, mdl.Nsph, mdl.Ndim);
 
   // Allocate memory for spheres and dimers
-  spheres = malloc( Ns * sizeof(SPH));
-  dimers  = malloc( Nd * sizeof(DIM3D));
+  spheres = malloc( mdl.Nsph * sizeof(SPH));
+  dimers  = malloc( mdl.Ndim * sizeof(DIM3D));
 
   // Loop over selected set of structures
   for(s=cfg.first; s<=cfg.last; s++){
 
     // Clean allocated memory
-    memory_clean_spheres(spheres, Ns);
-    memory_clean_dimers(dimers, Nd);
+    memory_clean_spheres(spheres, mdl.Nsph);
+    memory_clean_dimers(dimers, mdl.Ndim);
 
     fprintf(stdout, "\n ***\tProcessing structure %d\n",s);
     fprintf(stdout, " Generating pure f.c.c. structure\n");
 
     // Set fcc structure of spheres
-    sph_set_fcc( spheres, Ns, cfg.cells);
+    sph_set_fcc( spheres, mdl.Nsph, cfg.cells);
 
     // Find neighbors for spheres
-    if(find_ngb_spheres(spheres, Ns, box_edge) != 0){
+    if(find_ngb_spheres(spheres, mdl.Nsph, mdl.box) != 0){
       exit_status = EXIT_FAILURE;
       goto cleanup;
     }
 
     // Assign lattice indexes to all spheres
-    sph_assign_lattice_indexes(spheres, 0, Ns);
-    sph_assign_lattice_indexes(spheres, 1, Ns);
-    sph_assign_lattice_indexes(spheres, 2, Ns);
+    sph_assign_lattice_indexes(spheres, 0, mdl.Nsph);
+    sph_assign_lattice_indexes(spheres, 1, mdl.Nsph);
+    sph_assign_lattice_indexes(spheres, 2, mdl.Nsph);
 
     // Flag all dimers as broken at this point
-    for(i=0; i<Nd; i++){
+    for(i=0; i<mdl.Ndim; i++){
       dimers[i].type = 2;
     }
 
@@ -171,7 +169,7 @@ int main(int argc, char *argv[])
         if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 || channels[i].nm[2] != 0){
           fprintf(stdout, " Inserting channel %d\n", i);
           make_channel(dimers, spheres, channels[i].nm, channels[i].radius,
-                     box_edge, channels[i].os, channels[i].sph_d, Ns);
+                     mdl.box, channels[i].os, channels[i].sph_d, mdl.Nsph);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
                   cfg.num_channels);
@@ -185,8 +183,8 @@ int main(int argc, char *argv[])
         // Test slit data
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, " Inserting slit %d\n", i);
-          make_slit(dimers, spheres, box_edge, slits[i].thickness, slits[i].os,
-                    slits[i].sph_d, slits[i].nm, Ns);
+          make_slit(dimers, spheres, mdl.box, slits[i].thickness, slits[i].os,
+                    slits[i].sph_d, slits[i].nm, mdl.Nsph);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                   cfg.num_slits);
@@ -199,13 +197,13 @@ int main(int argc, char *argv[])
      * Set broken dimers as type '2'
      * set free (non-channel) spheres as type '3'
      */
-    Nd2 = brake_dimers(dimers, spheres, Nd);
+    Nd2 = brake_dimers(dimers, spheres, mdl.Ndim);
 
     // Check the number of type-3 spheres
-    Ns3 = count_typeX_spheres(spheres, 3, Ns);
+    Ns3 = count_typeX_spheres(spheres, 3, mdl.Nsph);
 
     // Display current statistics
-    display_stats(Nd-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, Ns);
+    display_stats(mdl.Ndim-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, mdl.Nsph);
 
     // Randomly (where possible) connect all neighbouring free spheres
     // into dimers. In critical cases start with spheres with fewest possible
@@ -215,12 +213,12 @@ int main(int argc, char *argv[])
       fprintf(stdout,"\n\n Randomly connecting all possible free spheres\n");
       do{
         // Find a sphere with the lowes count of chanses to form a dimer
-        fsi = find_critical_FS(spheres, Ns);
+        fsi = find_critical_FS(spheres, mdl.Nsph);
         fsi_chances = count_typeX_sp_neighbours(spheres, 3, fsi);
 
         // If the possibilities are high enough, select sphere randomly
         if(fsi_chances >= 5){
-          fsi = draw_sphere_typeX(spheres, 3, Ns);
+          fsi = draw_sphere_typeX(spheres, 3, mdl.Nsph);
           fsi_chances = count_typeX_sp_neighbours(spheres, 3, fsi);
         }
 
@@ -229,22 +227,22 @@ int main(int argc, char *argv[])
 
         // Create a valid dimer from the pair of spheres
         if( fsi != -1 && fsn != -1){
-          make_dimer(dimers, spheres, box_edge, fsi, fsn, Nd);
+          make_dimer(dimers, spheres, mdl.box, fsi, fsn, mdl.Ndim);
           // Update free spheres count
           Ns3 -= 2;
         }
       }while(fsi_chances > 0);
 
-      test_dimer_distribution(dimers, Odistrib, Nd);
+      test_dimer_distribution(dimers, Odistrib, mdl.Ndim);
 
       // Check the number of type-2 dimers
-      Nd2 = count_typeX_dimers(dimers, 2, Nd);
+      Nd2 = count_typeX_dimers(dimers, 2, mdl.Ndim);
 
       // Check the number of type-3 spheres
-      Ns3 = count_typeX_spheres(spheres, 3, Ns);
+      Ns3 = count_typeX_spheres(spheres, 3, mdl.Nsph);
 
       // Display current statistics
-      display_stats(Nd-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, Ns);
+      display_stats(mdl.Ndim-Nd2, Nd2, 2 * Nd2 - Ns3, Ns3, mdl.Nsph);
     }
 
     // Eliminate remaining free spheres (if any) using zipper
@@ -267,7 +265,7 @@ int main(int argc, char *argv[])
 
       while(zip_Ns3_runs != 0){
         // Select type-3 sphere as the starting point for zipper
-        for(i=0; i<Ns; i++){
+        for(i=0; i<mdl.Nsph; i++){
           if(spheres[i].type == 3){
             zip_init_sph = i;
             break;
@@ -279,50 +277,50 @@ int main(int argc, char *argv[])
                   spheres[zip_init_sph].type, zip_init_sph);
 
         fprintf(stdout," completed after %7d steps (%d left)\n",
-                  zipper(dimers, spheres, box_edge, Nd, zip_init_sph, Ns),
+                  zipper(dimers, spheres, mdl.box, mdl.Ndim, zip_init_sph, mdl.Nsph),
                   --zip_Ns3_runs);
       }
 
-      test_dimer_distribution(dimers, Odistrib, Nd);
+      test_dimer_distribution(dimers, Odistrib, mdl.Ndim);
 
       // Check the number of type-3 spheres
-      Ns3 = count_typeX_spheres(spheres, 3, Ns);
+      Ns3 = count_typeX_spheres(spheres, 3, mdl.Nsph);
 
       // Check the number of type-2 dimers
-      Nd2 = count_typeX_dimers(dimers, 2, Nd);
+      Nd2 = count_typeX_dimers(dimers, 2, mdl.Ndim);
 
       // Display current statistics
-      display_stats(Nd-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, Ns);
+      display_stats(mdl.Ndim-Nd2, Nd2,2 * Nd2 - Ns3, Ns3, mdl.Nsph);
     }   // Done eliminating type-3 spheres
 
     // Check and display structure parameters after inclusions setup (if any)
-    if( (Nd-Nd2) % 6 == 0){
+    if( (mdl.Ndim-Nd2) % 6 == 0){
       fprintf(stdout,"\n Perfect DC orientation possible (%d/dir.)\n",
-              (Nd-Nd2)/6);
+              (mdl.Ndim-Nd2)/6);
     }else{
       fprintf(stdout,"\n Perfect DC orientation NOT possible (%.2lf/dir.)\n",
-              ((double) (Nd-Nd2))/6e0);
+              ((double) (mdl.Ndim-Nd2))/6e0);
     }
 
     fprintf(stdout,fmt_dimer_distr_header, "Initial distribution:",
-            "[110]", "[i10]", "[101]", "[i01]", "[011]", "[0i1]");
+            "[110]", "[T10]", "[101]", "[T01]", "[011]", "[0T1]");
 
     // Check if the number of dimers in the system is high enough
-    low_on_dimers = (((double) Nd - Nd2)/((double) Nd) < 2e-1 ? 1 : 0);
+    low_on_dimers = (((double) mdl.Ndim - Nd2)/((double) mdl.Ndim)  < 2e-1 ? 1 : 0);
     if(low_on_dimers != 0){
       fprintf(stdout, " Number of dimers to low to get a good structure\n");
     }
 
     // Reorganize molecules to get best distribution possible
     flip_count = 0;
-    if( !validate_distrib(Odistrib, Nd-Nd2, flip_count) && !low_on_dimers ){
+    if( !validate_distrib(Odistrib, mdl.Ndim-Nd2, flip_count) && !low_on_dimers ){
       do{
         // Find a valid dimer configuration to flip orientations
-        find_valid_cluster(dimers, spheres, box_edge, Nd, valid_dimer_pair);
+        find_valid_cluster(dimers, spheres, mdl.box, mdl.Ndim, valid_dimer_pair);
 
         // Flip dimers
         if(valid_dimer_pair[0] != -1 && valid_dimer_pair[1] != -1){
-          flip_dimers(dimers, spheres, box_edge, Odistrib,
+          flip_dimers(dimers, spheres, mdl.box, Odistrib,
                       valid_dimer_pair[0], valid_dimer_pair[1]);
         }
 
@@ -330,27 +328,27 @@ int main(int argc, char *argv[])
         if(flip_count %1000000 == 0){
           do{
             // Select random type-1 sphere to start from
-            zip_init_sph = (int) (u_RNG() * Ns);
-            zip_init_sph = (zip_init_sph < Ns ? zip_init_sph : Ns - 1);
+            zip_init_sph = (int) (u_RNG() * mdl.Nsph);
+            zip_init_sph = (zip_init_sph < mdl.Nsph ? zip_init_sph : mdl.Nsph - 1);
           }while(spheres[zip_init_sph].type != 1);
           fprintf(stdout," Zipper %7d steps; distr.:",
-            zipper(dimers, spheres, box_edge, Nd, zip_init_sph, 100*Ns));
+            zipper(dimers, spheres, mdl.box, mdl.Ndim, zip_init_sph, 100*mdl.Nsph));
           // Display distribution after zipper
-          test_dimer_distribution(dimers,  Odistrib, Nd);
+          test_dimer_distribution(dimers,  Odistrib, mdl.Ndim);
           display_dimer_distribution(Odistrib);
         }
 
         flip_count++;
-      }while(validate_distrib(Odistrib, Nd-Nd2, flip_count) == 0);
+      }while(validate_distrib(Odistrib, mdl.Ndim-Nd2, flip_count) == 0);
     }   // finished with flipping
 
     // Perform a final test of the structure prior to export
-    test_dimer_distribution(dimers,  Odistrib, Nd);
+    test_dimer_distribution(dimers,  Odistrib, mdl.Ndim);
     fprintf(stdout," Step %9d distribution :", flip_count);
     display_dimer_distribution(Odistrib);
 
     // Generate required output files for structure 's'
-    if( exp_str_data(dimers, spheres, box_edge, Ns, Nd, Ns3, Nd2, s) != 0 ){
+    if( exp_str_data(dimers, spheres, mdl.box, mdl.Nsph, mdl.Ndim, Ns3, Nd2, s) != 0 ){
       exit_status = EXIT_FAILURE;
       goto cleanup;
     }
