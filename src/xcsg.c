@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 {
   FILE *f;
   CONFIG cfg;
-
+  MODEL mod;
 
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
