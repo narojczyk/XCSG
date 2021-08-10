@@ -5,7 +5,6 @@ typedef struct
 {
   int type;         // Sphere type
   int ngb[12];      // Neighbors list
-//   TODO: possibly change the following to pointer to DIM array element
   int dim_ind;      // Index of dimer the sphere belongs to
   int lattice_ind[3]; //sphere lattice coordinates
   double r[3];      // Position vector
@@ -15,7 +14,6 @@ typedef struct
 typedef struct
 {
   int type;         // Dimer type
-//   TODO: possibly change the following to array of pointers to SPH array elem.
   int sph_ind[2];   // Indexes of spheres forming dimer
   int ngb[22][2];   // Neighbors list
   double R[3];      // Dimer position
@@ -58,7 +56,7 @@ typedef struct
 typedef struct
 {
   int Nsph;     // Number of monomers forming system (based on structure) //old: Ns
-  int Ndim;     // Maximum possible number of dimers (based on Nmon) // old: Nd
+  int Ndim;     // Maximum possible number of dimers (based on Nsph) // old: Nd
   double box[3];  // Size of the container for the structure  //old: box_edge
 
 } MODEL;

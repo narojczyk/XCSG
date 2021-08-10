@@ -107,8 +107,8 @@ void display_stats(MODEL md, int bd, int is, int fs)
  * Use export_spheres(), export_dimers(), and export_to_GLviewer() to write the
  * complete set of informations for the final structure.
  */
-int exp_str_data(DIM3D *dim, SPH *sph, double box[3], 
-                 int ns, int nd, int ns3, int nd2, int strn)
+int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
+                 int ns3, int nd2, int strn)
 {
   FILE *file;
   char f_out[128];
@@ -127,18 +127,19 @@ int exp_str_data(DIM3D *dim, SPH *sph, double box[3],
     return EXIT_FAILURE;
   }
   // Export str. descrip. data to file
-  fprintf(file,"Number of spheres       : %d\n", ns);
-  // TODO: this is valid only for dimers
-  fprintf(file,"Number of particles     : %d\n", nd + nd2); 
-  fprintf(file,"Number of x-mers        : %d %d\n",2*nd2, nd - nd2);
+  fprintf(file,"Number of spheres       : %d\n", md.Nsph);
+  // TODO: this value is now erronusly calculated
+  fprintf(file,"Number of particles     : %d\n", md.Ndim + nd2);
+  // TODO: the 2*nd gives wrong value for the number of spheres
+  fprintf(file,"Number of x-mers        : %d %d\n",2*nd2, md.Ndim - nd2);
   fprintf(file,"Box matrix h00 h01 h02  : %.16le %.16le %.16le\n",
-          box[0], 0e0, 0e0);
+          md.box[0], 0e0, 0e0);
   fprintf(file,"Box matrix     h11 h12  : %.16le %.16le\n",
-          box[1], 0e0);
-  fprintf(file,"Box matrix         h22  : %.16le\n", box[2]);
+          md.box[1], 0e0);
+  fprintf(file,"Box matrix         h22  : %.16le\n", md.box[2]);
   fclose(file);
   
-  // Set the file name for dimer data and open the file for write
+  // Set the file name for sphere data and open the file for write
   sprintf(f_out, fmt_exp_sph, strn);
   fprintf(stdout, fmt_message, "sphere", f_out);
   
@@ -146,25 +147,29 @@ int exp_str_data(DIM3D *dim, SPH *sph, double box[3],
     fprintf(stderr, fmt_exporting_failed, __func__, f_out);
     return EXIT_FAILURE;
   }
-  // Export sphere datat to file
-  export_spheres(file, sph, ns);
+  // Exports complete Nsph sphere data regardles of particles they form
+  // (additional constraints and bonds are exported to files for the given
+  // molecules)
+  export_spheres(file, sph, md.Nsph);
   fclose(file);
 
-  // Set the file name for dimer data and open the file for write
-  sprintf(f_out, fmt_exp_dim, strn);
-  fprintf(stdout, fmt_message, "dimer", f_out);
+  if(cf.mk_dimers){
+    // Set the file name for dimer data and open the file for write
+    sprintf(f_out, fmt_exp_dim, strn);
+    fprintf(stdout, fmt_message, "dimer", f_out);
 
-  if((file = fopen(f_out, "w")) == NULL) {
-    fprintf(stderr, fmt_exporting_failed, __func__, f_out);
-    return EXIT_FAILURE;
+    if((file = fopen(f_out, "w")) == NULL) {
+      fprintf(stderr, fmt_exporting_failed, __func__, f_out);
+      return EXIT_FAILURE;
+    }
+    // Export dimer datat to file
+    export_dimers(file, dim, md.Ndim);
+    fclose(file);
   }
-  // Export dimer datat to file
-  export_dimers(file, dim, nd);
-  fclose(file);
 
 #ifdef DATA_VISGL_OUTPUT
   // Export data in data_visGL format
-  if( export_to_GLviewer(dim, sph, box, strn, ns, nd) != 0 ){
+  if( export_to_GLviewer(dim, sph, md.box, strn, md.Nsph, md.Ndim) != 0 ){
     return EXIT_FAILURE;
   }
 #endif
