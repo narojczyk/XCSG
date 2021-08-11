@@ -24,7 +24,42 @@ extern const double zero;
 extern const double one;
 extern const double two;
 
+extern const int TYPE_INVALID;
+extern const int TYPE_SPHERE;
+extern const int TYPE_SPHERE_DIMER;
+extern const int TYPE_DIMER;
+extern const int TYPE_INCLUSION_SPHERE;
+
 const char *fcc = "fcc";
+
+int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
+  int i;
+  int tp_sph = 0, tp_inc_sph = 0;
+  int tp_sph_dim = 0, tp_dim = 0;
+
+  const char *fmt_data_corruption =
+    " [%s] ERR: data corruption found in sphere and dimer arrays\n";
+  for(i=0; i<md->Nsph; i++){
+    if(sph[i].type == TYPE_SPHERE) tp_sph++;
+    if(sph[i].type == TYPE_SPHERE_DIMER) tp_sph_dim++;
+    if(sph[i].type == TYPE_INCLUSION_SPHERE) tp_inc_sph++;
+  }
+
+  for(i=0; i<md->Ndim; i++){
+    if(dim[i].type == TYPE_DIMER) tp_dim++;
+  }
+
+  // Check for data corruption between tables;
+  if(tp_sph_dim != 2*tp_dim){
+    fprintf(stderr, fmt_data_corruption, __func__);
+    return EXIT_FAILURE;
+  }
+
+  md->mtrx_sph = tp_sph;
+  md->mtrx_dim = tp_dim;
+  md->incl_sph = tp_inc_sph;
+  return EXIT_SUCCESS;
+}
 
 
 int container_dimensions(MODEL *md, CONFIG cf){
@@ -164,32 +199,31 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
     if(sph[sp_id].type == x){
       return sp_id;
     }else{
-      // Draw another index in type is not correct.
+      // Draw another index if type is not correct.
       sp_id = (int) (u_RNG() * ns);
     }
   }
 }
 
 /*
- * find_critical_FS(sph,ns)
- *
- * Find a free type-3 sphere with the lowest count of type-3 neigbours
+ * find_critical_sphere(sph,ns)
+ * Find an id of sphere with the lowest count of TYPE_SPHERE neigbours
  */
 
-int find_critical_FS(SPH *sph, int ns)
+int find_critical_sphere(SPH *sph, int ns)
 {
-  int i, ic;
-  int min_ic = 100;
+  int i, ngb_count;
+  int min_ngb_count = 100000;
   int crit_fs = -1;
 
   for(i=0; i<ns; i++){
-    if(sph[i].type == 3){
-      // clear type-3 spheres count for i'th sphere
-      ic = count_typeX_sp_neighbours(sph, 3, i)  ;
+    if(sph[i].type == TYPE_SPHERE){
+      // Count TYPE_SPHERE neighbours for i'th sphere
+      ngb_count = count_typeX_sp_neighbours(sph, TYPE_SPHERE, i);
 
-      // remember 'i' index if calculated ic is minimal
-      if(ic > 0 && ic < min_ic){
-        min_ic = ic;
+      // remember 'i' index if calculated ngb_count is minimal
+      if(ngb_count > 0 && ngb_count < min_ngb_count){
+        min_ngb_count = ngb_count;
         crit_fs = i;
       }
     }
@@ -206,6 +240,7 @@ int find_critical_FS(SPH *sph, int ns)
  */
 int count_typeX_sp_neighbours(SPH *sph, int x, int id)
 {
+  //NOTE: the function is not safe if id is over sph array
   int ic = 0, i;
 
   // Check if id is valid array index
@@ -220,6 +255,7 @@ int count_typeX_sp_neighbours(SPH *sph, int x, int id)
   return ic;
 }
 
+// OBSOLETE
 int count_typeX_dimers(DIM3D *dim, int x, int nd)
 {
   int i, count=0;
@@ -248,6 +284,10 @@ int check_dimer_direction(DIM3D *dim, int i)
 {
   int j;
   double fcc_dir[6][3];
+  const char *fmt_unknown_orientation =
+    " [%s] ERR: unrecognized dimer orientation\n";
+  const char *fmt_error_details =
+    " dimer ID %d O: %.16le %.16le %.16le (no match)\n";
 
   fcc_dir[0][0] =  one;
   fcc_dir[0][1] =  one;
@@ -273,16 +313,15 @@ int check_dimer_direction(DIM3D *dim, int i)
   fcc_dir[5][1] = -one;
   fcc_dir[5][2] =  one;
 
-  if(dim[i].type == 1){
+  if(dim[i].type == TYPE_DIMER){
     for(j=0; j<6; j++){
       if( fabs(fabs(vdotu(fcc_dir[j], dim[i].O)) -sqrt(two)) < 1e-10 ){
         return j;
       }
     }
   }
-  fprintf(stderr,"\n [%s] error: unrecognized dimer orientation\n",__func__);
-  fprintf(stderr," dimer %d O: %.16le %.16le %.16le\n",
-          i, dim[i].O[0], dim[i].O[1], dim[i].O[2]);
+  fprintf(stderr, fmt_unknown_orientation, __func__);
+  fprintf(stderr, fmt_error_details, i, dim[i].O[0], dim[i].O[1], dim[i].O[2]);
   return -1;
 }
 
@@ -290,8 +329,8 @@ int check_dimer_direction(DIM3D *dim, int i)
  * find_ngb_spheres(sph,ns,box)
  * Build neighburs data for spheres.
  */
-int find_ngb_spheres(SPH sph[], int ns, double box[3])
-{
+int find_ngb_spheres(SPH sph[], int ns, double box[3]){
+  //NOTE: this algorithm is not efficient
   int i,j,cni;
   const double lim = 5e-11;
 
@@ -314,7 +353,7 @@ int find_ngb_spheres(SPH sph[], int ns, double box[3])
       return EXIT_FAILURE;
     }
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -330,7 +369,8 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
   for(i=0; i<nd; i++){
 
     // Check for type set by make_channel() or make_slit()
-    if(dim[i].type == 2){
+    // NOTE update this comment when the above changes.
+    if(dim[i].type == TYPE_INVALID){
       // Get atom indexes
       atom0 = dim[i].sph_ind[0];
       atom1 = dim[i].sph_ind[1];
@@ -339,13 +379,15 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
       dim[i].sph_ind[0] = -1;
       dim[i].sph_ind[1] = -1;
 
+      // NOTE: is this still relevant ? ##########################
       // Set the free (non-channel) sphere (if any) to type '3'
       if(atom0 >= 0 && sph[atom0].type == 1){
-        sph[atom0].type = 3;
+        sph[atom0].type = TYPE_SPHERE;
       }
       if(atom1 >= 0 && sph[atom1].type == 1){
-        sph[atom1].type = 3;
+        sph[atom1].type = TYPE_SPHERE;
       }
+      // ##########################################################
 
       // Remove dimer index from the sphere data
       if(atom0 >= 0){
@@ -369,31 +411,39 @@ int brake_dimers(DIM3D *dim, SPH *sph, int nd)
  * Update the orientation and the center of mass coordinates for dimer d,
  * based on the spheres' positions
  */
-void update_dimer_parameters(DIM3D *dim, SPH *sph, double box[3], int d)
-{
+int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d){
   int atom0 = dim[d].sph_ind[0];
   int atom1 = dim[d].sph_ind[1];
   double O[3] = {zero,zero,zero};
   double R[3] = {zero,zero,zero};
+  const char *fmt_data_corruption =
+    " [%s] ERR: for dimer ID %d passed, invalid sphere indices found %d %d\n";
 
-  // Calculate current dimer orientation
-  vector(sph[atom1].r, sph[atom0].r, O, box);
+  if((atom0 > -1 && atom0 < md.Nsph) && (atom1 > -1 && atom1 < md.Nsph)){
+    // Calculate current dimer orientation
+    vector(sph[atom1].r, sph[atom0].r, O, md.box);
 
-  // Unit norm the calculated vector
-  vnorm(O);
+    // Unit norm the calculated vector
+    vnorm(O);
 
-  // Calculate the center of mass
-  R[0] = sph[atom1].r[0] + O[0]/two;
-  R[1] = sph[atom1].r[1] + O[1]/two;
-  R[2] = sph[atom1].r[2] + O[2]/two;
+    // Calculate the center of mass
+    R[0] = sph[atom1].r[0] + O[0]/two;
+    R[1] = sph[atom1].r[1] + O[1]/two;
+    R[2] = sph[atom1].r[2] + O[2]/two;
 
-  // Store calculations in the data structure
-  dim[d].R[0] = R[0];
-  dim[d].R[1] = R[1];
-  dim[d].R[2] = R[2];
-  dim[d].O[0] = O[0];
-  dim[d].O[1] = O[1];
-  dim[d].O[2] = O[2];
+    // Store calculations in the data structure
+    dim[d].R[0] = R[0];
+    dim[d].R[1] = R[1];
+    dim[d].R[2] = R[2];
+    dim[d].O[0] = O[0];
+    dim[d].O[1] = O[1];
+    dim[d].O[2] = O[2];
+
+    return EXIT_SUCCESS;
+  }else{
+    fprintf(stderr, fmt_data_corruption, __func__, d, atom0, atom1);
+    return EXIT_FAILURE;
+  }
 }
 
 /*
@@ -451,88 +501,6 @@ void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd)
 }
 
 /*
- * sph_set_fcc(sph, ns, fcc)
- * Set fcc structure of ns spheres in a cubic system of fcc cells at the
- * edge. The edge length is assumed sqrt(2)
- */
-int sph_set_fcc( SPH *sph, int ns, int fcc[3])
-{
-  int i, x=0, y=0, z=0;
-  double cell_edge = sqrt(two);
-  double cell_edge_half = cell_edge/two;
-  double com[3]={zero,zero,zero};
-
-  for(i=0; i<ns; i+=4){
-    sph[i  ].r[0] = - fcc[0] * cell_edge_half + x * cell_edge;
-    sph[i  ].r[1] = - fcc[1] * cell_edge_half + y * cell_edge;
-    sph[i  ].r[2] = - fcc[2] * cell_edge_half + z * cell_edge;
-
-    sph[i+1].r[0] = - fcc[0] * cell_edge_half + x * cell_edge + cell_edge_half;
-    sph[i+1].r[1] = - fcc[1] * cell_edge_half + y * cell_edge;
-    sph[i+1].r[2] = - fcc[2] * cell_edge_half + z * cell_edge + cell_edge_half;
-
-    sph[i+2].r[0] = - fcc[0] * cell_edge_half + x * cell_edge;
-    sph[i+2].r[1] = - fcc[1] * cell_edge_half + y * cell_edge + cell_edge_half;
-    sph[i+2].r[2] = - fcc[2] * cell_edge_half + z * cell_edge + cell_edge_half;
-
-    sph[i+3].r[0] = - fcc[0] * cell_edge_half + x * cell_edge + cell_edge_half;
-    sph[i+3].r[1] = - fcc[1] * cell_edge_half + y * cell_edge + cell_edge_half;
-    sph[i+3].r[2] = - fcc[2] * cell_edge_half + z * cell_edge;
-
-    sph[i  ].d = one;
-    sph[i+1].d = one;
-    sph[i+2].d = one;
-    sph[i+3].d = one;
-
-    // set default type as free spheres
-    sph[i  ].type = 3;
-    sph[i+1].type = 3;
-    sph[i+2].type = 3;
-    sph[i+3].type = 3;
-
-    // clear dimer indexes
-    sph[i  ].dim_ind = -1;
-    sph[i+1].dim_ind = -1;
-    sph[i+2].dim_ind = -1;
-    sph[i+3].dim_ind = -1;
-
-    // Increment cell in x direction
-    x++;
-    // Increment cell in y direction
-    if( x == fcc[0]){
-      x = 0;
-      y++;
-    };
-    // increment cell in z direction
-    if( y == fcc[1]){
-      y = 0;
-      z++;
-    };
-  }
-  // Security check
-  if( (x+1)*(y+1)*(z+1)*4 > ns ){
-    fprintf(stderr,"\n [%s] structure index out of range\n",__func__);
-    fprintf(stderr," index %d > Ns\n",(x+1)*(y+1)*(z+1)*4);
-    return EXIT_FAILURE;
-  }
-  // Calculate the center of mass of the new structure
-  for(i=0; i<ns; i++){
-    com[0] += sph[i].r[0];
-    com[1] += sph[i].r[1];
-    com[2] += sph[i].r[2];
-  }
-
-  // Move the center of mass of the new structure to point 0
-  for(i=0; i<ns; i++){
-    sph[i].r[0] -= com[0]/ns;
-    sph[i].r[1] -= com[1]/ns;
-    sph[i].r[2] -= com[2]/ns;
-  }
-
-  return EXIT_SUCCESS;
-}
-
-/*
  * memory_clean_spheres(sph, ns)
  * memory_clean_dimers(dim, nd)
  * memory_clean_slits(sl, nsl)
@@ -546,18 +514,18 @@ void memory_clean_spheres(SPH *sph, int ns)
   int i;
 
   // Default values for initial array of spheres
-  template.type = 1;    // regular spheres (forming dimers)
-  template.dim_ind = -1;
+  template.type = TYPE_INVALID;
+  template.dim_ind = TYPE_INVALID;
   template.r[0] = zero;
   template.r[1] = zero;
   template.r[2] = zero;
-  template.lattice_ind[0] = -1;
-  template.lattice_ind[1] = -1;
-  template.lattice_ind[2] = -1;
+  template.lattice_ind[0] = TYPE_INVALID;
+  template.lattice_ind[1] = TYPE_INVALID;
+  template.lattice_ind[2] = TYPE_INVALID;
   template.d = one;
 
   for(i=0; i<12; i++){
-    template.ngb[i] = -1;
+    template.ngb[i] = TYPE_INVALID;
   }
 
   // Copy default values to the array
@@ -573,9 +541,9 @@ void memory_clean_dimers(DIM3D *dim, int nd)
   int i;
 
   // Default values for initial array of dimers
-  template.type = 2;    // regular dimers
-  template.sph_ind[0] = -1;
-  template.sph_ind[1] = -1;
+  template.type = TYPE_INVALID;
+  template.sph_ind[0] = TYPE_INVALID;
+  template.sph_ind[1] = TYPE_INVALID;
   template.R[0] = zero;
   template.R[1] = zero;
   template.R[2] = zero;
@@ -585,8 +553,8 @@ void memory_clean_dimers(DIM3D *dim, int nd)
   template.L = one;
 
   for(i=0; i<22; i++){
-    template.ngb[i][0] = -1;
-    template.ngb[i][1] = -1;
+    template.ngb[i][0] = TYPE_INVALID;
+    template.ngb[i][1] = TYPE_INVALID;
   }
 
   // Copy default values to the array

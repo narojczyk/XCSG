@@ -82,24 +82,18 @@ void display_configuration_summary(CONFIG cfg, MODEL md, SLI *slits,
 /*
  * display_stats()
  */
-void display_stats(MODEL md, int bd, int is, int fs)
+void display_stats(MODEL md)
 {
   const char *fmt_sde = " %-17s (if any): %4d %6.2lf %%\n";
-  int vd = md.Ndim - bd;
-  int ns = md.Nsph;
 
-  double hvd = (double) (100 * vd); // (hekto vd)
-  double hfs = (double) (100 * fs); // (hekto fs)
-  double his = (double) (100 * is); // (hekto is)
-  double hbd = (double) (100 * bd); // (hekto bd)
-  double ns_db = one*ns;
-  double ns_2_db = two*ns;
+  double fNsph = one * md.Nsph;
+  double hdim = (double) (200 * md.mtrx_dim); // (hekto dimers x2)
+  double hsph = (double) (100 * md.mtrx_sph); // (hekto spheres)
+  double hisp = (double) (100 * md.incl_sph); // (hekto inc. spheres)
 
-  fprintf(stdout, fmt_sde, "Free spheres", fs, hfs/ns_db );
-  fprintf(stdout, fmt_sde, "Inclusion spheres", is, his/ns_db);
-  fprintf(stdout, fmt_sde, "Dimers valid", vd, hvd/ns_2_db );
-  fprintf(stdout, fmt_sde, "Dimers broken", bd, hbd/ns_2_db );
-//   fprintf(stdout, fmt_sde, "Dimers spheres", 2 * vd, (2e2*(vd))/ns_db );
+  fprintf(stdout, fmt_sde, "Free spheres",      md.mtrx_sph, hsph/fNsph);
+  fprintf(stdout, fmt_sde, "Inclusion spheres", md.incl_sph, hisp/fNsph);
+  fprintf(stdout, fmt_sde, "Dimers valid",      md.mtrx_dim, hdim/fNsph);
 }
 
 /*
@@ -169,7 +163,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
 
 #ifdef DATA_VISGL_OUTPUT
   // Export data in data_visGL format
-  if( export_to_GLviewer(dim, sph, md.box, strn, md.Nsph, md.Ndim) != 0 ){
+  if( export_to_GLviewer(md, dim, sph, strn) != 0 ){
     return EXIT_FAILURE;
   }
 #endif
@@ -184,6 +178,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
  */
 int export_dimers(FILE *file, DIM3D *dim, int nd)
 {
+  extern const int TYPE_DIMER;
   const char *fmt_exp_dim =
     "%5d  %3d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %5d %5d\n";
   const char *fmt_exporting_failed =
@@ -192,9 +187,9 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
 
   for(i=0; i<nd; i++){
     // Export information about molecule
-    if(dim[i].type == 1){
+    if(dim[i].type == TYPE_DIMER){
       if(fprintf(file, fmt_exp_dim,
-          k++, 2,
+          k++, dim[i].type,
           dim[i].R[0], dim[i].R[1], dim[i].R[2],
           dim[i].O[0], dim[i].O[1], dim[i].O[2],
           dim[i].L,
@@ -219,21 +214,10 @@ int export_spheres(FILE *file, SPH *sph, int ns)
   const char *fmt_exp_sph_2 = "  %2d %2d %2d\n";
   const char *fmt_exporting_failed = "  [%s] ERR: exporting sphere %s failed\n";
   int i;
-  int newtype;
   for(i=0; i<ns; i++){
-    // Modify type for new program
-    if(sph[i].type == 3){
-      newtype = 1;
-    }else if(sph[i].type == 2){
-      newtype = 101;
-    }else if(sph[i].type == 1){
-      newtype = 2;
-    }else{
-      newtype = -1;
-    }
     // Write sphere positions and properties
     if(fprintf(file, fmt_exp_sph_0,
-        i, newtype,
+        i, sph[i].type,
         sph[i].r[0], sph[i].r[1], sph[i].r[2], sph[i].d) == EOF){
       fprintf(stderr, fmt_exporting_failed, "positions", __func__);
       return EXIT_FAILURE;
@@ -262,10 +246,9 @@ int export_spheres(FILE *file, SPH *sph, int ns)
 /*
  * export_to_GLviewer()
  * Export required data for viewing the structure by data_visGL
+ * double box[3],  int ns,  int nd
  */
-int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
-                       int nd)
-{
+int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
   FILE *file;
   int i;
   char f_GLout[64];
@@ -288,11 +271,11 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
   // Write to data_visGL
   fprintf(file, "Type of data            : dim3dDCS\n");
   fprintf(file, "Number of input files   : %d\n", 2);
-  fprintf(file, "Input lines per file    : %d\n", ns);
+  fprintf(file, "Input lines per file    : %d\n", md.Nsph);
   fprintf(file, "Structure index         : %d\n", strn);
   fprintf(file, "(# not used          #) : %d\n", 0);
   fprintf(file, "Box dimensions          : %.16le %.16le %.16le\n",
-          box[0], box[1], box[2]);
+          md.box[0], md.box[1], md.box[2]);
   fprintf(file, "(# not used          #) : %.16le\n", 0e0);
   fprintf(file, "(# not used          #) : %.16le\n", 0e0);
   fclose(file);
@@ -306,10 +289,11 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
   }
 
   // Export structure data to data_spheresGL
-  for(i=0; i<ns; i++){
+  for(i=0; i<md.Nsph; i++){
     if(fprintf(file, exp_form, i,
         sph[i].r[0], sph[i].r[1], sph[i].r[2],
-        sph[i].d, sph[i].type ) == EOF){
+        sph[i].d,
+        legacy_GLexport_sphere_type_converter(sph[i].type) ) == EOF){
       fprintf(stderr, fmt_exporting_failed, "sphere", __func__);
       return EXIT_FAILURE;
     }
@@ -325,11 +309,12 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
   }
 
   // Export structure data to data_dimersGL
-  for(i=0; i<nd; i++){
+  for(i=0; i<md.Ndim; i++){
     if(fprintf(file, exp_form_d, i,
         dim[i].R[0], dim[i].R[1], dim[i].R[2],
         dim[i].O[0], dim[i].O[1], dim[i].O[2],
-        dim[i].L, dim[i].type ) == EOF){
+        dim[i].L,
+        legacy_GLexport_dimer_type_converter(dim[i].type) ) == EOF){
       fprintf(stderr, fmt_exporting_failed, "dimer", __func__);
       return EXIT_FAILURE;
     }
@@ -337,4 +322,31 @@ int export_to_GLviewer(DIM3D *dim, SPH *sph, double box[3], int strn, int ns,
   fclose(file);
 
   return 0;
+}
+
+int legacy_GLexport_dimer_type_converter(int type){
+  extern const int TYPE_DIMER;
+  if(type == TYPE_DIMER) return 1;
+  return type;
+}
+
+int legacy_GLexport_sphere_type_converter(int type){
+  extern const int TYPE_SPHERE;
+  extern const int TYPE_SPHERE_DIMER;
+  extern const int TYPE_INCLUSION_SPHERE;
+
+  if(type == TYPE_SPHERE) return 3;
+  if(type == TYPE_INCLUSION_SPHERE) return 2;
+  if(type == TYPE_SPHERE_DIMER) return 1;
+  return -1;
+/*  // conversion legend - remove when verified that it works
+    if(sph[i].type == 3){
+      newtype = 1;
+    }else if(sph[i].type == 2){
+      newtype = 101;
+    }else if(sph[i].type == 1){
+      newtype = 2;
+    }else{
+      newtype = -1;
+    }*/
 }

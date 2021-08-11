@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "data.h"
@@ -17,6 +18,114 @@
 extern const double zero;
 extern const double one;
 extern const double two;
+
+extern const int TYPE_INVALID;
+extern const int TYPE_SPHERE;
+extern const int TYPE_SPHERE_DIMER;
+extern const int TYPE_DIMER;
+extern const int TYPE_INCLUSION_SPHERE;
+
+extern const char *fmt_internal_call_failed;
+
+
+int set_structure(CONFIG cf, MODEL md, SPH *sph){
+  const char *fcc = "fcc";
+  const char *fmt_generate_structure = " Generating initial %s structure\n";
+  int len_fcc = strlen(fcc);
+  int size_symmetry = strlen(cf.symmetry);
+
+  if(size_symmetry == len_fcc && !strncmp(cf.symmetry, fcc, len_fcc)){
+    fprintf(stdout, fmt_generate_structure, fcc);
+    return set_fcc(sph, md.Nsph, cf.cells);
+  }
+
+  return EXIT_FAILURE;
+}
+
+/*
+ * set_fcc(sph, ns, cells)
+ * Set fcc structure of ns spheres in a cubic system of fcc cells at the
+ * edge. The edge length is assumed sqrt(2)
+ */
+int set_fcc(SPH *sph, int ns, int cells[3]){
+  int i,j,k,l, x=0, y=0, z=0, last_index;
+  // Lattice constant
+  double a = sqrt(two);
+  double half_a = a/two;
+  double com[3]={zero,zero,zero};
+  const char *fmt_index_out_of_range = " [%s] ERR: sphere index out of range\n";
+  const char *fmt_index_value = " index %d > MODEL.Nsph\n";
+
+  for(i=0, j=i+1, k=i+2, l=i+3; i<ns; i+=4, j+=4, k+=4, l+=4){
+    sph[i].r[0] = -cells[0] * half_a + x * a;
+    sph[i].r[1] = -cells[1] * half_a + y * a;
+    sph[i].r[2] = -cells[2] * half_a + z * a;
+
+    sph[j].r[0] = -cells[0] * half_a + x * a + half_a;
+    sph[j].r[1] = -cells[1] * half_a + y * a;
+    sph[j].r[2] = -cells[2] * half_a + z * a + half_a;
+
+    sph[k].r[0] = -cells[0] * half_a + x * a;
+    sph[k].r[1] = -cells[1] * half_a + y * a + half_a;
+    sph[k].r[2] = -cells[2] * half_a + z * a + half_a;
+
+    sph[l].r[0] = -cells[0] * half_a + x * a + half_a;
+    sph[l].r[1] = -cells[1] * half_a + y * a + half_a;
+    sph[l].r[2] = -cells[2] * half_a + z * a;
+
+    sph[i].d = one;
+    sph[j].d = one;
+    sph[k].d = one;
+    sph[l].d = one;
+
+    // set default type as free spheres
+    sph[i].type = TYPE_SPHERE;
+    sph[j].type = TYPE_SPHERE;
+    sph[k].type = TYPE_SPHERE;
+    sph[l].type = TYPE_SPHERE;
+
+    // clear dimer indexes
+    sph[i].dim_ind = TYPE_INVALID;
+    sph[j].dim_ind = TYPE_INVALID;
+    sph[k].dim_ind = TYPE_INVALID;
+    sph[l].dim_ind = TYPE_INVALID;
+
+    // Increment cell in x direction
+    x++;
+    // Increment cell in y direction
+    if( x == cells[0]){
+      x = 0;
+      y++;
+    };
+    // increment cell in z direction
+    if( y == cells[1]){
+      y = 0;
+      z++;
+    };
+  }
+  // Security check
+  last_index = (x+1)*(y+1)*(z+1)*4;
+  if( last_index > ns ){
+    fprintf(stderr, fmt_index_out_of_range, __func__);
+    fprintf(stderr, fmt_index_value, last_index);
+    return EXIT_FAILURE;
+  }
+  // Calculate the center of mass of the new structure
+  for(i=0; i<ns; i++){
+    com[0] += sph[i].r[0];
+    com[1] += sph[i].r[1];
+    com[2] += sph[i].r[2];
+  }
+
+  // Move the center of mass of the new structure to point 0
+  for(i=0; i<ns; i++){
+    sph[i].r[0] -= com[0]/ns;
+    sph[i].r[1] -= com[1]/ns;
+    sph[i].r[2] -= com[2]/ns;
+  }
+
+  return EXIT_SUCCESS;
+}
 
 /*
  * sph_assign_lattice_indexes( sph, ns)
@@ -93,45 +202,51 @@ int sph_assign_lattice_indexes( SPH *sph, int ns)
 
 /*
  * make_dimer(dim,sph,s1,s2)
- *
  * Make dimer from s1,s2 spheres and update all relevant table data
  */
-
-void make_dimer(DIM3D *dim, SPH *sph, double box[3], int s1, int s2, int nd)
-{
+void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2){
+  const char *fmt_no_free_dimer_slots =
+    " [%s] ERR: No free dimers slots found in array.\n";
+  const char *fmt_failed_to_connect =
+    " Cannot make dimer from %d and %d spheres\n";
+  const char *fmt_data_corruption =
+    " [%s] ERR: Inconsistent data in dimer structure.\n"
+    "  * recived sphere IDs: %d %d";
   int i = 0;
-  int dim_t2_ind = -1;
+  int valid_ids = 1;
 
-  // Find a free (type-2) dimer
-  while(dim[i].type == 1){
+  // Find first free slot in dimer array
+  while(dim[i].type != TYPE_INVALID){
     i++;
     // Brake the loop if no free dimers are found - this should not happen
-    if(i == nd){
+    if(i == md.Ndim){
       i = -1;
-      fprintf(stderr," [%s] error: No free type-2 dimers found.\n",__func__);
-      fprintf(stderr," Cannot connect free spheres - this should not happen\n");
+      fprintf(stderr, fmt_no_free_dimer_slots, __func__);
+      fprintf(stderr, fmt_failed_to_connect, s1, s2);
       break;
     }
   }
 
-  if(i >= 0 && dim[i].type != 1){
-    dim_t2_ind = i;
+  // Validate obtained parameters
+  if(s1 < 0 || s2 < 0 || s1 >= md.Nsph || s2 >= md.Nsph){
+    valid_ids = 0;
+  }
 
+  if(i >= 0 && dim[i].type == TYPE_INVALID && valid_ids == 1){
     // Update sphere data
-    sph[s1].type = 1;
-    sph[s1].dim_ind = dim_t2_ind;
+    sph[s1].type = TYPE_SPHERE_DIMER;
+    sph[s1].dim_ind = i;
 
-    sph[s2].type = 1;
-    sph[s2].dim_ind = dim_t2_ind;
+    sph[s2].type = TYPE_SPHERE_DIMER;
+    sph[s2].dim_ind = i;
 
     // Update dimer data
-    dim[dim_t2_ind].type = 1;
-    dim[dim_t2_ind].sph_ind[0] = s1;
-    dim[dim_t2_ind].sph_ind[1] = s2;
-    update_dimer_parameters(dim, sph, box, dim_t2_ind);
+    dim[i].type = TYPE_DIMER;
+    dim[i].sph_ind[0] = s1;
+    dim[i].sph_ind[1] = s2;
+    update_dimer_parameters(md, dim, sph, i);
   }else{
-    fprintf(stderr,
-            " [%s] error: Inconsistent data in dimer structure.\n",__func__);
+    fprintf(stderr, fmt_data_corruption, __func__, s1, s2);
   }
 }
 
@@ -142,9 +257,7 @@ void make_dimer(DIM3D *dim, SPH *sph, double box[3], int s1, int s2, int nd)
  * their orientation
  */
 
-void find_valid_cluster(DIM3D *dim, SPH *sph, double box[3], int nd,
-                        int vclust[2])
-{
+void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]){
   int rn_id0, rn_id1;   // array indexes generated randomly
   int a0, a1, b0, b1;   // sphere indexes of first and second dimer resp.
   int d0, nd0, nd1;     // selected dimer index and neighboring dimer ids.
@@ -154,11 +267,11 @@ void find_valid_cluster(DIM3D *dim, SPH *sph, double box[3], int nd,
   vclust[1] = -1;
   // Do the following untill valid dimer cluster is located
   do{
-    // Select a random type-1 dimer
-    do{
-      d0 = (int) (u_RNG() * (nd+1));
-      d0 = ( d0 >= nd ) ? nd : d0;
-    }while(dim[d0].type != 1);
+    // Select a random dimer of type-dimer
+    do{ // Be aware of infinite loop
+      d0 = (int) (u_RNG() * (md.Ndim+1));
+      d0 = (d0 >= md.Ndim) ? md.Ndim : d0;
+    }while(dim[d0].type != TYPE_DIMER);
 
     // Get index of spheres for the selected dimer
     a0 = dim[d0].sph_ind[0];
@@ -166,10 +279,10 @@ void find_valid_cluster(DIM3D *dim, SPH *sph, double box[3], int nd,
 
     // Randomly get the index of neighboring spheres
     rn_id0 = (int) (u_RNG() * 12);
-    rn_id0 = ( rn_id0 >= 12 ) ? 11 : rn_id0;
+    rn_id0 = (rn_id0 >= 12) ? 11 : rn_id0;
 
     rn_id1 = (int) (u_RNG() * 12);
-    rn_id1 = ( rn_id1 >= 12 ) ? 11 : rn_id1;
+    rn_id1 = (rn_id1 >= 12) ? 11 : rn_id1;
 
     // Get indexes of respective neighbors of atoms a0,a1
     b0 = sph[a0].ngb[rn_id0];
@@ -179,16 +292,16 @@ void find_valid_cluster(DIM3D *dim, SPH *sph, double box[3], int nd,
     candidate0 = candidate1 = 0;
     nd0 = nd1 = -1;
 
-    // Make sure b0 is not the other atom of dimer d0 and is a type-1 sphere
-    if(b0 != a1 && sph[b0].type == 1){
+    // Make sure b0 is not the other atom of dimer d0 and it is a dimer sphere
+    if(b0 != a1 && sph[b0].type == TYPE_SPHERE_DIMER){
       nd0 = sph[b0].dim_ind;
-      candidate0 = check_dimers_configuration(dim, sph, box, d0, nd0);
+      candidate0 = check_dimers_configuration(dim, sph, md.box, d0, nd0);
     }
 
-    // Make sure b1 is not the other atom of dimer d0 and is a type-1 sphere
-    if(b1 != a0 && sph[b1].type == 1){
+    // Make sure b1 is not the other atom of dimer d0 and it is a dimer sphere
+    if(b1 != a0 && sph[b1].type == TYPE_SPHERE_DIMER){
       nd1 = sph[b1].dim_ind;
-      candidate1 =  check_dimers_configuration(dim, sph, box, d0, nd1);
+      candidate1 =  check_dimers_configuration(dim, sph, md.box, d0, nd1);
     }
   }while(candidate0 == 0 && candidate1 == 0);
 
@@ -258,23 +371,22 @@ int check_dimers_configuration(DIM3D *dim, SPH *sph, double box[3],
  *
  * Chceck current partition of dimer orientations
  */
-void test_dimer_distribution(DIM3D *dim, int od[6], int nd)
+int test_dimer_distribution(DIM3D *dim, int od[6], int Ndim)
 {
   int i, j;
-  int nd1=0;
+  int mtrx_dim=0;
   int o_ind;
   int od_local[6]={0,0,0,0,0,0};
 
-  for(i=0; i<nd; i++){
-    if(dim[i].type == 1){
+  for(i=0; i<Ndim; i++){
+    if(dim[i].type == TYPE_DIMER){
       o_ind = check_dimer_direction(dim, i);
       if(o_ind != -1){
         od_local[o_ind]++;
-        nd1++;
+        mtrx_dim++;
       }else{
-        fprintf(stderr,
-                " [%s] error code received from 'check_dimer_direction()'\n",
-                __func__);
+        fprintf(stderr, fmt_internal_call_failed, __func__);
+        return EXIT_FAILURE;
       }
     }
   }
@@ -282,6 +394,7 @@ void test_dimer_distribution(DIM3D *dim, int od[6], int nd)
   for(j=0; j<6; j++){
     od[j] = od_local[j];
   }
+  return EXIT_SUCCESS;
 }
 
 /*
@@ -300,37 +413,34 @@ void display_dimer_distribution(int od[6])
 }
 
 /*
- * validate_distrib(od, nd, step)
+ * validate_distrib(od, nd, flip)
  *
  * checks the distribution of dimer orientations and brakes the cluster moves
  * if good-enough state is achieved. Returns '1' if the conditions are met and
  * zero otherwise.
  */
-int validate_distrib(int od[6], int nd1, int step)
+int validate_distrib(int od[6], int Ndim, int flip)
 {
-  int i;
-  int level;
+  int i, round_up=0;
+  int dimer_per_dir;
   int exit_code = 1; // Assume the structure is good ;)
+  extern const int display_interval;
+  extern const int max_flips;
 
   // Set exit code criteria depending on the number of dimers in the system
-  if( nd1 % 6 == 0 && step < (int) 1e+8 ){
-    // Perfect distribution is possible
-    level = (int) (((double) nd1) / 6e0);
-  }else{
-    // Perfect distribution is not possible
-    level = (int) (((double) nd1) / 6e0) + 1;
-  }
+  if(Ndim % 6 != 0 && flip < max_flips) round_up = 1;
+  dimer_per_dir = ((int) (((double) Ndim) / 6e0)) + round_up;
 
   for(i=0; i<6; i++){
-    exit_code *= ( od[i] <= level ) ? 1 : 0;
+    exit_code *= ( od[i] <= dimer_per_dir ) ? 1 : 0;
   }
 
-  if(exit_code == 1 || step % 1000000 == 0){
-    fprintf(stdout," Step %9d distribution :", step);
+  if(exit_code == 1 || flip % display_interval == 0){
+    fprintf(stdout," Step %9d distribution :", flip);
     for(i=0; i<6; i++){
       fprintf(stdout," %3d  ",od[i]);
     }
-    fprintf(stdout,"cond.: <= %d\n",level);
+    fprintf(stdout,"cond.: <= %d\n",dimer_per_dir);
   }
 
   return exit_code;
@@ -343,27 +453,31 @@ int validate_distrib(int od[6], int nd1, int step)
  * table
  */
 
-void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
+void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2])
 {
+  int d0 = d_ids[0];
+  int d1 = d_ids[1];
   int rn_id0, rn_id1;   // array indexes generated randomly
   int a0, a1, b0, b1;   // sphere indexes of first and second dimer resp.
   int o_id0 = check_dimer_direction(dim, d0);
   int o_id1 = check_dimer_direction(dim, d1);
   double dist0, dist1;  // interatomic distances
+  const char *fmt_illegal_orientation_before =
+    " [%s] ERR: Illegal orientation index (%d) of dimer %d before flip\n";
+  const char *fmt_illegal_orientation_after =
+    " [%s] ERR: Illegal orientation index (%d) of dimer %d after flip\n";
 
   // Decrement appropriate orientation buckets
   if(o_id0 != -1){
     od[o_id0]--;
   }else{
-    fprintf(stderr, "[%s] Illegal orientation index (%d) of dimer %d\n",
-      __func__, o_id0, d0);
+    fprintf(stderr, fmt_illegal_orientation_before, __func__, o_id0, d0);
   }
 
   if(o_id1 != -1){
     od[o_id1]--;
   }else{
-    fprintf(stderr, "[%s] Illegal orientation index (%d) of dimer %d\n",
-      __func__, o_id1, d1);
+    fprintf(stderr, fmt_illegal_orientation_before, __func__, o_id1, d1);
   }
 
   // Assign corresponding sphere indexes randomly to fliping handler
@@ -380,8 +494,8 @@ void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
   b1 = dim[d1].sph_ind[rn_id1];
 
   // Calculate the interatomic dostances for pairs a0-b0 and a1-b1
-  dist0 = distance(sph[a0].r, sph[b0].r, box);
-  dist1 = distance(sph[a1].r, sph[b1].r, box);
+  dist0 = distance(sph[a0].r, sph[b0].r, md.box);
+  dist1 = distance(sph[a1].r, sph[b1].r, md.box);
 
   // Assign paired spheres to respective dimers if BOTH distances are equal
   // to $\sigm$ (i.e. spheres lie on neighboring lattice sites).
@@ -411,8 +525,8 @@ void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
   }
 
   // Update orientation and the center of mass for fliped dimers
-  update_dimer_parameters(dim, sph, box, d0);
-  update_dimer_parameters(dim, sph, box, d1);
+  update_dimer_parameters(md, dim, sph, d0);
+  update_dimer_parameters(md, dim, sph, d1);
 
   // Increment appropriate orientation buckets
   o_id0 = check_dimer_direction(dim, d0);
@@ -421,15 +535,13 @@ void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
   if(o_id0 != -1){
     od[o_id0]++;
   }else{
-    fprintf(stderr," [%s] Illegal orientation index (%d) of fliped dimer %d\n",
-      __func__, o_id0, d0);
+    fprintf(stderr, fmt_illegal_orientation_after, __func__, o_id0, d0);
   }
 
   if(o_id1 != -1){
     od[o_id1]++;
   }else{
-    fprintf(stderr," [%s] Illegal orientation index (%d) of fliped dimer %d\n",
-      __func__, o_id1, d1);
+    fprintf(stderr, fmt_illegal_orientation_after, __func__, o_id1, d1);
   }
 }
 
@@ -439,123 +551,106 @@ void flip_dimers(DIM3D *dim, SPH *sph, double box[3], int od[6], int d0, int d1)
  * Run zipper on the structure, starting from sphere sph_ind, and continue
  * untill another free sphere is found.
  */
-int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
+// (DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
+int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload)
 {
-  int i=0, nseek=0;
-  int step=0;
-  int sngb_id, sngb_type, rand_ngb, valid_ngb, sother_id;
-  int dim_ind, dngb_id, dim_t2_ind;
-  int allow_type3=0;
+  int i=0, nseek=0, step=0;
+  int sngb_id, sngb_type, rand_ngb, valid_ngb, next_s_id;
+  int d_id, dngb_id;
+  int allow_tp_sph=0;
 
-  if(sph[sph_ind].type == 1){
-    // Get the index of dimer for type-1 sphere
-    dim_ind = sph[sph_ind].dim_ind;
-    // Flag dimer spheres as type-3
-    sph[ dim[dim_ind].sph_ind[0] ].type = 3;
-    sph[ dim[dim_ind].sph_ind[1] ].type = 3;
-    sph[ dim[dim_ind].sph_ind[0] ].dim_ind = -1;
-    sph[ dim[dim_ind].sph_ind[1] ].dim_ind = -1;
-    // Brake dimer
-    dim[dim_ind].type = 2;
-    dim[dim_ind].sph_ind[0] = -1;
-    dim[dim_ind].sph_ind[1] = -1;
-  }else if(sph[sph_ind].type == 2){
-    // Exit if the channel sphere selected as starting point
+  if(sph[s_id].type == TYPE_SPHERE_DIMER){
+    // Get the index of dimer for type-sphere-dimer object
+    d_id = sph[s_id].dim_ind;
+    // Flag its spheres as type-spheres and brake dimer
+    sph[ dim[d_id].sph_ind[0] ].type = TYPE_SPHERE;
+    sph[ dim[d_id].sph_ind[1] ].type = TYPE_SPHERE;
+    sph[ dim[d_id].sph_ind[0] ].dim_ind = TYPE_INVALID;
+    sph[ dim[d_id].sph_ind[1] ].dim_ind = TYPE_INVALID;
+
+    dim[d_id].type = TYPE_INVALID;
+    dim[d_id].sph_ind[0] = TYPE_INVALID;
+    dim[d_id].sph_ind[1] = TYPE_INVALID;
+  }else if(sph[s_id].type == TYPE_INCLUSION_SPHERE){
+    // Exit if the inclusion sphere selected as starting point
     return -1;
   }
 
-  // Loop until the free spheres meet
+  // Loop until the two spheres meet
   while(1){
-    // Select random neighbor of sph_ind
+    // Select random neighbor of s_id
     nseek=0;
     do{
       valid_ngb = 0;
-      allow_type3 = 0;
       // Select neighbor index randomly
       rand_ngb = (int) (u_RNG() * 12);
       // Check not to go outside the naighbor list
       rand_ngb = (rand_ngb < 12) ? rand_ngb : 11;
       // Get neighbor id and type
-      sngb_id = sph[sph_ind].ngb[rand_ngb];
-      sngb_type = sph[ sngb_id ].type;
-      // If enough steps passed OR if type-1 sphere is NOT on the list,
-      // allow type-3 selection
-      if((sngb_type == 3) && ( (step > ms) || (nseek > 100) )){
-        allow_type3 = 1;
-      }
-      // Select type-1 sphere or, if enough steps passed allow type-3 selection
-      if( (allow_type3 == 1) || (sngb_type == 1) ) {
-        valid_ngb = 1;
-      }
-      // Security check not to select type-2 spheres EVER!
-      if(sngb_type == 2){
-        valid_ngb = 0;
-      }
+      sngb_id = sph[s_id].ngb[rand_ngb];
+      sngb_type = sph[sngb_id].type;
+
+      // If enough steps passed OR if type-sphere-dimer is NOT on the list,
+      // allow type-sphere selection
+      allow_tp_sph =
+        ((sngb_type == TYPE_SPHERE) && ((step > workload) || (nseek > 100) ))
+        ? 1 : 0;
+
+      // Select type-sphere-dimer or, if enough steps passed allow regular
+      // sphere selection
+      valid_ngb = (allow_tp_sph || (sngb_type == TYPE_SPHERE_DIMER)) ? 1 : 0;
+
+      // Security check not to select type-inclusion-sphere spheres EVER!
+      valid_ngb = (sngb_type == TYPE_INCLUSION_SPHERE) ? 0 : valid_ngb;
+
       // Watchdog: count attempts to select valid neighbor
       nseek++;
     }while(!valid_ngb);
 
     // Brake neighboring dimer or connect free spheres and brake the cycle
-    if(sngb_type == 1){
+    if(sngb_type == TYPE_SPHERE_DIMER){
       // Get dimer index to whom sngb_id belongs to
       dngb_id = sph[sngb_id].dim_ind;
 
       // Get the index of the other sphere of dimer 'dngb_id'
-      sother_id = (dim[dngb_id].sph_ind[0] == sngb_id)
+      next_s_id = (dim[dngb_id].sph_ind[0] == sngb_id)
         ? dim[dngb_id].sph_ind[1] : dim[dngb_id].sph_ind[0];
 
-      // Flag 'sother_id' as type-3 and make dimer from the remaining spheres
-      sph[sother_id].type = 3;
-      sph[sother_id].dim_ind = -1;
+      // Flag 'next_s_id' as type-sphere ...
+      sph[next_s_id].type = TYPE_SPHERE;
+      sph[next_s_id].dim_ind = TYPE_INVALID;
 
-      sph[sph_ind].type = 1;
-      sph[sph_ind].dim_ind = dngb_id;
+      // ...  and make dimer from the remaining two spheres
+      sph[s_id].type = TYPE_SPHERE_DIMER;
+      sph[s_id].dim_ind = dngb_id;
 
-      // Ammend the indexes in data structures
-      dim[dngb_id].sph_ind[0] = sph_ind;
+      // Ammend the indices in data structures
+      dim[dngb_id].sph_ind[0] = s_id;
       dim[dngb_id].sph_ind[1] = sngb_id;
 
       // Switch to created free sphere
-      sph_ind = sother_id;
+      s_id = next_s_id;
 
       // Count steps
       step++;
 
-    }else if(sngb_type == 3){
-      // Connect the spheres into dimers with index from the type-2 DIMERS range
-      // Find a free (type-2) dimer
-      i = 0;
-      while(dim[i].type == 1){
-        i++;
-      }
-      dim_t2_ind = i;
-
-      if(dim[dim_t2_ind].type != 1 ){
-
-        // Update sphere data
-        sph[sph_ind].type = 1;
-        sph[sph_ind].dim_ind = dim_t2_ind;
-
-        sph[sngb_id].type = 1;
-        sph[sngb_id].dim_ind = dim_t2_ind;
-
-        // Update dimer data
-        dim[dim_t2_ind].type = 1;
-        dim[dim_t2_ind].sph_ind[0] = sph_ind;
-        dim[dim_t2_ind].sph_ind[1] = sngb_id;
-      }
+    }else if(sngb_type == TYPE_SPHERE){
+      // Make final dimer
+      make_dimer(dim, sph, md, s_id, sngb_id);
       // Brake the master while loop and finish procedure
       break;
     }
   } // Infinite 'while' loop
 
-  // Recalculate centers of mass and orientations for type-1 diemrs
-  for(i=0; i<nd; i++){
-    if(dim[i].type == 1){
-      update_dimer_parameters(dim, sph, box, i);
+  // Recalculate centers of mass and orientations for type-diemrs
+  for(i=0; i<md.Ndim; i++){
+    if(dim[i].type == TYPE_DIMER){
+      if(update_dimer_parameters(md, dim, sph, i) == EXIT_FAILURE){
+        fprintf(stderr, fmt_internal_call_failed, __func__);
+      }
     }
   }
-  return ++step;
+  return step;
 }
 
 /*
@@ -566,10 +661,8 @@ int zipper(DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
  * periodic image that is not the nearest to the channel axis)
  *
  */
-void make_channel(
-  DIM3D *dim, SPH *sph, double c[3], double cr, double box[3], double tr[3],
-  double csd, int ns)
-{
+void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3],
+                  double tr[3], double isd, int ns){
   int i;
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
   double p1[3], p2[3], pxcd[3], dist, dist0, dist1;
@@ -637,16 +730,18 @@ void make_channel(
     // If the sphere lies within the channel radius include the former into
     // channel and continue to the next sphere
     if(dist0 < cr || dist1 < cr){
-      // Mark sphere as 'channel-sphere' (type '2')
-      sph[i].type = 2;
+      // Mark sphere as 'inclusion-sphere'
+      sph[i].type = TYPE_INCLUSION_SPHERE;
 
-      // ... and assign the respective channel-sphere-diameter
-      sph[i].d = csd;
+      // ... and assign the respective inclusion-sphere-diameter
+      sph[i].d = isd;
 
-      // Mark dimers that cross the channel as type '2'
+      // Mark dimers that cross the channel as invalid
+      // TODO: Move this outside ###############
       if( sph[i].dim_ind >= 0 ){
-        dim[ sph[i].dim_ind ].type = 2;
+        dim[ sph[i].dim_ind ].type = TYPE_INVALID;
       }
+      // #######################################
     }
   }
 }
@@ -659,7 +754,7 @@ void make_channel(
  * NOTE: periodic boundaries are not taken into account here
  */
 void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
-               double ssd, double nm[3], int ns){
+               double isd, double nm[3], int ns){
   int i,j;
   double cd[3] = {one*nm[0], one*nm[1], one*nm[2]};
   double p[7][3];
@@ -712,14 +807,16 @@ void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
       // If the sphere lies within the plane, include the sphere into
       // plane and continue to the next sphere
       if(fabs(dist) < thick ){
-        // Mark sphere as 'channel-sphere' (type '2')
-        sph[i].type = 2;
-        // Mark dimers that cross the channel as type '2'
+        // Mark sphere as 'inclusion-sphere'
+        sph[i].type = TYPE_INCLUSION_SPHERE;
+        // Mark dimers that cross the layer as invalid
+        // TODO: Move this outside ###############
         if( sph[i].dim_ind >= 0 ){
-          dim[ sph[i].dim_ind ].type = 2;
+          dim[ sph[i].dim_ind ].type = TYPE_INVALID;
         }
-        // Assign the sphere the respective diameter
-        sph[i].d = ssd;
+        // #######################################
+        // Assign the sphere the respective inclusion-sphere-diameter
+        sph[i].d = isd;
         // Escape the j-loop if sphere is found to lie on the plane
         break;
       }
