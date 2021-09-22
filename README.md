@@ -9,7 +9,7 @@ can be individualy controlled. Multiple inclusions in arbitrary orientations are
 possible.
 
 ###### Acknowledgements
-The project builed upon older code by M. Kowalik
+The project build upon older code by M. Kowalik
 
 
 ## Manifest
