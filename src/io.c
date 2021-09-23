@@ -108,6 +108,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
   char f_out[128];
   const char *fmt_exp_dsc = "s3d0_summary_%05d.ini";
   const char *fmt_exp_sph = "s3d1_monomers_%05d.csv";
+  const char *fmt_exp_sph_pov = "v_s3d1_monomers_%05d.pov";
   const char *fmt_exp_dim = "s3d2_dimers_%05d.csv";
   const char *fmt_exporting_failed = "  [%s] ERR: writting to %s failed\n";
   const char *fmt_message = " Writting %-6s data to %s\n";
@@ -168,7 +169,53 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
   }
 #endif
 
+  sprintf(f_out, fmt_exp_sph_pov, strn);
+  if((file = fopen(f_out, "w")) == NULL) {
+    fprintf(stderr, fmt_exporting_failed, __func__, f_out);
+    return EXIT_FAILURE;
+  }
+  povray_export_spheres(file, sph, md.Nsph);
+  fclose(file);
+
   return 0;
+}
+
+int povray_export_spheres(FILE *file, SPH *sph, int ns){
+  extern const int TYPE_SPHERE;
+  extern const int TYPE_INCLUSION_SPHERE;
+  const char *fmt_exp_sph_0 =
+    " sph(<% .6le, % .6le, % .6le> + TL, %s, %s) // sph %5d type %d\n";
+  const char *fmt_exporting_failed = "  [%s] ERR: exporting sphere %s failed\n";
+  int i;
+
+  fprintf(file, "#declare matrixSpheres = union{\n");
+
+  for(i=0; i<ns; i++){
+    // Write sphere positions and properties
+    if(sph[i].type == TYPE_SPHERE){
+      if(fprintf(file, fmt_exp_sph_0, sph[i].r[0], sph[i].r[1], sph[i].r[2],
+        "Dmtr", "Tmtr", i, sph[i].type) == EOF){
+        fprintf(stderr, fmt_exporting_failed, "(povray)", __func__);
+        return EXIT_FAILURE;
+      }
+    }
+  }
+
+  fprintf(file, "}\n\n#declare inclusionSpheres = union{\n");
+
+  for(i=0; i<ns; i++){
+    // Write sphere positions and properties
+    if(sph[i].type == TYPE_INCLUSION_SPHERE){
+      if(fprintf(file, fmt_exp_sph_0, sph[i].r[0], sph[i].r[1], sph[i].r[2],
+        "Dinc", "Tinc", i, sph[i].type) == EOF){
+        fprintf(stderr, fmt_exporting_failed, "(povray)", __func__);
+        return EXIT_FAILURE;
+      }
+    }
+  }
+
+  fprintf(file, "}\n");
+  return EXIT_SUCCESS;
 }
 
 /*
