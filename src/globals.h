@@ -15,7 +15,8 @@ const int TYPE_INVALID = -1;
 const int TYPE_SPHERE = 1;
 const int TYPE_SPHERE_DIMER = 2;
 const int TYPE_DIMER = TYPE_SPHERE_DIMER;
-const int TYPE_INCLUSION_SPHERE = 101;
+const int TYPE_INCLUSION_SPHERE = 100 + TYPE_SPHERE;
+const int TYPE_INCLUSION_DIMER = 100 + TYPE_DIMER;
 
 // zipper work length
 const int lazy = 10;

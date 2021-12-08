@@ -4,13 +4,13 @@
 char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 char* buildAt = "decker";
-char* build = "śro, 8 gru 2021, 19:15:17 CET";
+char* build = "śro, 8 gru 2021, 20:47:17 CET";
 char* code_version = "1.2";
-char* code_comit_id = "311ebce603c5b387d3ec12ac967e4437560eaa37";
-char* code_comit_date = "2021-12-08 19:09:12 +0100";
+char* code_comit_id = "dfc618aa2705613c3f804bfc9c643f1a760138b5";
+char* code_comit_date = "2021-12-08 19:18:44 +0100";
 
 char* xcsg_c_SHA1 = "aa32eb6d9a8141616c16fa1a11ff629ab5621026";
-char* globals_h_SHA1 = "52159420fef5ad8bce483134ab4ac9feaff9d9bf";
+char* globals_h_SHA1 = "f0b02fefb3dd25eadee66d96852d61587e2f604e";
 char* mt19937_h_SHA1 = "08961c2d0bfffac380ab1ee575c0e530c95d762d";
 char* mt19937_64_h_SHA1 = "b442092d46c546522b41f0e9995901f78d6d1d6e";
 char* config_h_SHA1 = "82e8dad4c62ec098117ceb31e5bce6fa380e2890";
