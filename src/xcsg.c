@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
   const char *fmt_wrong_container_dimensions =
     " [%s] ERR: failed to calculate continer dimensions\n";
   const char *fmt_generating_structure = "\n ### Processing structure %d\n";
-  const char *fmt_inserting_inclusion = " Inserting %-10s of ID %2\n";
+  const char *fmt_inserting_inclusion = " Inserting %-10s of ID %2d\n";
   const char *fmt_mk_dimers_at_random =
     " Randomly join spheres into dimers\n";
   const char *fmt_mk_dimers_with_zipper =
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
     }
 
     // Display current statistics
-    display_stats(mdl);
+    display_stats(mdl,cfg);
 
     // Create dimers
     if(mdl.mtrx_sph > 1 && cfg.mk_dimers == 1){
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
       }
 
       // Display current statistics
-      display_stats(mdl);
+      display_stats(mdl, cfg);
 
       // Eliminate remaining spheres (if necesarry) using zipper
       if(mdl.mtrx_sph > 1){
@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
         }
 
         // Display current statistics
-        display_stats(mdl);
+        display_stats(mdl, cfg);
       } // Done eliminating type-spheres
 
       // ## Make a good DC structure

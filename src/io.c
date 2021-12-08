@@ -48,8 +48,8 @@ void display_configuration_summary(CONFIG cfg, MODEL md, SLI *slits,
   fprintf(stdout, fmt_ses, "Box dimensions", md.box[0], "x");
   fprintf(stdout, fmt_ses, "", md.box[1], "y");
   fprintf(stdout, fmt_ses, "", md.box[2], "z");
-  fprintf(stdout, fmt_sd, "dimers", md.Nsph);
-  fprintf(stdout, fmt_sd, "spheres", md.Ndim);
+  fprintf(stdout, fmt_sd, "spheres", md.Nsph);
+  fprintf(stdout, fmt_sd, "dimers", md.Ndim);
 
   fprintf(stdout,"\n ## Inclusions settings\n");
   if (cfg.mk_channel){
@@ -82,7 +82,7 @@ void display_configuration_summary(CONFIG cfg, MODEL md, SLI *slits,
 /*
  * display_stats()
  */
-void display_stats(MODEL md)
+void display_stats(MODEL md, CONFIG cfg)
 {
   const char *fmt_sde = " %-17s (if any): %4d %6.2lf %%\n";
 
@@ -91,9 +91,13 @@ void display_stats(MODEL md)
   double hsph = (double) (100 * md.mtrx_sph); // (hekto spheres)
   double hisp = (double) (100 * md.incl_sph); // (hekto inc. spheres)
 
-  fprintf(stdout, fmt_sde, "Free spheres",      md.mtrx_sph, hsph/fNsph);
-  fprintf(stdout, fmt_sde, "Inclusion spheres", md.incl_sph, hisp/fNsph);
-  fprintf(stdout, fmt_sde, "Dimers valid",      md.mtrx_dim, hdim/fNsph);
+  fprintf(stdout, fmt_sde, "Matrix spheres",    md.mtrx_sph, hsph/fNsph);
+  if(cfg.mk_channel | cfg.mk_slit){
+    fprintf(stdout, fmt_sde, "Inclusion spheres", md.incl_sph, hisp/fNsph);
+  }
+  if(cfg.mk_dimers){
+    fprintf(stdout, fmt_sde, "Dimers valid",      md.mtrx_dim, hdim/fNsph);
+  }
 }
 
 /*
@@ -115,6 +119,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
 
   // Set the file name for info data and open the file for write
   sprintf(f_out, fmt_exp_dsc, strn);
+  fprintf(stdout, "\n");
   fprintf(stdout, fmt_message, "ini", f_out);
 
   if((file = fopen(f_out, "w")) == NULL) {

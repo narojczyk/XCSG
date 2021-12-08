@@ -3,7 +3,7 @@
 
 void display_configuration_summary(CONFIG cfg, MODEL md, SLI *slits,
                                    CHA *channels);
-void display_stats(MODEL md);
+void display_stats(MODEL md, CONFIG cfg);
 
 int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
                  int ns3, int nd2, int strn);
