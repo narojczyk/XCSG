@@ -109,6 +109,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
                  int ns3, int nd2, int strn)
 {
   FILE *file;
+  int write_status = 0;
   char f_out[128];
   const char *fmt_exp_dsc = "s3d0_summary_%05d.ini";
   const char *fmt_exp_sph = "s3d1_monomers_%05d.csv";
@@ -150,8 +151,11 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
   // Exports complete Nsph sphere data regardles of particles they form
   // (additional constraints and bonds are exported to files for the given
   // molecules)
-  export_spheres(file, sph, md.Nsph);
+  write_status = export_spheres(file, sph, md.Nsph);
   fclose(file);
+  if(write_status != 0){
+    return EXIT_FAILURE;
+  }
 
   if(cf.mk_dimers){
     // Set the file name for dimer data and open the file for write
@@ -163,8 +167,11 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
       return EXIT_FAILURE;
     }
     // Export dimer datat to file
-    export_dimers(file, dim, md.Ndim);
+    write_status = export_dimers(file, dim, md.Ndim);
     fclose(file);
+    if(write_status != 0){
+      return EXIT_FAILURE;
+    }
   }
 
 #ifdef DATA_VISGL_OUTPUT
@@ -179,8 +186,11 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
     fprintf(stderr, fmt_exporting_failed, __func__, f_out);
     return EXIT_FAILURE;
   }
-  povray_export_spheres(file, sph, md.Nsph);
+  write_status = povray_export_spheres(file, sph, md.Nsph);
   fclose(file);
+  if(write_status != 0){
+    return EXIT_FAILURE;
+  }
 
   return 0;
 }
