@@ -26,6 +26,7 @@
 #include "io.h"
 #include "utils.h"
 #include "structure.h"
+#include "terminators.h"
 
 int main(int argc, char *argv[])
 {
@@ -96,10 +97,12 @@ int main(int argc, char *argv[])
 
   // Allocate and clean memory for channels' data
   channels = malloc(cfg.num_channels * sizeof(CHA));
+  on_exit(free_channels, dimers);
   memory_clean_channels(channels, cfg.num_channels);
 
   // Allocate and clean memory for slits' data
   slits = malloc(cfg.num_slits * sizeof(SLI));
+  on_exit(free_slits, dimers);
   memory_clean_slits(slits, cfg.num_slits);
 
   // Open and read channel description data
@@ -150,7 +153,9 @@ int main(int argc, char *argv[])
 
   // Allocate memory for spheres and dimers
   spheres = malloc( mdl.Nsph * sizeof(SPH));
+  on_exit(free_spheres, dimers);
   dimers  = malloc( mdl.Ndim * sizeof(DIM3D));
+  on_exit(free_dimers, dimers);
 
   // Loop over selected set of structures
   for(s=cfg.first; s<=cfg.last; s++){
@@ -357,14 +362,9 @@ int main(int argc, char *argv[])
     }
   } // End structure loop
 
+// This label can be now obsoleted. Resources are released through on_exit() callbacks
 cleanup:
-  // Free resources
-  free(spheres);
-  free(dimers);
-  free(slits);
-  free(channels);
   return exit_status;
 }
-
 
 /* vim: set tw=80 ts=2 sw=2 et: */

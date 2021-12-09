@@ -166,6 +166,8 @@ void print_version(int status)
   fprintf(stdout, fmt_sha1, io_c_SHA1,          "io.c");
   fprintf(stdout, fmt_sha1, structure_h_SHA1,   "structure.h");
   fprintf(stdout, fmt_sha1, structure_c_SHA1,   "structure.c");
+  fprintf(stdout, fmt_sha1, terminators_h_SHA1, "terminators.h");
+  fprintf(stdout, fmt_sha1, terminators_c_SHA1, "terminators.c");
   fprintf(stdout, fmt_sha1, utils_h_SHA1,       "utils.h");
   fprintf(stdout, fmt_sha1, utils_c_SHA1,       "utils.c");
   exit(status);
