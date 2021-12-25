@@ -97,12 +97,12 @@ int main(int argc, char *argv[])
 
   // Allocate and clean memory for channels' data
   channels = malloc(cfg.num_channels * sizeof(CHA));
-  on_exit(free_channels, dimers);
+  on_exit(free_channels, channels);
   memory_clean_channels(channels, cfg.num_channels);
 
   // Allocate and clean memory for slits' data
   slits = malloc(cfg.num_slits * sizeof(SLI));
-  on_exit(free_slits, dimers);
+  on_exit(free_slits, slits);
   memory_clean_slits(slits, cfg.num_slits);
 
   // Open and read channel description data
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 
   // Allocate memory for spheres and dimers
   spheres = malloc( mdl.Nsph * sizeof(SPH));
-  on_exit(free_spheres, dimers);
+  on_exit(free_spheres, spheres);
   dimers  = malloc( mdl.Ndim * sizeof(DIM3D));
   on_exit(free_dimers, dimers);
 
