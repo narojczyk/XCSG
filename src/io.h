@@ -13,5 +13,7 @@ int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn);
 int legacy_GLexport_dimer_type_converter(int type);
 int legacy_GLexport_sphere_type_converter(int type);
 
+// These functions can close program on error
+FILE* open_to_read();
 
 #endif

@@ -30,7 +30,7 @@
 
 int main(int argc, char *argv[])
 {
-  FILE *f;
+  FILE *f = NULL;
   CONFIG cfg;
   MODEL mdl;
 
@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
 
   char *f_ini = NULL;
 
-  int exit_status = EXIT_SUCCESS; // Initial assumption.
   int zipper_runs=0, zip_init_sph=-1;
   int Odistrib[6] = {0,0,0,0,0,0};
   int flipable_dimers[2] = {-1, -1};
@@ -50,8 +49,6 @@ int main(int argc, char *argv[])
   int flip_count = 0;
   int s_id, s_ngb_id, s_ngb_qty;
 
-  const char *fmt_open_failed =
-    " [%s] ERR: cannot open file: %s\n";
   const char *fmt_missing_inclusion_normal =
     " [%s] WRN: missing normal vector for %s inc. no %d, skipping\n";
   const char *fmt_dimer_distr_header =
@@ -83,14 +80,12 @@ int main(int argc, char *argv[])
   parse_options(argc, argv, &f_ini);
 
   // Open and parse config file
-  if((f = fopen(f_ini, "r")) == NULL) {
-    fprintf(stderr, fmt_open_failed, prog_name, f_ini);
-    return EXIT_FAILURE;
-  }
-  exit_status = parse_config(f, &cfg);
-  fclose(f);
-  if(exit_status != EXIT_SUCCESS){
-      return EXIT_FAILURE;
+  if( f == NULL ){
+    f = open_to_read(f_ini);
+    if(parse_config(f, &cfg) != EXIT_SUCCESS){
+        return EXIT_FAILURE;
+    }
+    f = NULL;
   }
 
   // Allocate and clean memory for channels' data
@@ -104,29 +99,21 @@ int main(int argc, char *argv[])
   memory_clean_slits(slits, cfg.num_slits);
 
   // Open and read channel description data
-  if( cfg.mk_channel != 0 ){
-    if((f = fopen(cfg.cfg_channels, "r")) == NULL) {
-      fprintf(stderr, fmt_open_failed, prog_name, cfg.cfg_channels);
+  if( cfg.mk_channel != 0 && f == NULL ){
+    f = open_to_read(cfg.cfg_channels);
+    if(parse_channels(f, channels, cfg.num_channels) != EXIT_SUCCESS){
       return EXIT_FAILURE;
     }
-    exit_status = parse_channels(f, channels, cfg.num_channels);
-    fclose(f);
-    if(exit_status != EXIT_SUCCESS){
-      return EXIT_FAILURE;
-    }
+    f = NULL;
   }
 
   // Open and read slits description data
-  if( cfg.mk_slit != 0 ){
-    if((f = fopen(cfg.cfg_slits, "r")) == NULL) {
-      fprintf(stderr, fmt_open_failed, prog_name, cfg.cfg_slits);
+  if( cfg.mk_slit != 0 && f == NULL ){
+    f = open_to_read(cfg.cfg_slits);
+    if(parse_slits(f, slits, cfg.num_slits) != EXIT_SUCCESS){
       return EXIT_FAILURE;
     }
-    exit_status = parse_slits(f, slits, cfg.num_slits);
-    fclose(f);
-    if(exit_status != EXIT_SUCCESS){
-      return EXIT_FAILURE;
-    }
+    f = NULL;
   }
 
   // Initiate generator with 'seed'

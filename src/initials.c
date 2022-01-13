@@ -275,43 +275,50 @@ int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
   double c_nor[3] = {0e0, 0e0, 0e0};
   double c_r = 0e0;
   double s_d = 0e0;
-  unsigned char binc;
+  unsigned char trash;
 
-  // Skip the header line in file
-  // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
-  do{
-    binc = fgetc(file);
-  }while (binc != '\n');
+  if(file != NULL){
+    // Skip the header line in file
+    // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
+    do{
+      trash = fgetc(file);
+    }while (trash != '\n');
 
-  // Read data from the file
-  for(i=0; i<num_channels; i++){
-    if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
-           &c_off[0], &c_off[1], &c_off[2],
-           &c_nor[0], &c_nor[1], &c_nor[2], &c_r, &s_d) == EOF){
-      fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
-      fprintf(stderr,"  %d data lines read; %d data lines expected\n",
-              i, num_channels);
-      return EXIT_FAILURE;
-    }else{
+    // Read data from the file
+    for(i=0; i<num_channels; i++){
+      if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
+            &c_off[0], &c_off[1], &c_off[2],
+            &c_nor[0], &c_nor[1], &c_nor[2], &c_r, &s_d) == EOF){
+        fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
+        fprintf(stderr,"  %d data lines read; %d data lines expected\n",
+                i, num_channels);
+        fclose(file);
+        return EXIT_FAILURE;
+      }else{
 
-    // Store offset for the channel 'i'
-    ch_tab[i].os[0] = c_off[0];
-    ch_tab[i].os[1] = c_off[1];
-    ch_tab[i].os[2] = c_off[2];
+      // Store offset for the channel 'i'
+      ch_tab[i].os[0] = c_off[0];
+      ch_tab[i].os[1] = c_off[1];
+      ch_tab[i].os[2] = c_off[2];
 
-    // Store normal vector for the channel 'i'
-    ch_tab[i].nm[0] = c_nor[0];
-    ch_tab[i].nm[1] = c_nor[1];
-    ch_tab[i].nm[2] = c_nor[2];
+      // Store normal vector for the channel 'i'
+      ch_tab[i].nm[0] = c_nor[0];
+      ch_tab[i].nm[1] = c_nor[1];
+      ch_tab[i].nm[2] = c_nor[2];
 
-    // Store radius for the channel 'i'
-    ch_tab[i].radius = c_r;
+      // Store radius for the channel 'i'
+      ch_tab[i].radius = c_r;
 
-    // Store diameter of spheres in channel 'i'
-    ch_tab[i].sph_d = s_d;
+      // Store diameter of spheres in channel 'i'
+      ch_tab[i].sph_d = s_d;
+      }
     }
+    fclose(file);
+    return EXIT_SUCCESS;
+  }else{
+    fprintf(stderr, " [%s] ERR: Null pointer found as input parameter\n", __func__);
+    return EXIT_FAILURE;
   }
-  return EXIT_SUCCESS;
 }
 
 /*
@@ -327,43 +334,50 @@ int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
   double sl_nor[3] = {0e0, 0e0, 0e0};
   double sl_th = 0e0;
   double s_d = 0e0;
-  unsigned char binc;
+  unsigned char trash;
 
-  // Skip the header line in file
-  // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
-  do{
-    binc = fgetc(file);
-  }while (binc != '\n');
+  if(file != NULL){
+    // Skip the header line in file
+    // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
+    do{
+      trash = fgetc(file);
+    }while (trash != '\n');
 
-  // Read data from the file
-  for(i=0; i<num_slits; i++){
-    if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
-           &sl_off[0], &sl_off[1], &sl_off[2],
-           &sl_nor[0], &sl_nor[1], &sl_nor[2], &sl_th, &s_d) == EOF){
-      fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
-      fprintf(stderr,"  %d data lines read; %d data lines expected\n",
-              i, num_slits);
-      return EXIT_FAILURE;
-    }else{
+    // Read data from the file
+    for(i=0; i<num_slits; i++){
+      if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
+            &sl_off[0], &sl_off[1], &sl_off[2],
+            &sl_nor[0], &sl_nor[1], &sl_nor[2], &sl_th, &s_d) == EOF){
+        fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
+        fprintf(stderr,"  %d data lines read; %d data lines expected\n",
+                i, num_slits);
+        fclose(file);
+        return EXIT_FAILURE;
+      }else{
 
-    // Store offset for the slit 'i'
-    sl_tab[i].os[0] = sl_off[0];
-    sl_tab[i].os[1] = sl_off[1];
-    sl_tab[i].os[2] = sl_off[2];
+      // Store offset for the slit 'i'
+      sl_tab[i].os[0] = sl_off[0];
+      sl_tab[i].os[1] = sl_off[1];
+      sl_tab[i].os[2] = sl_off[2];
 
-    // Store normal vector for the slit 'i'
-    sl_tab[i].nm[0] = sl_nor[0];
-    sl_tab[i].nm[1] = sl_nor[1];
-    sl_tab[i].nm[2] = sl_nor[2];
+      // Store normal vector for the slit 'i'
+      sl_tab[i].nm[0] = sl_nor[0];
+      sl_tab[i].nm[1] = sl_nor[1];
+      sl_tab[i].nm[2] = sl_nor[2];
 
-    // Store radius for the slit 'i'
-    sl_tab[i].thickness = sl_th;
+      // Store radius for the slit 'i'
+      sl_tab[i].thickness = sl_th;
 
-    // Store diameter of spheres in slit 'i'
-    sl_tab[i].sph_d = s_d;
+      // Store diameter of spheres in slit 'i'
+      sl_tab[i].sph_d = s_d;
+      }
     }
+    fclose(file);
+    return EXIT_SUCCESS;
+  }else{
+    fprintf(stderr, " [%s] ERR: Null pointer found as input parameter\n", __func__);
+    return EXIT_FAILURE;
   }
-  return EXIT_SUCCESS;
 }
 
 /*
@@ -382,31 +396,37 @@ int parse_config(FILE *file, CONFIG *cfg)
   const char *fmt_s   = "%*26c %s\n";
   int exit_code = EXIT_SUCCESS;
 
-  fscanf(file, fmt_lu, &cfg->seed);
-  fscanf(file, fmt_ddd,
-         &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
-  fscanf(file, fmt_s,   cfg->symmetry);
-  fscanf(file, fmt_dd, &cfg->first, &cfg->last);
-  fscanf(file, fmt_d,  &cfg->mk_channel);
-  fscanf(file, fmt_d,  &cfg->mk_slit);
-  fscanf(file, fmt_d,  &cfg->mk_dimers);
-  fscanf(file, fmt_d,  &cfg->num_channels);
-  fscanf(file, fmt_s,   cfg->cfg_channels);
-  fscanf(file, fmt_d,  &cfg->num_slits);
-  fscanf(file, fmt_s,   cfg->cfg_slits);
+  if(file != NULL){
+    fscanf(file, fmt_lu, &cfg->seed);
+    fscanf(file, fmt_ddd,
+          &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
+    fscanf(file, fmt_s,   cfg->symmetry);
+    fscanf(file, fmt_dd, &cfg->first, &cfg->last);
+    fscanf(file, fmt_d,  &cfg->mk_channel);
+    fscanf(file, fmt_d,  &cfg->mk_slit);
+    fscanf(file, fmt_d,  &cfg->mk_dimers);
+    fscanf(file, fmt_d,  &cfg->num_channels);
+    fscanf(file, fmt_s,   cfg->cfg_channels);
+    fscanf(file, fmt_d,  &cfg->num_slits);
+    fscanf(file, fmt_s,   cfg->cfg_slits);
 
-  // Parameters sanity check
-  if(cfg->last < cfg->first || cfg->first < 0 || cfg->last < 0){
-    fprintf(stderr, fmt_bad_range_values, __func__);
-    exit_code = EXIT_FAILURE;
+    // Parameters sanity check
+    if(cfg->last < cfg->first || cfg->first < 0 || cfg->last < 0){
+      fprintf(stderr, fmt_bad_range_values, __func__);
+      exit_code = EXIT_FAILURE;
+    }
+
+    exit_code = config_inclusions_sanity_check(
+      cfg->mk_channel, cfg->num_channels, "num_channels");
+
+    exit_code = config_inclusions_sanity_check(
+      cfg->mk_slit, cfg->num_slits, "num_slits");
+
+    fclose(file);
+  }else{
+    fprintf(stderr, " [%s] ERR: Null pointer found as input parameter\n", __func__);
+    return EXIT_FAILURE;
   }
-
-  exit_code = config_inclusions_sanity_check(
-    cfg->mk_channel, cfg->num_channels, "num_channels");
-
-  exit_code = config_inclusions_sanity_check(
-    cfg->mk_slit, cfg->num_slits, "num_slits");
-
   return exit_code;
 }
 

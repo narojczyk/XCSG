@@ -34,6 +34,6 @@ char *prog_name;
 
 // message strings
 const char *fmt_internal_call_failed = " [%s] ERR: internall call failed\n";
-
+const char *fmt_open_failed = " [%s] ERR: cannot open file: %s\n";
 #endif
 /* vim: set tw=80 ts=2 sw=2 et: */

@@ -11,6 +11,7 @@
 #include "io.h"
 
 extern char *prog_name;
+extern const char *fmt_open_failed;
 
 extern const double two;
 extern const double one;
@@ -386,6 +387,21 @@ int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
   fclose(file);
 
   return 0;
+}
+
+/*
+ * open_to_read(file)
+ * Open file to read and return the pointer to file. Terminate program on error.
+ */
+FILE* open_to_read(char file[]){
+  FILE *p = NULL;
+
+  if((p = fopen(file, "r")) == NULL) {
+    fprintf(stderr, fmt_open_failed, __func__, file);
+    exit(EXIT_FAILURE);
+  }
+
+  return p;
 }
 
 int legacy_GLexport_dimer_type_converter(int type){
