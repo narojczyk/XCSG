@@ -105,8 +105,7 @@ void display_stats(MODEL md, CONFIG cfg)
  * Use export_spheres(), export_dimers(), and export_to_GLviewer() to write the
  * complete set of informations for the final structure.
  */
-int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
-                 int ns3, int nd2, int strn)
+int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
 {
   FILE *file;
   int write_status = 0;
@@ -129,10 +128,13 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph,
   }
   // Export str. descrip. data to file
   fprintf(file,"Number of spheres       : %d\n", md.Nsph);
-  // TODO: this value is now erronusly calculated
-  fprintf(file,"Number of particles     : %d\n", md.Ndim + nd2);
-  // TODO: the 2*nd gives wrong value for the number of spheres
-  fprintf(file,"Number of x-mers        : %d %d\n",2*nd2, md.Ndim - nd2);
+  // TODO: replace this with Nmon
+  fprintf(file,"Number of particles     : %d\n", md.Nsph - md.mtrx_dim);
+  // TODO: should be: Nmon(*), Ndim(*), ...
+  // (*) all x-mers, matrix and inclusion alike
+  fprintf(file,"Number of x-mers        : %d %d\n",md.Nsph - md.mtrx_dim, md.mtrx_dim);
+  // TODO: add additional info about Nmatrix and Ninclusion particles
+  // fprintf(file,...);
   fprintf(file,"Box matrix h00 h01 h02  : %.16le %.16le %.16le\n",
           md.box[0], 0e0, 0e0);
   fprintf(file,"Box matrix     h11 h12  : %.16le %.16le\n",

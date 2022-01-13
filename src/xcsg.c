@@ -356,7 +356,7 @@ int main(int argc, char *argv[])
     } // end if(cfg.mk_dimers)
 
     // Generate required output files for structure 's'
-    if( exp_str_data(cfg, mdl, dimers, spheres, mdl.mtrx_sph, mdl.mtrx_dim, s) != 0 ){
+    if( exp_str_data(cfg, mdl, dimers, spheres, s) != 0 ){
       exit_status = EXIT_FAILURE;
       goto cleanup;
     }

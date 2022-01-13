@@ -1,6 +1,6 @@
 #!/bin/bash
-echo "Computing source files SHA1 checksums"
 chkFile="checksum.h"
+echo "Updating source SHA1 hashes in $chkFile"
 
 
 builderName=`git config user.name 2>/dev/null`
