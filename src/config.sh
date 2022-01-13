@@ -15,6 +15,12 @@ else
   sed -i 's/^.*\(#define\ DEBUG_MODE.*$\)/\/\/\ \1/' $cfile
 fi
 
+if [ $verboseMode -eq 1 ]; then
+  sed -i 's/\/\/\ \(#define\ VERBOSE_MDOE.*$\)/\1/' $cfile
+else
+  sed -i 's/^.*\(#define\ VERBOSE_MDOE.*$\)/\/\/\ \1/' $cfile
+fi
+
 if [ $use64MT19937 -eq 1 ]; then
   sed -i 's/\/\/\ \(#define\ PRNG_64BIT_MT19937.*$\)/\1/' $cfile
   sed -i 's/^.*\(#define\ PRNG_32BIT_MT19937.*$\)/\/\/\ \1/' $cfile

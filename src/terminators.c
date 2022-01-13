@@ -7,49 +7,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "data.h"
+#include "config.h"
 
-const char *fmt_free_allocated_memory_msg =
-    " Exitting (%d), release allocated memory for %s\n";
 
 /*
- * free_*(exit_status, pointer)
+ * releace_memory(exit_status, pointer)
  *
- * Cleanup functions to releace allocated memory
+ * Cleanup function to releace allocated memory
  */
-void free_dimers  (int stat, void *ptr)
+void releace_memory(int stat, void *ptr)
 {
 #ifdef VERBOSE_MDOE
-  fprintf(stdout, fmt_free_allocated_memory_msg, stat, "dimers");
+  const char *fmt_free_allocated_memory_msg =
+    " Exitting (%d), release allocated memory for %p\n";
 #endif
-  free((DIM3D *) ptr ) ;
-  ptr = NULL;
+  const char *fmt_free_allocated_memory_failed_msg =
+    " Exitting (%d), cannot free memory for null-pointer\n";
+
+  if(ptr != NULL){
+  #ifdef VERBOSE_MDOE
+    fprintf(stdout, fmt_free_allocated_memory_msg, stat, ptr);
+  #endif
+    free(ptr);
+    ptr = NULL;
+  }else{
+    fprintf(stderr, fmt_free_allocated_memory_failed_msg, stat);
+  }
 }
 
-void free_spheres (int stat, void *ptr)
-{
-#ifdef VERBOSE_MDOE
-  fprintf(stdout, fmt_free_allocated_memory_msg, stat, "spheres");
-#endif
-  free((SPH *) ptr ) ;
-  ptr = NULL;
-}
-
-void free_slits   (int stat, void *ptr)
-{
-#ifdef VERBOSE_MDOE
-  fprintf(stdout, fmt_free_allocated_memory_msg, stat, "slits");
-#endif
-  free((SLI *) ptr ) ;
-  ptr = NULL;
-}
-
-void free_channels(int stat, void *ptr)
-{
-#ifdef VERBOSE_MDOE
-  fprintf(stdout, fmt_free_allocated_memory_msg, stat, "channels");
-#endif
-  free((CHA *) ptr ) ;
-  ptr = NULL;
-}
 
 /* vim: set tw=80 ts=2 sw=2 et: */

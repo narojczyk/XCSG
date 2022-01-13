@@ -30,7 +30,7 @@ xcsg.o  : config.h data.h globals.h initials.h io.h utils.h structure.h terminat
 
 # PHONY - targets that are only actions.
 .PHONY: all clean debug mark
-all: mark $(binary)
+all: configure mark $(binary)
 	mv $(binary) ..
 
 # Clean the source directory of old object, backup files abd the binary.
