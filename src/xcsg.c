@@ -50,10 +50,8 @@ int main(int argc, char *argv[])
   int flip_count = 0;
   int s_id, s_ngb_id, s_ngb_qty;
 
-  const char *fmt_open_config_failed =
-    " [%s] ERR: cannot open config file: %s\n";
-  const char *fmt_open_inclusion_failed =
-    " [%s] ERR: cannot open inclusion file: %s\n";
+  const char *fmt_open_failed =
+    " [%s] ERR: cannot open file: %s\n";
   const char *fmt_missing_inclusion_normal =
     " [%s] WRN: missing normal vector for %s inc. no %d, skipping\n";
   const char *fmt_dimer_distr_header =
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
 
   // Open and parse config file
   if((f = fopen(f_ini, "r")) == NULL) {
-    fprintf(stderr, fmt_open_config_failed, prog_name, f_ini);
+    fprintf(stderr, fmt_open_failed, prog_name, f_ini);
     return EXIT_FAILURE;
   }
   exit_status = parse_config(f, &cfg);
@@ -108,7 +106,7 @@ int main(int argc, char *argv[])
   // Open and read channel description data
   if( cfg.mk_channel != 0 ){
     if((f = fopen(cfg.cfg_channels, "r")) == NULL) {
-      fprintf(stderr, fmt_open_inclusion_failed, prog_name, cfg.cfg_channels);
+      fprintf(stderr, fmt_open_failed, prog_name, cfg.cfg_channels);
       return EXIT_FAILURE;
     }
     exit_status = parse_channels(f, channels, cfg.num_channels);
@@ -121,7 +119,7 @@ int main(int argc, char *argv[])
   // Open and read slits description data
   if( cfg.mk_slit != 0 ){
     if((f = fopen(cfg.cfg_slits, "r")) == NULL) {
-      fprintf(stderr, fmt_open_inclusion_failed, prog_name, cfg.cfg_slits);
+      fprintf(stderr, fmt_open_failed, prog_name, cfg.cfg_slits);
       return EXIT_FAILURE;
     }
     exit_status = parse_slits(f, slits, cfg.num_slits);
