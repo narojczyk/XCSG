@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
   exit_status = parse_config(f, &cfg);
   fclose(f);
   if(exit_status != EXIT_SUCCESS){
-      goto cleanup;
+      return EXIT_FAILURE;
   }
 
   // Allocate and clean memory for channels' data
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     exit_status = parse_channels(f, channels, cfg.num_channels);
     fclose(f);
     if(exit_status != EXIT_SUCCESS){
-      goto cleanup;
+      return EXIT_FAILURE;
     }
   }
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     exit_status = parse_slits(f, slits, cfg.num_slits);
     fclose(f);
     if(exit_status != EXIT_SUCCESS){
-      goto cleanup;
+      return EXIT_FAILURE;
     }
   }
 
@@ -138,14 +138,14 @@ int main(int argc, char *argv[])
   mdl.Nsph = number_of_spheres(cfg);
   if(mdl.Nsph == EXIT_FAILURE){
     fprintf(stderr, fmt_wrong_number_of_spheres, prog_name);
-    goto cleanup;
+    return EXIT_FAILURE;
   }
   mdl.Ndim = mdl.Nsph / 2;
 
   // Calculate container dimensions
   if(container_dimensions(&mdl, cfg) == EXIT_FAILURE){
     fprintf(stderr, fmt_wrong_container_dimensions, prog_name);
-    goto cleanup;
+    return EXIT_FAILURE;
   }
 
   // Summary of configuration variables
@@ -167,20 +167,17 @@ int main(int argc, char *argv[])
 
     // Set requested structure
     if(set_structure(cfg, mdl, spheres) == EXIT_FAILURE){
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
+      return EXIT_FAILURE;
     }
 
     // Find neighbors for spheres
     if(find_ngb_spheres(spheres, mdl.Nsph, mdl.box) == EXIT_FAILURE){
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
+      return EXIT_FAILURE;
     }
 
     // Assign lattice indexes to all spheres
     if(sph_assign_lattice_indexes(spheres, mdl.Nsph) == EXIT_FAILURE){
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
+      return EXIT_FAILURE;
     }
 
     // Make channel
@@ -215,8 +212,7 @@ int main(int argc, char *argv[])
 
     // Check the number of different spheres
     if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
+      return EXIT_FAILURE;
     }
 
     // Display current statistics
@@ -249,13 +245,11 @@ int main(int argc, char *argv[])
       }while(s_ngb_qty > 0);
 
       if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE){
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
+        return EXIT_FAILURE;
       }
 
       if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
+        return EXIT_FAILURE;
       }
 
       // Display current statistics
@@ -286,13 +280,11 @@ int main(int argc, char *argv[])
         }
 
         if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE){
-          exit_status = EXIT_FAILURE;
-          goto cleanup;
+          return EXIT_FAILURE;
         }
 
         if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
-          exit_status = EXIT_FAILURE;
-          goto cleanup;
+          return EXIT_FAILURE;
         }
 
         // Display current statistics
@@ -337,8 +329,7 @@ int main(int argc, char *argv[])
             // Display distribution after zipper
             if(test_dimer_distribution(dimers,  Odistrib, mdl.Ndim)
               == EXIT_FAILURE){
-              exit_status = EXIT_FAILURE;
-              goto cleanup;
+              return EXIT_FAILURE;
             }
             fprintf(stdout," %-27s :", "Zipper distribution");
             display_dimer_distribution(Odistrib);
@@ -350,21 +341,18 @@ int main(int argc, char *argv[])
 
       // Perform a final test of the structure prior to export
       if(test_dimer_distribution(dimers,  Odistrib, mdl.Ndim) == EXIT_FAILURE){
-        exit_status = EXIT_FAILURE;
-        goto cleanup;
+        return EXIT_FAILURE;
       }
     } // end if(cfg.mk_dimers)
 
     // Generate required output files for structure 's'
     if( exp_str_data(cfg, mdl, dimers, spheres, s) != 0 ){
-      exit_status = EXIT_FAILURE;
-      goto cleanup;
+      return EXIT_FAILURE;
     }
   } // End structure loop
 
-// This label can be now obsoleted. Resources are released through on_exit() callbacks
-cleanup:
-  return exit_status;
+  // Succesfully finish program
+  return EXIT_SUCCESS;
 }
 
 /* vim: set tw=80 ts=2 sw=2 et: */
