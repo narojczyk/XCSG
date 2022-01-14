@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
     } // end if(cfg.mk_dimers)
 
     // Generate required output files for structure 's'
-    if( exp_str_data(cfg, mdl, dimers, spheres, s) != 0 ){
+    if( exp_str_data(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){
       return EXIT_FAILURE;
     }
   } // End structure loop

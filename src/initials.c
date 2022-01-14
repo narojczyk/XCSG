@@ -457,6 +457,7 @@ void parse_options(int argc, char *argv[], char**f)
   char optc;
   const char *fmt_missing_config =
     "  [%s] ERR: missing config file specification\n";
+  const char *fmt_unknown_option = "  [%s]: Unknown option '-%c'\n";
 
   opterr = 0;
   while ((optc = getopt_long(argc, argv, "hvit", long_opts, &optind)) != -1) {
@@ -474,7 +475,7 @@ void parse_options(int argc, char *argv[], char**f)
         print_version(EXIT_SUCCESS);
         break;
       default:
-        fprintf(stderr, "  [%s]: Unknown option '-%c'\n", prog_name, optopt);
+        fprintf(stderr, fmt_unknown_option, prog_name, optopt);
         print_help(EXIT_FAILURE);
         break;
     }

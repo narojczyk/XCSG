@@ -10,10 +10,10 @@ int export_dimers(FILE *file, DIM3D *dim, int nd);
 int export_spheres(FILE *file, SPH *sph, int ns);
 int povray_export_spheres(FILE *file, SPH *sph, int ns);
 int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn);
-int legacy_GLexport_dimer_type_converter(int type);
-int legacy_GLexport_sphere_type_converter(int type);
+
 
 // These functions can close program on error
-FILE* open_to_read();
+FILE* open_to_read(const char *file);
+FILE* open_to_write(const char *file);
 
 #endif
