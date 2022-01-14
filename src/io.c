@@ -15,6 +15,10 @@ extern char *prog_name;
 extern const double two;
 extern const double one;
 
+static int export_dimers(FILE *file, DIM3D *dim, int nd);
+static int export_spheres(FILE *file, SPH *sph, int ns);
+static int povray_export_spheres(FILE *file, SPH *sph, int ns);
+static int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn);
 static int legacy_GLexport_dimer_type_converter(int type);
 static int legacy_GLexport_sphere_type_converter(int type);
 // These function can close program on error
@@ -209,7 +213,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
  * povray_export_spheres(file, sph, ns)
  * Export sphere data in format readable by POV-Ray
  */
-int povray_export_spheres(FILE *file, SPH *sph, int ns){
+static int povray_export_spheres(FILE *file, SPH *sph, int ns){
   extern const int TYPE_SPHERE;
   extern const int TYPE_INCLUSION_SPHERE;
   extern const char *fmt_writting_failed;
@@ -255,7 +259,7 @@ int povray_export_spheres(FILE *file, SPH *sph, int ns){
  * Writes information about dimers to a file. Perform the write operation twice
  * (add more if required) in order to separate dimers of different type.
  */
-int export_dimers(FILE *file, DIM3D *dim, int nd)
+static int export_dimers(FILE *file, DIM3D *dim, int nd)
 {
   extern const int TYPE_DIMER;
   extern const char *fmt_writting_failed;
@@ -286,7 +290,7 @@ int export_dimers(FILE *file, DIM3D *dim, int nd)
  * export_spheres(f,sp,ns)
  * Export positions and other data for spheres
  */
-int export_spheres(FILE *file, SPH *sph, int ns)
+static int export_spheres(FILE *file, SPH *sph, int ns)
 {
   extern const char *fmt_writting_failed;
   const char *fmt_exp_sph_0 = "%5d %3d % .16le % .16le % .16le %.16le ";
@@ -333,7 +337,7 @@ int export_spheres(FILE *file, SPH *sph, int ns)
  * Export required data for viewing the structure by data_visGL
  * double box[3],  int ns,  int nd
  */
-int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
+static int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
 #ifdef DEBUG_MODE
   extern const char *fmt_dbg_opening_file;
 #endif
