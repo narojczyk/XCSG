@@ -44,7 +44,7 @@ const char *fmt_writting_failed = "  [%s] ERR: writing %s data failed\n";
 const char *fmt_write_notify = " Writting %-6s data to file %s\n";
 
 // *** additional debuging messages
-const char *fmt_dbg_opening_file = " [%s] opening file: %s\n";
+const char *fmt_dbg_opening_file = " [%s] DBG opening file: %s\n";
 
 // *** I/O formats
 

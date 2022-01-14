@@ -128,13 +128,13 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   // Set the file name for info data and open the file for write
   sprintf(f_out, fmt_exp_dsc, strn);
   fprintf(stdout, "\n");
-  fprintf(stdout, fmt_write_notify, "ini", f_out);
 
 #ifdef DEBUG_MODE
-  fprintf(stdout, fmt_dbg_opening_file, __func__);
+  fprintf(stdout, fmt_dbg_opening_file, __func__, f_out);
 #endif
   file = open_to_write(f_out);
 
+  fprintf(stdout, fmt_write_notify, "ini", f_out);
   // Export str. descrip. data to file
   fprintf(file,"Number of spheres       : %d\n", md.Nsph);
   // TODO: replace this with Nmon
@@ -154,7 +154,6 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   
   // Set the file name for sphere data and open the file for write
   sprintf(f_out, fmt_exp_sph, strn);
-  fprintf(stdout, fmt_write_notify, "sphere", f_out);
 
 #ifdef DEBUG_MODE
   fprintf(stdout, fmt_dbg_opening_file, __func__, f_out);
@@ -164,6 +163,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   // (additional constraints and bonds are exported to files for the given
   // molecules)
   file = open_to_write(f_out);
+  fprintf(stdout, fmt_write_notify, "sphere", f_out);
   if(export_spheres(file, sph, md.Nsph) != EXIT_SUCCESS){
     return EXIT_FAILURE;
   }
@@ -172,12 +172,12 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   if(cf.mk_dimers){
     // Set the file name for dimer data and open the file for write
     sprintf(f_out, fmt_exp_dim, strn);
-    fprintf(stdout, fmt_write_notify, "dimer", f_out);
   #ifdef DEBUG_MODE
     fprintf(stdout, fmt_dbg_opening_file, __func__, f_out);
   #endif
     file = open_to_write(f_out);
     // Export dimer datat to file
+    fprintf(stdout, fmt_write_notify, "dimer", f_out);
     if(export_dimers(file, dim, md.Ndim) != EXIT_SUCCESS){
       return EXIT_FAILURE;
     }
@@ -193,11 +193,11 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
 
   // Export data in POV-Ray format
   sprintf(f_out, fmt_exp_sph_pov, strn);
-  fprintf(stdout, fmt_write_notify, "sphere", f_out);
 #ifdef DEBUG_MODE
   fprintf(stdout, fmt_dbg_opening_file, __func__, f_out);
 #endif
   file = open_to_write(f_out);
+  fprintf(stdout, fmt_write_notify, "sphere", f_out);
   if(povray_export_spheres(file, sph, md.Nsph) != EXIT_SUCCESS){
     return EXIT_FAILURE;
   }
@@ -369,13 +369,13 @@ int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
 
   // Open file for spheres data
   sprintf(f_GLout, data_spheresGL, strn);
-  fprintf(stdout, fmt_write_notify, "sphere", f_GLout);
 #ifdef DEBUG_MODE
   fprintf(stdout, fmt_dbg_opening_file, __func__, f_GLout);
 #endif
   file = open_to_write(f_GLout);
 
   // Export structure data to data_spheresGL
+  fprintf(stdout, fmt_write_notify, "sphere", f_GLout);
   for(i=0; i<md.Nsph; i++){
     if(fprintf(file, exp_form, i,
         sph[i].r[0], sph[i].r[1], sph[i].r[2],
@@ -389,13 +389,13 @@ int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
 
   // Open file for dimer data
   sprintf(f_GLout, data_dimersGL, strn);
-  fprintf(stdout, fmt_write_notify, "dimer",f_GLout);
 #ifdef DEBUG_MODE
   fprintf(stdout, fmt_dbg_opening_file, __func__, f_GLout);
 #endif
   file = open_to_write(f_GLout);
 
   // Export structure data to data_dimersGL
+  fprintf(stdout, fmt_write_notify, "dimer",f_GLout);
   for(i=0; i<md.Ndim; i++){
     if(fprintf(file, exp_form_d, i,
         dim[i].R[0], dim[i].R[1], dim[i].R[2],
