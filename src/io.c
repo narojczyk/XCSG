@@ -448,11 +448,11 @@ FILE* open_to_write(const char *file){
 }
 
 static FILE* open_file(const char *file, const char *mode){
-  extern const char *fmt_open_failed;
+  const char *fmt_open_failed = " [%s] ERR: cannot open file: %s (%c)\n";
   FILE *p = NULL;
 
   if((p = fopen(file, mode)) == NULL){
-    fprintf(stderr, fmt_open_failed, __func__, file);
+    fprintf(stderr, fmt_open_failed, __func__, file, mode);
     exit(EXIT_FAILURE);
   }
 

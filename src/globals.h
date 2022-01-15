@@ -5,7 +5,10 @@
  * Declarations of global variables
  */
 
-// constants
+// integer constants
+const int length_max = 128; // maximal length of character array
+
+// floating point constants
 const double zero = (double) 0;
 const double one = (double) 1;
 const double two = (double) 2;
@@ -32,11 +35,13 @@ const double minimal_dimer_qty = 2e-1;
 // general purpose global variables
 char *prog_name;
 
+
 // message strings
 // *** errors
 const char *fmt_internal_call_failed = " [%s] ERR: internall call failed\n";
-const char *fmt_open_failed = " [%s] ERR: cannot open file: %s\n";
 const char *fmt_writting_failed = "  [%s] ERR: writing %s data failed\n";
+const char *fmt_null_ptr = " [%s] ERR: Null pointer found as input parameter\n";
+const char *fmt_sudden_eof = " [%s] ERR: sudden EOF (%d of %d) lines read\n";
 
 // *** warnings
 
@@ -47,6 +52,6 @@ const char *fmt_write_notify = " Writting %-6s data to file %s\n";
 const char *fmt_dbg_opening_file = " [%s] DBG opening file: %s\n";
 
 // *** I/O formats
-
+const char *fmt_IO_8f = "%lf %lf %lf %lf %lf %lf %lf %lf\n";
 #endif
 /* vim: set tw=80 ts=2 sw=2 et: */

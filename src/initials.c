@@ -13,9 +13,12 @@
 #include "data.h"
 #include "checksum.h"
 #include "initials.h"
+#include "io.h"
 
 extern char *prog_name;
 
+static void gen_template_confirmation(int ec, const char *desc,
+  const char *file);
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -181,18 +184,32 @@ void print_version(int status)
  */
 void generate_template_config(int status)
 {
+  extern const int length_max;
+  FILE *f = NULL;
+  const char *template = "%s.%s.template";
+  char template_cfg[length_max], template_cha[length_max],
+    template_sli[length_max];
+  int fname_length[] = {
+    snprintf(template_cfg, length_max -1, template, prog_name, "ini"),
+    snprintf(template_cha, length_max -1, template, prog_name, "channels.dat"),
+    snprintf(template_sli, length_max -1, template, prog_name, "slits.dat")};
+  const int fname_qty = (int) sizeof(fname_length) / (int) sizeof(int);
 
-  FILE  *f;
-  char *template = strcat(prog_name,".ini.sed");
-  char *template_ch = "channels.dat.sed";
-  char *template_sl = "slits.dat.sed";
-
-  // Opening file
-  if ((f = fopen(template,"w")) == NULL ) {
-    fprintf(stderr,
-      "  [%s]: error: failed to open file %s\n", __func__, template);
-    exit(1);
+  // Exit with error in case of array overflow and when binary name length
+  // maches the generated template name (function would try to overwrite the
+  // binary)
+  for(int i=0; i<fname_qty; i++){
+    if(fname_length[i] >= length_max || fname_length[i] == strlen(prog_name)+2){
+      fprintf(stderr,
+              " [%s] ERR: File name for config template (%d) is too short\n"
+              " or the same as the binary. Shorten the name of the binary"
+              " or increse the value\n of 'length_max' variable\n",
+              __func__, i);
+      exit(EXIT_FAILURE);
+    }
   }
+  // Opening file
+  f = open_to_write(template_cfg);
 
   fprintf(f, "RNG seed                 : LUINT\n");
   fprintf(f, "Number of edge fcc cells : INT_x INT_y INT_z\n");
@@ -206,21 +223,10 @@ void generate_template_config(int status)
   fprintf(f, "Number of slits          : INT\n");
   fprintf(f, "Slits descrip. file name : STRING\n");
 
-  if(fclose(f)==0) {
-    fprintf(stdout," Main  program template config file written to: %s\n",
-            template);
-  } else {
-    fprintf(stderr,
-      "  [%s]: error: failed to write to: %s\n", __func__, template);
-    exit(EXIT_FAILURE);
-  }
+  gen_template_confirmation(fclose(f), "Main  program", template_cfg);
 
   // Opening file
-  if ((f = fopen(template_ch,"w")) == NULL ) {
-    fprintf(stderr,
-      "  [%s]: error: failed to open file %s\n", __func__, template_ch);
-    exit(1);
-  }
+  f = open_to_write(template_cha);
 
   fprintf(f, "#axis offset (3F); axis wersor (3F); channel radius (1F);");
   fprintf(f, " ch. sph. diameter (1F). The 1st line is skipped.\n");
@@ -228,21 +234,10 @@ void generate_template_config(int status)
   fprintf(f, " DOUBLE_cx DOUBLE_cy DOUBLE_cz ");
   fprintf(f, " DOUBLE_cr DOUBLE_sd\n");
 
-  if(fclose(f)==0) {
-    fprintf(stdout," Channel desc. template config file written to: %s\n",
-            template_ch);
-  } else {
-    fprintf(stderr,
-      "  [%s]: error: failed to write to: %s\n", __func__, template_ch);
-    exit(EXIT_FAILURE);
-  }
+  gen_template_confirmation(fclose(f), "Channel desc.", template_cha);
 
   // Opening file
-  if ((f = fopen(template_sl,"w")) == NULL ) {
-    fprintf(stderr,
-      "  [%s]: error: failed to open file %s\n", __func__, template_sl);
-    exit(1);
-  }
+  f = open_to_write(template_sli);
 
   fprintf(f, "#plane offset (3F); plane normal (3F); pl. thickness (1F);");
   fprintf(f, " plane sph. diameter (1F). 1st line is skipped.\n");
@@ -250,16 +245,19 @@ void generate_template_config(int status)
   fprintf(f, " DOUBLE_cx DOUBLE_cy DOUBLE_cz ");
   fprintf(f, " DOUBLE_cr DOUBLE_sd\n");
 
-  if(fclose(f)==0) {
-    fprintf(stdout," Slit descrip. template config file written to: %s\n",
-            template_sl);
-    exit(status);
-  } else {
-    fprintf(stderr,
-      "  [%s]: error: failed to write to: %s\n", __func__, template_sl);
+  gen_template_confirmation(fclose(f), "Slit descrip.", template_sli);
+  exit(status);
+}
+
+static void gen_template_confirmation(int ec, const char *desc,
+  const char *file){
+  extern const char *fmt_writting_failed;
+  if(ec == 0){
+    fprintf(stdout," %s template config file written to: %s\n", desc, file);
+  }else{
+    fprintf(stderr, fmt_writting_failed, __func__, file);
     exit(EXIT_FAILURE);
   }
-
 }
 
 /*
@@ -270,6 +268,9 @@ void generate_template_config(int status)
  */
 int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
 {
+  extern const char *fmt_IO_8f;
+  extern const char *fmt_sudden_eof;
+  extern const char *fmt_null_ptr;
   int i=0;
   double c_off[3] = {0e0, 0e0, 0e0};
   double c_nor[3] = {0e0, 0e0, 0e0};
@@ -286,12 +287,10 @@ int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
 
     // Read data from the file
     for(i=0; i<num_channels; i++){
-      if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
+      if(fscanf(file, fmt_IO_8f,
             &c_off[0], &c_off[1], &c_off[2],
             &c_nor[0], &c_nor[1], &c_nor[2], &c_r, &s_d) == EOF){
-        fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
-        fprintf(stderr,"  %d data lines read; %d data lines expected\n",
-                i, num_channels);
+        fprintf(stderr, fmt_sudden_eof, __func__, i, num_channels);
         fclose(file);
         return EXIT_FAILURE;
       }else{
@@ -316,7 +315,7 @@ int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
     fclose(file);
     return EXIT_SUCCESS;
   }else{
-    fprintf(stderr, " [%s] ERR: Null pointer found as input parameter\n", __func__);
+    fprintf(stderr, fmt_null_ptr, __func__);
     return EXIT_FAILURE;
   }
 }
@@ -329,6 +328,9 @@ int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
  */
 int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
 {
+  extern const char *fmt_IO_8f;
+  extern const char *fmt_sudden_eof;
+  extern const char *fmt_null_ptr;
   int i=0;
   double sl_off[3] = {0e0, 0e0, 0e0};
   double sl_nor[3] = {0e0, 0e0, 0e0};
@@ -345,12 +347,10 @@ int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
 
     // Read data from the file
     for(i=0; i<num_slits; i++){
-      if(fscanf(file, "%lf %lf %lf %lf %lf %lf %lf %lf\n",
+      if(fscanf(file, fmt_IO_8f,
             &sl_off[0], &sl_off[1], &sl_off[2],
             &sl_nor[0], &sl_nor[1], &sl_nor[2], &sl_th, &s_d) == EOF){
-        fprintf(stderr,"  [%s]: faile ended unexpectedly\n", __func__);
-        fprintf(stderr,"  %d data lines read; %d data lines expected\n",
-                i, num_slits);
+        fprintf(stderr, fmt_sudden_eof, __func__, i, num_slits);
         fclose(file);
         return EXIT_FAILURE;
       }else{
@@ -375,7 +375,7 @@ int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
     fclose(file);
     return EXIT_SUCCESS;
   }else{
-    fprintf(stderr, " [%s] ERR: Null pointer found as input parameter\n", __func__);
+    fprintf(stderr, fmt_null_ptr, __func__);
     return EXIT_FAILURE;
   }
 }
@@ -387,6 +387,7 @@ int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
  */
 int parse_config(FILE *file, CONFIG *cfg)
 {
+  extern const char *fmt_null_ptr;
   const char *fmt_bad_range_values =
     "  [%s] ERR: Incorrect parameters for structure indexes\n";
   const char *fmt_lu  = "%*26c %lu\n";
@@ -424,7 +425,7 @@ int parse_config(FILE *file, CONFIG *cfg)
 
     fclose(file);
   }else{
-    fprintf(stderr, " [%s] ERR: Null pointer found as input parameter\n", __func__);
+    fprintf(stderr, fmt_null_ptr, __func__);
     return EXIT_FAILURE;
   }
   return exit_code;
