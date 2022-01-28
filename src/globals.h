@@ -34,7 +34,8 @@ const double minimal_dimer_qty = 2e-1;
 
 // general purpose global variables
 char *prog_name;
-
+const char* recent_config_version = "a5d22f901c89e2e86601cbeb06789cc311d0134a";
+const int config_version_length = 64;
 
 // message strings
 // *** errors

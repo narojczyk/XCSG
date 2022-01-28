@@ -16,9 +16,12 @@
 #include "io.h"
 
 extern char *prog_name;
+extern const char* recent_config_version;
 
 static void gen_template_confirmation(int ec, const char *desc,
   const char *file);
+static int config_inclusions_sanity_check(
+  int mk_inclusion, int num_inclusions, const char *msg);
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -211,17 +214,14 @@ void generate_template_config(int status)
   // Opening file
   f = open_to_write(template_cfg);
 
+  fprintf(f, "Config version marker    : %s\n", recent_config_version);
   fprintf(f, "RNG seed                 : LUINT\n");
   fprintf(f, "Number of edge fcc cells : INT_x INT_y INT_z\n");
   fprintf(f, "Generated symmetry       : STRING\n");
   fprintf(f, "Structures (start end)   : INT INT\n");
-  fprintf(f, "Make nano-channel (bool) : INT\n");
-  fprintf(f, "Make nano-slit    (bool) : INT\n");
+  fprintf(f, "Channels (bool file qty) : INT STRING INT\n");
+  fprintf(f, "Slits    (bool file qty) : INT STRING INT\n");
   fprintf(f, "Insert dimers DC  (bool) : INT\n");
-  fprintf(f, "Number of channels       : INT\n");
-  fprintf(f, "Channels desc. file name : STRING\n");
-  fprintf(f, "Number of slits          : INT\n");
-  fprintf(f, "Slits descrip. file name : STRING\n");
 
   gen_template_confirmation(fclose(f), "Main  program", template_cfg);
 
@@ -388,6 +388,76 @@ int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
 int parse_config(FILE *file, CONFIG *cfg)
 {
   extern const char *fmt_null_ptr;
+  extern const int config_version_length;
+  const char *fmt_bad_range_values =
+    "  [%s] ERR: Incorrect parameters for structure indexes\n";
+  const char *fmt_legacy_config =
+    "  [%s] WARN: Config version not recognized."
+    " Attempting to parse in legacy format\n";
+  const char *fmt_lu  = "%*26c %lu\n";
+  const char *fmt_ddd = "%*26c %d %d %d\n";
+  const char *fmt_dsd = "%*26c %d %s %d\n";
+  const char *fmt_dd  = "%*26c %d %d\n";
+  const char *fmt_d   = "%*26c %d\n";
+  const char *fmt_s   = "%*26c %s\n";
+  char cversion[config_version_length];
+  int exit_code = EXIT_SUCCESS;
+  int length_rcv = strlen(recent_config_version);
+
+  if(file != NULL){
+    // Look for version marker in a config file
+    fscanf(file, fmt_s, cversion);
+
+    // If version agrees, read parameters in current format
+    if(strlen(cversion) == length_rcv &&
+        !strncmp(cversion, recent_config_version, length_rcv)){
+
+      fscanf(file, fmt_lu,  &cfg->seed);
+      fscanf(file, fmt_ddd, &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
+      fscanf(file, fmt_s,    cfg->symmetry);
+      fscanf(file, fmt_dd,  &cfg->first, &cfg->last);
+      fscanf(file, fmt_dsd, &cfg->mk_channel, cfg->cfg_channels,
+             &cfg->num_channels);
+      fscanf(file, fmt_dsd, &cfg->mk_slit, cfg->cfg_slits, &cfg->num_slits);
+      fscanf(file, fmt_d,  &cfg->mk_dimers);
+
+      fclose(file);
+    // Switch between parsing functions in different formats if required
+//     }else if (){
+    }else{
+      // Rewind to the start of the file and parse config in legacy format
+      // (this will be removed when old format is no longer used)
+      fprintf(stderr, fmt_legacy_config, __func__);
+      fseek(file, 0, SEEK_SET);
+      parse_config_legacy(file, cfg); // fclose() inside
+    }
+  }else{
+    fprintf(stderr, fmt_null_ptr, __func__);
+    return EXIT_FAILURE;
+  }
+
+  // Parameters sanity check
+  // * main ini file (TODO: move this to a function)
+  if(cfg->last < cfg->first || cfg->first < 0 || cfg->last < 0){
+    fprintf(stderr, fmt_bad_range_values, __func__);
+    exit_code = EXIT_FAILURE;
+  }
+
+  // * channels inclusions
+  exit_code = config_inclusions_sanity_check(
+    cfg->mk_channel, cfg->num_channels, "num_channels");
+
+  // * slits inclusions
+  exit_code = config_inclusions_sanity_check(
+    cfg->mk_slit, cfg->num_slits, "num_slits");
+
+  return exit_code;
+}
+
+// Preserve legacy format for a while
+int parse_config_legacy(FILE *file, CONFIG *cfg)
+{
+  extern const char *fmt_null_ptr;
   const char *fmt_bad_range_values =
     "  [%s] ERR: Incorrect parameters for structure indexes\n";
   const char *fmt_lu  = "%*26c %lu\n";
@@ -436,7 +506,7 @@ int parse_config(FILE *file, CONFIG *cfg)
  *
  * Prints error messages for wrong inlcusion parameters
  */
-int config_inclusions_sanity_check(
+static int config_inclusions_sanity_check(
   int mk_inclusion, int num_inclusions, const char *msg)
 {
   const char *fmt_switch_sanity_check =
