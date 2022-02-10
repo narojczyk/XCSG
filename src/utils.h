@@ -16,8 +16,7 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind);
 
 void memory_clean_spheres(SPH *sph, int nd);
 void memory_clean_dimers(DIM3D *dim, int nd);
-void memory_clean_slits(SLI *sli, int nsl);
-void memory_clean_channels(CHA *cha, int nch);
+void memory_clean_inclusion(INC *inc, int n);
 void update_sphere_positions(DIM3D *dim, SPH *sph, double box[3], int d);
 int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d);
 void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd);

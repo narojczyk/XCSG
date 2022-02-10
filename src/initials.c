@@ -16,7 +16,9 @@
 #include "io.h"
 
 extern char *prog_name;
-extern const char* recent_config_version;
+extern const char* valid_config_version;
+
+extern const double zero;
 
 static void gen_template_confirmation(int ec, const char *desc,
   const char *file);
@@ -214,7 +216,7 @@ void generate_template_config(int status)
   // Opening file
   f = open_to_write(template_cfg);
 
-  fprintf(f, "Config version marker    : %s\n", recent_config_version);
+  fprintf(f, "Config version marker    : %s\n", valid_config_version);
   fprintf(f, "RNG seed                 : LUINT\n");
   fprintf(f, "Number of edge fcc cells : INT_x INT_y INT_z\n");
   fprintf(f, "Generated symmetry       : STRING\n");
@@ -261,21 +263,21 @@ static void gen_template_confirmation(int ec, const char *desc,
 }
 
 /*
- * parse_channels(file, ch_tab)
+ * parse_inclusions(file, inc)
  *
- * Reads channels' configuration from 'file' and stores data for each channel
- * respectively.
+ * Reads inclusions' configuration from 'file' and stores data for each array
+ * element of 'inc'.
  */
-int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
+int parse_inclusions(FILE *file, INC inc[], int num)
 {
   extern const char *fmt_IO_8f;
   extern const char *fmt_sudden_eof;
   extern const char *fmt_null_ptr;
   int i=0;
-  double c_off[3] = {0e0, 0e0, 0e0};
-  double c_nor[3] = {0e0, 0e0, 0e0};
-  double c_r = 0e0;
-  double s_d = 0e0;
+  double off[3] = {zero, zero, zero};
+  double nor[3] = {zero, zero, zero};
+  double size = zero;
+  double sd = zero;
   unsigned char trash;
 
   if(file != NULL){
@@ -286,90 +288,31 @@ int parse_channels(FILE *file, CHA ch_tab[], int num_channels)
     }while (trash != '\n');
 
     // Read data from the file
-    for(i=0; i<num_channels; i++){
+    for(i=0; i<num; i++){
       if(fscanf(file, fmt_IO_8f,
-            &c_off[0], &c_off[1], &c_off[2],
-            &c_nor[0], &c_nor[1], &c_nor[2], &c_r, &s_d) == EOF){
-        fprintf(stderr, fmt_sudden_eof, __func__, i, num_channels);
+            &off[0], &off[1], &off[2],
+            &nor[0], &nor[1], &nor[2], &size, &sd) == EOF){
+        fprintf(stderr, fmt_sudden_eof, __func__, i, num);
         fclose(file);
         return EXIT_FAILURE;
       }else{
 
-      // Store offset for the channel 'i'
-      ch_tab[i].os[0] = c_off[0];
-      ch_tab[i].os[1] = c_off[1];
-      ch_tab[i].os[2] = c_off[2];
+      // Store offset for the inclusion 'i'
+      inc[i].os[0] = off[0];
+      inc[i].os[1] = off[1];
+      inc[i].os[2] = off[2];
 
-      // Store normal vector for the channel 'i'
-      ch_tab[i].nm[0] = c_nor[0];
-      ch_tab[i].nm[1] = c_nor[1];
-      ch_tab[i].nm[2] = c_nor[2];
+      // Store normal vector for the inclusion 'i'
+      inc[i].nm[0] = nor[0];
+      inc[i].nm[1] = nor[1];
+      inc[i].nm[2] = nor[2];
 
-      // Store radius for the channel 'i'
-      ch_tab[i].radius = c_r;
+      // Store size for the inclusion 'i' in all possible cases
+      inc[i].thickness = size;
+      inc[i].radius = size;
 
-      // Store diameter of spheres in channel 'i'
-      ch_tab[i].sph_d = s_d;
-      }
-    }
-    fclose(file);
-    return EXIT_SUCCESS;
-  }else{
-    fprintf(stderr, fmt_null_ptr, __func__);
-    return EXIT_FAILURE;
-  }
-}
-
-/*
- * parse_slits(file, sl_tab)
- *
- * Reads slits' configuration from 'file' and stores data for each slit
- * respectively.
- */
-int parse_slits(FILE *file, SLI sl_tab[], int num_slits)
-{
-  extern const char *fmt_IO_8f;
-  extern const char *fmt_sudden_eof;
-  extern const char *fmt_null_ptr;
-  int i=0;
-  double sl_off[3] = {0e0, 0e0, 0e0};
-  double sl_nor[3] = {0e0, 0e0, 0e0};
-  double sl_th = 0e0;
-  double s_d = 0e0;
-  unsigned char trash;
-
-  if(file != NULL){
-    // Skip the header line in file
-    // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
-    do{
-      trash = fgetc(file);
-    }while (trash != '\n');
-
-    // Read data from the file
-    for(i=0; i<num_slits; i++){
-      if(fscanf(file, fmt_IO_8f,
-            &sl_off[0], &sl_off[1], &sl_off[2],
-            &sl_nor[0], &sl_nor[1], &sl_nor[2], &sl_th, &s_d) == EOF){
-        fprintf(stderr, fmt_sudden_eof, __func__, i, num_slits);
-        fclose(file);
-        return EXIT_FAILURE;
-      }else{
-
-      // Store offset for the slit 'i'
-      sl_tab[i].os[0] = sl_off[0];
-      sl_tab[i].os[1] = sl_off[1];
-      sl_tab[i].os[2] = sl_off[2];
-
-      // Store normal vector for the slit 'i'
-      sl_tab[i].nm[0] = sl_nor[0];
-      sl_tab[i].nm[1] = sl_nor[1];
-      sl_tab[i].nm[2] = sl_nor[2];
-
-      // Store radius for the slit 'i'
-      sl_tab[i].thickness = sl_th;
-
-      // Store diameter of spheres in slit 'i'
-      sl_tab[i].sph_d = s_d;
+      // Store the diameter of spheres in inclusion 'i'
+      inc[i].sph_d = sd;
       }
     }
     fclose(file);
@@ -402,7 +345,7 @@ int parse_config(FILE *file, CONFIG *cfg)
   const char *fmt_s   = "%*26c %s\n";
   char cversion[config_version_length];
   int exit_code = EXIT_SUCCESS;
-  int length_rcv = strlen(recent_config_version);
+  int length_rcv = strlen(valid_config_version);
 
   if(file != NULL){
     // Look for version marker in a config file
@@ -410,7 +353,7 @@ int parse_config(FILE *file, CONFIG *cfg)
 
     // If version agrees, read parameters in current format
     if(strlen(cversion) == length_rcv &&
-        !strncmp(cversion, recent_config_version, length_rcv)){
+        !strncmp(cversion, valid_config_version, length_rcv)){
 
       fscanf(file, fmt_lu,  &cfg->seed);
       fscanf(file, fmt_ddd, &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);

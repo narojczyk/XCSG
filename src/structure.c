@@ -661,16 +661,16 @@ int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload)
  * periodic image that is not the nearest to the channel axis)
  *
  */
-void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3],
-                  double tr[3], double isd, int ns){
+void make_channel(MODEL md, DIM3D *dim, SPH *sph, INC *inc){
   int i;
+  double c[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
   double p1[3], p2[3], pxcd[3], dist, dist0, dist1;
-  double ref[3] = {-box[0]/two, -box[1]/two, -box[2]/two};
-  double min_dist = box[0]; // any relatively large number will do
+  double ref[3] = {-md.box[0]/two, -md.box[1]/two, -md.box[2]/two};
+  double min_dist = md.box[0]; // any relatively large number will do
 
   // Find coordinates of the sphere in lower-left-corner of the cube
-  for(i=0; i<ns; i++){
+  for(i=0; i<md.Nsph; i++){
     // Calculate distance (no p.b.) of a sphere from a reference point
     dist = distance_absolute(ref, sph[i].r);
 
@@ -686,7 +686,7 @@ void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3],
 
   // Translate channel by specified vector
   for(i=0; i<3; i++){
-    llc[i] += tr[i];
+    llc[i] += inc->os[i];
   }
 
   // Find the coordinates of the center point on the channel axis
@@ -694,8 +694,8 @@ void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3],
   ccp[1] = llc[1] * (one - c[1]);
   ccp[2] = llc[2] * (one - c[2]);
 
-  for(i=0; i<ns; i++){
-    // Determine vector from point 'i' to lowe-left-corner atom of the cube
+  for(i=0; i<md.Nsph; i++){
+    // Determine vector from point 'i' to lower-left-corner atom of the cube
     p1[0] = llc[0] - sph[i].r[0];
     p1[1] = llc[1] - sph[i].r[1];
     p1[2] = llc[2] - sph[i].r[2];
@@ -706,13 +706,13 @@ void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3],
     p2[2] = ccp[2] - sph[i].r[2];
 
     // Apply boundary conditions
-    p1[0] = p1[0] - box[0] * round( p1[0]/box[0] );
-    p1[1] = p1[1] - box[1] * round( p1[1]/box[1] );
-    p1[2] = p1[2] - box[2] * round( p1[2]/box[2] );
+    p1[0] = p1[0] - md.box[0] * round( p1[0]/md.box[0] );
+    p1[1] = p1[1] - md.box[1] * round( p1[1]/md.box[1] );
+    p1[2] = p1[2] - md.box[2] * round( p1[2]/md.box[2] );
 
-    p2[0] = p2[0] - box[0] * round( p2[0]/box[0] );
-    p2[1] = p2[1] - box[1] * round( p2[1]/box[1] );
-    p2[2] = p2[2] - box[2] * round( p2[2]/box[2] );
+    p2[0] = p2[0] - md.box[0] * round( p2[0]/md.box[0] );
+    p2[1] = p2[1] - md.box[1] * round( p2[1]/md.box[1] );
+    p2[2] = p2[2] - md.box[2] * round( p2[2]/md.box[2] );
     // Calculate the cross product pxcd = p x cd
     vcrossu(p1, c, pxcd);
 
@@ -729,12 +729,12 @@ void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3],
 
     // If the sphere lies within the channel radius include the former into
     // channel and continue to the next sphere
-    if(dist0 < cr || dist1 < cr){
+    if(dist0 < inc->radius || dist1 < inc->radius){
       // Mark sphere as 'inclusion-sphere'
       sph[i].type = TYPE_INCLUSION_SPHERE;
 
       // ... and assign the respective inclusion-sphere-diameter
-      sph[i].d = isd;
+      sph[i].d = inc->sph_d;
 
       // Mark dimers that cross the channel as invalid
       // TODO: Move this outside ###############
@@ -753,10 +753,9 @@ void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3],
  * atoms belong to the plane, are flagged for braking.
  * NOTE: periodic boundaries are not taken into account here
  */
-void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
-               double isd, double nm[3], int ns){
+void make_slit(MODEL md, DIM3D *dim, SPH *sph, INC *inc){
   int i,j;
-  double cd[3] = {one*nm[0], one*nm[1], one*nm[2]};
+  double cd[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double p[7][3];
   double dist;
 
@@ -764,36 +763,36 @@ void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
   vnorm(cd);
 
   // Loop over all spheres in the structure
-  for(i=0; i<ns; i++){
-    // Get the i'th sphere position relative to the plane inside periodic box
-    p[0][0] = sph[i].r[0] - os[0];
-    p[0][1] = sph[i].r[1] - os[1];
-    p[0][2] = sph[i].r[2] - os[2];
+  for(i=0; i<md.Nsph; i++){
+    // Get the i'th sphere position relative to the plane inside periodic md.box
+    p[0][0] = sph[i].r[0] - inc->os[0];
+    p[0][1] = sph[i].r[1] - inc->os[1];
+    p[0][2] = sph[i].r[2] - inc->os[2];
 
     // ... and in the six of the sorrounding images
-    p[1][0] = sph[i].r[0] - os[0] + box[0];
-    p[1][1] = sph[i].r[1] - os[1];
-    p[1][2] = sph[i].r[2] - os[2];
+    p[1][0] = p[0][0] + md.box[0];
+    p[1][1] = p[0][1];
+    p[1][2] = p[0][2];
 
-    p[2][0] = sph[i].r[0] - os[0];
-    p[2][1] = sph[i].r[1] - os[1] + box[1];
-    p[2][2] = sph[i].r[2] - os[2];
+    p[2][0] = p[0][0];
+    p[2][1] = p[0][1] + md.box[1];
+    p[2][2] = p[0][2];
 
-    p[3][0] = sph[i].r[0] - os[0];
-    p[3][1] = sph[i].r[1] - os[1];
-    p[3][2] = sph[i].r[2] - os[2] + box[2];
+    p[3][0] = p[0][0];
+    p[3][1] = p[0][1];
+    p[3][2] = p[0][2] + md.box[2];
 
-    p[4][0] = sph[i].r[0] - os[0] - box[0];
-    p[4][1] = sph[i].r[1] - os[1];
-    p[4][2] = sph[i].r[2] - os[2];
+    p[4][0] = p[0][0] - md.box[0];
+    p[4][1] = p[0][1];
+    p[4][2] = p[0][2];
 
-    p[5][0] = sph[i].r[0] - os[0];
-    p[5][1] = sph[i].r[1] - os[1] - box[1];
-    p[5][2] = sph[i].r[2] - os[2];
+    p[5][0] = p[0][0];
+    p[5][1] = p[0][1] - md.box[1];
+    p[5][2] = p[0][2];
 
-    p[6][0] = sph[i].r[0] - os[0];
-    p[6][1] = sph[i].r[1] - os[1];
-    p[6][2] = sph[i].r[2] - os[2] - box[2];
+    p[6][0] = p[0][0];
+    p[6][1] = p[0][1];
+    p[6][2] = p[0][2] - md.box[2];
 
     for(j=0; j<=6; j++){
       // Calculate the dot product of the normal to the plane located at
@@ -806,7 +805,7 @@ void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
 
       // If the sphere lies within the plane, include the sphere into
       // plane and continue to the next sphere
-      if(fabs(dist) < thick ){
+      if(fabs(dist) < inc->thickness){
         // Mark sphere as 'inclusion-sphere'
         sph[i].type = TYPE_INCLUSION_SPHERE;
         // Mark dimers that cross the layer as invalid
@@ -816,7 +815,7 @@ void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
         }
         // #######################################
         // Assign the sphere the respective inclusion-sphere-diameter
-        sph[i].d = isd;
+        sph[i].d = inc->sph_d;
         // Escape the j-loop if sphere is found to lie on the plane
         break;
       }

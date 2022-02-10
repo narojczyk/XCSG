@@ -24,8 +24,8 @@ static int legacy_GLexport_sphere_type_converter(int type);
 // These function can close program on error
 static FILE* open_file(const char *file, const char *mode);
 
-void display_configuration_summary(CONFIG cfg, MODEL md, SLI *slits,
-                                   CHA *channels){
+void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
+                                   INC *channels){
   int i;
   const char *fmt_sees = " %-23s: %.16le %.16le (%1s)\n";
   const char *fmt_ses  = " %-23s: %.16le (%1s)\n";

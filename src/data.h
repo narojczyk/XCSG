@@ -21,21 +21,14 @@ typedef struct
   double L;         // Dimer length (dist. between spheres' centers)
 } DIM3D;
 
-typedef struct
+typedef struct INC
 {
-  double os[3];     // Channel offset from the base atom in the structure
-  double nm[3];     // Vector parallel to the channel axis
-  double radius;    // The radius of the channel
-  double sph_d;     // Diameter of spheres in the channel
-} CHA;
-
-typedef struct
-{
-  double os[3];     // Channel offset from the base atom in the structure
-  double nm[3];     // Vector orthogonal to the plane
-  double thickness; // The thickness of the plane
-  double sph_d;     // Diameter of spheres in the plane
-} SLI;
+  double os[3];     // Inclusion offset from the base atom in the structure
+  double nm[3];     // Normal vector of the inclusion
+  double radius;    // Inclusion radius (for spherically symmetric inclusions)
+  double thickness; // Inclusion thickness (in direction orthogonal to 'nm')
+  double sph_d;     // Diameter of spheres in the inclusion
+} INC;
 
 typedef struct
 {
@@ -63,11 +56,6 @@ typedef struct
   double box[3];  // Size of the container for the structure  //old: box_edge
 
 } MODEL;
-
-typedef struct
-{
-
-} PTINC;
 
 #endif
 /* vim: set tw=80 ts=2 sw=2 et: */

@@ -564,33 +564,12 @@ void memory_clean_dimers(DIM3D *dim, int nd)
 
 }
 
-void memory_clean_slits(SLI *sli, int nsl)
+void memory_clean_inclusion(INC *inc, int n)
 {
-  SLI template;
+  INC template;
   int i;
 
-  // Default values for initial array of spheres
-  template.os[0] = zero;
-  template.os[1] = zero;
-  template.os[2] = zero;
-  template.nm[0] = zero;
-  template.nm[1] = zero;
-  template.nm[2] = zero;
-  template.thickness = zero;
-  template.sph_d = one;
-
-  // Copy default values to the array
-  for(i=0; i<nsl; i++){
-    sli[i] = template;
-  }
-}
-
-void memory_clean_channels(CHA *cha, int nch)
-{
-  CHA template;
-  int i;
-
-  // Default values for initial array of spheres
+  // Default values for an initial (undefined) inclusion
   template.os[0] = zero;
   template.os[1] = zero;
   template.os[2] = zero;
@@ -598,11 +577,12 @@ void memory_clean_channels(CHA *cha, int nch)
   template.nm[1] = zero;
   template.nm[2] = zero;
   template.radius = zero;
+  template.thickness = zero;
   template.sph_d = one;
 
   // Copy default values to the array
-  for(i=0; i<nch; i++){
-    cha[i] = template;
+  for(i=0; i<n; i++){
+    inc[i] = template;
   }
 }
 

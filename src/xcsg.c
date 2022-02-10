@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
 
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
-  CHA *channels = NULL;
-  SLI *slits = NULL;
+  INC *channels = NULL;
+  INC *slits = NULL;
 
   char *f_ini = NULL;
 
@@ -89,19 +89,19 @@ int main(int argc, char *argv[])
   }
 
   // Allocate and clean memory for channels' data
-  channels = malloc(cfg.num_channels * sizeof(CHA));
+  channels = malloc(cfg.num_channels * sizeof(INC));
   on_exit(releace_memory, channels);
-  memory_clean_channels(channels, cfg.num_channels);
+  memory_clean_inclusion(channels, cfg.num_channels);
 
   // Allocate and clean memory for slits' data
-  slits = malloc(cfg.num_slits * sizeof(SLI));
+  slits = malloc(cfg.num_slits * sizeof(INC));
   on_exit(releace_memory, slits);
-  memory_clean_slits(slits, cfg.num_slits);
+  memory_clean_inclusion(slits, cfg.num_slits);
 
   // Open and read channel description data
   if( cfg.mk_channel != 0 && f == NULL ){
     f = open_to_read(cfg.cfg_channels);
-    if(parse_channels(f, channels, cfg.num_channels) != EXIT_SUCCESS){
+    if(parse_inclusions(f, channels, cfg.num_channels) != EXIT_SUCCESS){
       return EXIT_FAILURE;
     }
     f = NULL;
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
   // Open and read slits description data
   if( cfg.mk_slit != 0 && f == NULL ){
     f = open_to_read(cfg.cfg_slits);
-    if(parse_slits(f, slits, cfg.num_slits) != EXIT_SUCCESS){
+    if(parse_inclusions(f, slits, cfg.num_slits) != EXIT_SUCCESS){
       return EXIT_FAILURE;
     }
     f = NULL;
@@ -171,8 +171,7 @@ int main(int argc, char *argv[])
         // Test channel data
         if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 || channels[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "channel", i);
-          make_channel(dimers, spheres, channels[i].nm, channels[i].radius,
-                     mdl.box, channels[i].os, channels[i].sph_d, mdl.Nsph);
+          make_channel(mdl, dimers, spheres, &channels[i]);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
                   cfg.num_channels);
@@ -186,8 +185,7 @@ int main(int argc, char *argv[])
         // Test slit data
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "layer", i);
-          make_slit(dimers, spheres, mdl.box, slits[i].thickness, slits[i].os,
-                    slits[i].sph_d, slits[i].nm, mdl.Nsph);
+          make_slit(mdl, dimers, spheres, &slits[i]);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                   cfg.num_slits);

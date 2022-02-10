@@ -11,10 +11,8 @@ int sph_assign_lattice_indexes( SPH *sph, int ns);
 
 void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2);
 void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2]);
-void make_channel(DIM3D *dim, SPH *sph, double c[3], double cr, double box[3], 
-                  double tr[3], double isd, int ns);
-void make_slit(DIM3D *dim, SPH *sph, double box[3], double thick, double os[3],
-               double isd, double nm[3], int ns);
+void make_channel(MODEL md, DIM3D *dim, SPH *sph, INC *inc);
+void make_slit(MODEL md, DIM3D *dim, SPH *sph, INC *inc);
 void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]);
 int test_dimer_distribution(DIM3D *dim, int od[6], int nd);
 void display_dimer_distribution(int od[6]);

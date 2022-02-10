@@ -9,8 +9,7 @@ void generate_template_config(int status);
 
  int parse_config(FILE *file, CONFIG *cfg);
  int parse_config_legacy(FILE *file, CONFIG *cfg);
- int parse_channels(FILE *file, CHA ch_tab[], int num_channels);
- int parse_slits(FILE *file, SLI sl_tab[], int num_slits);
+ int parse_inclusions(FILE *file, INC inc[], int num);
 void parse_options(int argc, char *argv[], char **f);
 
 #endif
