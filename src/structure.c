@@ -136,6 +136,9 @@ int set_fcc(SPH *sph, int ns, int cells[3]){
 
 int sph_assign_lattice_indexes( SPH *sph, int ns)
 {
+  const char *fmt_sph_number = " Sphere number %d\n";
+  const char *fmt_unassigned_latt_idx =
+    " [%s] ERR: Unasigned lattice index for the direction %d\n";
   int tmp_size = 300;
   int dir, i=0, j=0, c, present;
   double uniq_coords[tmp_size];
@@ -144,12 +147,6 @@ int sph_assign_lattice_indexes( SPH *sph, int ns)
   for(dir=0; dir<3; dir++){
     c=0;
     present=0;
-
-    /*if(dir != 0 && dir != 1 && dir != 2){
-      fprintf(stdout," [%s] error: wrong value passed for dir=%d (0|1|2 allowd)\n",
-              __func__,dir);
-      return EXIT_FAILURE;
-    }*/
 
     // Assign the coordinate of the first sphere into the array
     uniq_coords[c++] = sph[0].r[dir];
@@ -192,8 +189,8 @@ int sph_assign_lattice_indexes( SPH *sph, int ns)
       }
       // For security check if the index does not remain unassigned
       if(sph[i].lattice_ind[dir] == -1){
-        fprintf(stderr," [%s] error: Unasigned lattice index for the direction %d\n",__func__,dir);
-        fprintf(stderr," Sphere number %d\n",i);
+        fprintf(stderr, fmt_unassigned_latt_idx, __func__, dir);
+        fprintf(stderr, fmt_sph_number, i);
         return EXIT_FAILURE;
       }
     }
