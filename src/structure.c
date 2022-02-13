@@ -51,7 +51,7 @@ int set_fcc(SPH *sph, int ns, int cells[3]){
   double half_a = a/two;
   double sys_half_size[3] = {cells[0]*half_a, cells[1]*half_a, cells[2]*half_a};
   double com[3]={zero,zero,zero};
-  const char *fmt_index_out_of_range = " [%s] ERR: sphere index out of range\n";
+  const char *fmt_index_out_of_range = " [%s] ERR: index out of range\n";
   const char *fmt_index_value = " index %d > MODEL.Nsph\n";
 
   for(i=0, j=i+1, k=i+2, l=i+3; i<ns; i+=4, j+=4, k+=4, l+=4){
@@ -139,6 +139,7 @@ int sph_assign_lattice_indexes( SPH *sph, int ns)
   const char *fmt_sph_number = " Sphere number %d\n";
   const char *fmt_unassigned_latt_idx =
     " [%s] ERR: Unasigned lattice index for the direction %d\n";
+  const char *fmt_index_out_of_range = " [%s] ERR: index out of range\n";
   int tmp_size = 300;
   int dir, i=0, j=0, c, present;
   double uniq_coords[tmp_size];
@@ -170,7 +171,12 @@ int sph_assign_lattice_indexes( SPH *sph, int ns)
       // if the flag is not set after the sweep add the current coordinate
       // to the array and increment the array counter
       if(present==0){
-        uniq_coords[c++] = c_value;
+        if(c < tmp_size){
+          uniq_coords[c++] = c_value;
+        }else{
+          fprintf(stderr, fmt_index_out_of_range, __func__);
+          return EXIT_FAILURE;
+        }
       }
     }
 
