@@ -1,6 +1,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+int str_validate(const char *src, const char *tgt);
 int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim);
 int container_dimensions(MODEL *md, CONFIG cf);
 int number_of_spheres(CONFIG cf);

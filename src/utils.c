@@ -32,6 +32,16 @@ extern const int TYPE_INCLUSION_SPHERE;
 
 const char *fcc = "fcc";
 
+int str_validate(const char *src, const char *tgt){
+  int len_src = strlen(src);
+  int len_tgt = strlen(tgt);
+
+  if(len_src == len_tgt && !strncmp(src, tgt, len_tgt)){
+    return 0;
+  }
+  return 1;
+}
+
 int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
   int i;
   int tp_sph = 0, tp_inc_sph = 0;
@@ -63,11 +73,8 @@ int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
 
 
 int container_dimensions(MODEL *md, CONFIG cf){
-  int len_fcc = strlen(fcc);
-  int i, size_symmetry = strlen(cf.symmetry);
-
-  if(size_symmetry == len_fcc && !strncmp(cf.symmetry, fcc, len_fcc)){
-    for(i=0; i<3; i++){
+  if(!str_validate(cf.symmetry, fcc)){
+    for(int i=0; i<3; i++){
       md->box[i] = cf.cells[i] * sqrt(two);
     }
     return EXIT_SUCCESS;
@@ -76,11 +83,8 @@ int container_dimensions(MODEL *md, CONFIG cf){
 }
 
 int number_of_spheres(CONFIG cf){
-  int len_fcc = strlen(fcc);
-  int size_symmetry = strlen(cf.symmetry);
-
   // Variant for f.c.c. structure
-  if(size_symmetry == len_fcc && !strncmp(cf.symmetry, fcc, len_fcc)){
+  if(!str_validate(cf.symmetry, fcc)){
     return 4 * cf.cells[0] * cf.cells[1] * cf.cells[2];
   }
   return EXIT_FAILURE;

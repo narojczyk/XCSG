@@ -27,14 +27,11 @@ extern const int TYPE_INCLUSION_SPHERE;
 
 extern const char *fmt_internal_call_failed;
 
-
 int set_structure(CONFIG cf, MODEL md, SPH *sph){
   const char *fcc = "fcc";
   const char *fmt_generate_structure = " Generating initial %s structure\n";
-  int len_fcc = strlen(fcc);
-  int size_symmetry = strlen(cf.symmetry);
 
-  if(size_symmetry == len_fcc && !strncmp(cf.symmetry, fcc, len_fcc)){
+  if(!str_validate(cf.symmetry, fcc)){
     fprintf(stdout, fmt_generate_structure, fcc);
     return set_fcc(sph, md.Nsph, cf.cells);
   }

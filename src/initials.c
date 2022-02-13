@@ -14,6 +14,7 @@
 #include "checksum.h"
 #include "initials.h"
 #include "io.h"
+#include "utils.h"
 
 extern char *prog_name;
 extern const char* valid_config_version;
@@ -345,15 +346,13 @@ int parse_config(FILE *file, CONFIG *cfg)
   const char *fmt_s   = "%*26c %s\n";
   char cversion[config_version_length];
   int exit_code = EXIT_SUCCESS;
-  int length_rcv = strlen(valid_config_version);
 
   if(file != NULL){
     // Look for version marker in a config file
     fscanf(file, fmt_s, cversion);
 
     // If version agrees, read parameters in current format
-    if(strlen(cversion) == length_rcv &&
-        !strncmp(cversion, valid_config_version, length_rcv)){
+    if(!str_validate(cversion, valid_config_version)){
 
       fscanf(file, fmt_lu,  &cfg->seed);
       fscanf(file, fmt_ddd, &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
