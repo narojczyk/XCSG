@@ -259,31 +259,6 @@ int count_typeX_sp_neighbours(SPH *sph, int x, int id)
   return ic;
 }
 
-// OBSOLETE
-int count_typeX_dimers(DIM3D *dim, int x, int nd)
-{
-  int i, count=0;
-
-  for(i=0; i<nd; i++){
-    if(dim[i].type == x){
-      count++;
-    }
-  }
-  return count;
-}
-
-int count_typeX_spheres(SPH *sph, int x, int ns)
-{
-  int i, count=0;
-
-  for(i=0; i<ns; i++){
-    if(sph[i].type == x){
-      count++;
-    }
-  }
-  return count;
-}
-
 int check_dimer_direction(DIM3D *dim, int i)
 {
   int j;
