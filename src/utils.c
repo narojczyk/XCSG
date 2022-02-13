@@ -32,6 +32,8 @@ extern const int TYPE_INCLUSION_SPHERE;
 
 const char *fcc = "fcc";
 
+static int find_free_ngb_slot(SPH *sph);
+
 int str_validate(const char *src, const char *tgt){
   int len_src = strlen(src);
   int len_tgt = strlen(tgt);
@@ -310,30 +312,56 @@ int check_dimer_direction(DIM3D *dim, int i)
  * Build neighburs data for spheres.
  */
 int find_ngb_spheres(SPH sph[], int ns, double box[3]){
-  //NOTE: this algorithm is not efficient
-  int i,j,cni;
+  const char *fmt_too_small_ngb_list =
+    " [%s] ERR: neighbour list for %d is nof full\n";
+  const char *fmt_no_free_ngb_slot =
+    " [%s] ERR: no free slots for neighbour id of sph %d\n";
+  int i, j, slot_id, ngb_slot_id;
   const double lim = 5e-11;
 
   // Loop over all spheres
-  for(i=0; i<ns; i++){
-    // current neighbor index
-    cni = 0;
+  for(i=0; i<ns-1; i++){
+    // get free neighbor index
+    slot_id = find_free_ngb_slot(&sph[i]);
 
     // Loop over all spheres other than 'i'
-    for(j=0; j<ns; j++){
-      if(j!=i && fabs(distance(sph[i].r,sph[j].r, box) - one) < lim ){
-        sph[i].ngb[cni++] = j;
+    for(j=i+1; j<ns; j++){
+      if(fabs(distance(sph[i].r,sph[j].r, box) - one) < lim ){
+        // Save ngb index for i'th sphere
+        sph[i].ngb[slot_id++] = j;
+
+        // Find first free slot in the ngb tab of j'th sphere
+        ngb_slot_id = find_free_ngb_slot(&sph[j]);
+        if(ngb_slot_id == TYPE_INVALID){
+          fprintf(stderr, fmt_no_free_ngb_slot, __func__, j);
+          return EXIT_FAILURE;
+        }
+
+        // And save the index of i'th sphere as neighbour of 'j'
+        sph[j].ngb[ngb_slot_id] = i;
       }
-    }
+    } // j-loop end
 
     // Sanity check
-    if(cni != 12){
-      fprintf(stderr,
-              " [ %s ]: error: wrong cni value (%d != 12)\n", __func__, cni);
+    if(find_free_ngb_slot(&sph[i]) != TYPE_INVALID){
+      fprintf(stderr, fmt_too_small_ngb_list, __func__, i);
       return EXIT_FAILURE;
     }
   }
   return EXIT_SUCCESS;
+}
+
+static int find_free_ngb_slot(SPH *sph){
+  // NOTE: This should be global (maybe inside SPH declaration)
+  const int ngb_list_size = 12;
+
+  for(int i=0; i<ngb_list_size; i++){
+    if(sph->ngb[i] == TYPE_INVALID){
+      return i;
+    }
+  }
+
+  return TYPE_INVALID;
 }
 
 /*
