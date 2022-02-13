@@ -49,26 +49,27 @@ int set_fcc(SPH *sph, int ns, int cells[3]){
   // Lattice constant
   double a = sqrt(two);
   double half_a = a/two;
+  double sys_half_size[3] = {cells[0]*half_a, cells[1]*half_a, cells[2]*half_a};
   double com[3]={zero,zero,zero};
   const char *fmt_index_out_of_range = " [%s] ERR: sphere index out of range\n";
   const char *fmt_index_value = " index %d > MODEL.Nsph\n";
 
   for(i=0, j=i+1, k=i+2, l=i+3; i<ns; i+=4, j+=4, k+=4, l+=4){
-    sph[i].r[0] = -cells[0] * half_a + x * a;
-    sph[i].r[1] = -cells[1] * half_a + y * a;
-    sph[i].r[2] = -cells[2] * half_a + z * a;
+    sph[i].r[0] = -sys_half_size[0] + x * a;
+    sph[i].r[1] = -sys_half_size[1] + y * a;
+    sph[i].r[2] = -sys_half_size[2] + z * a;
 
-    sph[j].r[0] = -cells[0] * half_a + x * a + half_a;
-    sph[j].r[1] = -cells[1] * half_a + y * a;
-    sph[j].r[2] = -cells[2] * half_a + z * a + half_a;
+    sph[j].r[0] = -sys_half_size[0] + x * a + half_a;
+    sph[j].r[1] = -sys_half_size[1] + y * a;
+    sph[j].r[2] = -sys_half_size[2] + z * a + half_a;
 
-    sph[k].r[0] = -cells[0] * half_a + x * a;
-    sph[k].r[1] = -cells[1] * half_a + y * a + half_a;
-    sph[k].r[2] = -cells[2] * half_a + z * a + half_a;
+    sph[k].r[0] = -sys_half_size[0] + x * a;
+    sph[k].r[1] = -sys_half_size[1] + y * a + half_a;
+    sph[k].r[2] = -sys_half_size[2] + z * a + half_a;
 
-    sph[l].r[0] = -cells[0] * half_a + x * a + half_a;
-    sph[l].r[1] = -cells[1] * half_a + y * a + half_a;
-    sph[l].r[2] = -cells[2] * half_a + z * a;
+    sph[l].r[0] = -sys_half_size[0] + x * a + half_a;
+    sph[l].r[1] = -sys_half_size[1] + y * a + half_a;
+    sph[l].r[2] = -sys_half_size[2] + z * a;
 
     sph[i].d = one;
     sph[j].d = one;
@@ -113,12 +114,15 @@ int set_fcc(SPH *sph, int ns, int cells[3]){
     com[1] += sph[i].r[1];
     com[2] += sph[i].r[2];
   }
+  com[0] /= ns;
+  com[1] /= ns;
+  com[2] /= ns;
 
   // Move the center of mass of the new structure to point 0
   for(i=0; i<ns; i++){
-    sph[i].r[0] -= com[0]/ns;
-    sph[i].r[1] -= com[1]/ns;
-    sph[i].r[2] -= com[2]/ns;
+    sph[i].r[0] -= com[0];
+    sph[i].r[1] -= com[1];
+    sph[i].r[2] -= com[2];
   }
 
   return EXIT_SUCCESS;
