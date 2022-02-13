@@ -209,11 +209,13 @@ int main(int argc, char *argv[])
       do{
         // Find a sphere with the lowes count of chanses to form a dimer
         s_id = find_critical_sphere(spheres, mdl.Nsph);
-        s_ngb_qty = count_typeX_sp_neighbours(spheres, TYPE_SPHERE, s_id);
+        s_ngb_qty =
+          count_typeX_sp_neighbours(spheres, TYPE_SPHERE, s_id, mdl.Nsph);
         // If the possibilities are high enough, select sphere randomly
         if(s_ngb_qty >= 5){
           s_id = draw_sphere_typeX(spheres, TYPE_SPHERE, mdl.Nsph);
-          s_ngb_qty = count_typeX_sp_neighbours(spheres, TYPE_SPHERE, s_id);
+          s_ngb_qty =
+            count_typeX_sp_neighbours(spheres, TYPE_SPHERE, s_id, mdl.Nsph);
         }
 
         // Randomly select neighbour of s_id

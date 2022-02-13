@@ -223,7 +223,7 @@ int find_critical_sphere(SPH *sph, int ns)
   for(i=0; i<ns; i++){
     if(sph[i].type == TYPE_SPHERE){
       // Count TYPE_SPHERE neighbours for i'th sphere
-      ngb_count = count_typeX_sp_neighbours(sph, TYPE_SPHERE, i);
+      ngb_count = count_typeX_sp_neighbours(sph, TYPE_SPHERE, i, ns);
 
       // remember 'i' index if calculated ngb_count is minimal
       if(ngb_count > 0 && ngb_count < min_ngb_count){
@@ -242,19 +242,20 @@ int find_critical_sphere(SPH *sph, int ns)
  *
  * check the neighbours list of sphere 'id' and count all neighbours of type x
  */
-int count_typeX_sp_neighbours(SPH *sph, int x, int id)
+int count_typeX_sp_neighbours(SPH *sph, int x, int id, int nsph)
 {
-  //NOTE: the function is not safe if id is over sph array
   int ic = 0, i;
 
   // Check if id is valid array index
-  if(id == -1){
+  if(id < 0 && id >= nsph){
     return -1;
   }
 
   // count possible neighbours to connect.
   for(i=0; i<12; i++){
-    ic += (sph[sph[id].ngb[i]].type == x) ? 1 : 0 ;
+    if(sph[sph[id].ngb[i]].type == x){
+      ic++;
+    }
   }
   return ic;
 }

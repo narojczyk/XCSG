@@ -8,7 +8,7 @@ int number_of_spheres(CONFIG cf);
 int find_ngb_spheres(SPH sph[], int ns, double box[3]);
 int brake_dimers(DIM3D *dim, SPH *sph, int nd);
 int check_dimer_direction(DIM3D *dim, int i);
-int count_typeX_sp_neighbours(SPH *sph, int x, int id);
+int count_typeX_sp_neighbours(SPH *sph, int x, int id, int nsph);
 int find_critical_sphere(SPH *sph, int ns);
 int draw_sphere_typeX(SPH *sph, int x, int ns);
 int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind);
