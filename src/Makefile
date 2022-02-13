@@ -7,6 +7,9 @@ CFLAGS = -std=gnu99 -Wall
 # Optimalisation flags
 CFLAGS += -O2 -march=native -mtune=native
 
+# enable profiling
+# CFLAGS += -pg
+
 # Linker flags (i.e. external libraries used by the project).
 LDFLAGS = -lm
 
