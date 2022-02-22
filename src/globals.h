@@ -52,7 +52,7 @@ const char *fmt_write_notify = " Writting %-6s data to file %s\n";
 // *** additional debuging messages
 const char *fmt_dbg_opening_file = " [%s] DBG opening file: %s\n";
 
-// *** I/O formats
-const char *fmt_IO_8f = "%lf %lf %lf %lf %lf %lf %lf %lf\n";
+// *** common I/O formats
+
 #endif
 /* vim: set tw=80 ts=2 sw=2 et: */

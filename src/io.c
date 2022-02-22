@@ -34,9 +34,9 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
   const char *fmt_ss   = " %-23s: %s\n";
   const char *fmt_slu  = " %-23s: %8lu\n";
   const char *fmt_inlusion_data_header =
-    " No.| %s offset\t\t  | %s normal\t       | %s\t  | %s\n";
+    " No.| %s offset\t\t  | %s normal\t       | %s\t  | %s | %s\n";
   const char *fmt_inclusion_data =
-    " %2d | %lf %lf % lf | %lf %lf %lf | %lf | %lf\n";
+    " %2d | %lf %lf % lf | %lf %lf %lf | %lf | %lf | %d \n";
 
   fprintf(stdout," # %s - configuration summary\n", prog_name);
   fprintf(stdout,"\n ## Ini file parameters\n");
@@ -64,12 +64,12 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
   if (cfg.mk_channel){
     fprintf(stdout, fmt_ssDat, "Channels",cfg.cfg_channels);
     fprintf(stdout, fmt_inlusion_data_header,
-            "channel", "channel", "radius", "sph. diam.");
+            "channel", "channel", "radius", "sp. dia.", "n-mer");
     for(i=0; i<cfg.num_channels; i++){
       fprintf(stdout, fmt_inclusion_data, i,
               channels[i].os[0], channels[i].os[1], channels[i].os[2],
               channels[i].nm[0], channels[i].nm[1], channels[i].nm[2],
-              channels[i].radius, channels[i].sph_d);
+              channels[i].radius, channels[i].sph_d, channels[i].tgt_Nmer);
     }
     fprintf(stdout,"\n");
   }
@@ -77,12 +77,12 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
   if (cfg.mk_slit){
     fprintf(stdout, fmt_ssDat, "Layers", cfg.cfg_slits);
     fprintf(stdout, fmt_inlusion_data_header,
-            "layer", "layer", "thick.", "sph. diam.");
+            "layer", "layer", "thick.", "sp. dia.", "n-mer");
     for(i=0; i<cfg.num_slits; i++){
       fprintf(stdout, fmt_inclusion_data, i,
               slits[i].os[0], slits[i].os[1], slits[i].os[2],
               slits[i].nm[0], slits[i].nm[1], slits[i].nm[2],
-              slits[i].thickness, slits[i].sph_d);
+              slits[i].thickness, slits[i].sph_d, slits[i].tgt_Nmer);
     }
     fprintf(stdout,"\n");
   }

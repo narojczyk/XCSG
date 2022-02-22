@@ -23,6 +23,8 @@ typedef struct
 
 typedef struct INC
 {
+  int tgt_Nmer;     /* Targeted n-mer particle to be formed by spheres
+                       of this inclusion */
   double os[3];     // Inclusion offset from the base atom in the structure
   double nm[3];     // Normal vector of the inclusion
   double radius;    // Inclusion radius (for spherically symmetric inclusions)
@@ -39,6 +41,8 @@ typedef struct
   int mk_channel;         // Bolean [0|1] flag to enable channel inclusion
   int mk_slit;            // Bolean [0|1] flag to enable slit inclusion
   int mk_dimers;          // Bolean [0|1] flag to connect free spheres to dimers
+  int mk_inc_dimers;      /* Bolean [0|1] flag to connect inclusion spheres
+                             to dimers */
   int num_channels;       // Number of channels described in cfg_channels
   int num_slits;          // Number of slits described in cfg_slits
   char cfg_channels[41];  // File name for the channels' parameters
@@ -53,8 +57,8 @@ typedef struct
   int mtrx_sph;   // Current number of single spheres in matrix
   int mtrx_dim;   // Current number of dimers in matrix (not in inclusion)
   int incl_sph;   // Current number of spheres forming inclusion
+  int incl_dim;   // Current number of dimers forming inclusion
   double box[3];  // Size of the container for the structure  //old: box_edge
-
 } MODEL;
 
 #endif

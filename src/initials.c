@@ -217,7 +217,7 @@ void generate_template_config(int status)
   // Opening file
   f = open_to_write(template_cfg);
 
-  fprintf(f, "Config version marker    : %s\n", valid_config_version);
+  fprintf(f, "Version compliance sig.  : %s\n", valid_config_version);
   fprintf(f, "RNG seed                 : LUINT\n");
   fprintf(f, "Number of edge fcc cells : INT_x INT_y INT_z\n");
   fprintf(f, "Generated symmetry       : STRING\n");
@@ -232,10 +232,11 @@ void generate_template_config(int status)
   f = open_to_write(template_cha);
 
   fprintf(f, "#axis offset (3F); axis wersor (3F); channel radius (1F);");
-  fprintf(f, " ch. sph. diameter (1F). The 1st line is skipped.\n");
+  fprintf(f, " ch. sph. diameter (1F); n-mer to form (1I).");
+  fprintf(f, " The 1st line is skipped.\n");
   fprintf(f, " DOUBLE_ox DOUBLE_oy DOUBLE_oz ");
   fprintf(f, " DOUBLE_cx DOUBLE_cy DOUBLE_cz ");
-  fprintf(f, " DOUBLE_cr DOUBLE_sd\n");
+  fprintf(f, " DOUBLE_cr DOUBLE_sd INT_n-mer\n");
 
   gen_template_confirmation(fclose(f), "Channel desc.", template_cha);
 
@@ -243,10 +244,11 @@ void generate_template_config(int status)
   f = open_to_write(template_sli);
 
   fprintf(f, "#plane offset (3F); plane normal (3F); pl. thickness (1F);");
-  fprintf(f, " plane sph. diameter (1F). 1st line is skipped.\n");
+  fprintf(f, " plane sph. diameter (1F); n-mer to form (1I).");
+  fprintf(f, " The 1st line is skipped.\n");
   fprintf(f, " DOUBLE_ox DOUBLE_oy DOUBLE_oz ");
   fprintf(f, " DOUBLE_cx DOUBLE_cy DOUBLE_cz ");
-  fprintf(f, " DOUBLE_cr DOUBLE_sd\n");
+  fprintf(f, " DOUBLE_cr DOUBLE_sd INT_n-mer\n");
 
   gen_template_confirmation(fclose(f), "Slit descrip.", template_sli);
   exit(status);
@@ -271,10 +273,10 @@ static void gen_template_confirmation(int ec, const char *desc,
  */
 int parse_inclusions(FILE *file, INC inc[], int num)
 {
-  extern const char *fmt_IO_8f;
   extern const char *fmt_sudden_eof;
   extern const char *fmt_null_ptr;
-  int i=0;
+  const char *fmt_IO_8f1d = "%lf %lf %lf %lf %lf %lf %lf %lf %d\n";
+  int i=0, n_mer/* = 0*/;
   double off[3] = {zero, zero, zero};
   double nor[3] = {zero, zero, zero};
   double size = zero;
@@ -290,9 +292,9 @@ int parse_inclusions(FILE *file, INC inc[], int num)
 
     // Read data from the file
     for(i=0; i<num; i++){
-      if(fscanf(file, fmt_IO_8f,
+      if(fscanf(file, fmt_IO_8f1d,
             &off[0], &off[1], &off[2],
-            &nor[0], &nor[1], &nor[2], &size, &sd) == EOF){
+            &nor[0], &nor[1], &nor[2], &size, &sd, &n_mer) == EOF){
         fprintf(stderr, fmt_sudden_eof, __func__, i, num);
         fclose(file);
         return EXIT_FAILURE;
@@ -314,6 +316,9 @@ int parse_inclusions(FILE *file, INC inc[], int num)
 
       // Store the diameter of spheres in inclusion 'i'
       inc[i].sph_d = sd;
+
+      // Store the target n-mer size to be formed
+      inc[i].tgt_Nmer = n_mer;
       }
     }
     fclose(file);
