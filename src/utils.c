@@ -364,54 +364,6 @@ static int find_free_ngb_slot(SPH *sph){
   return TYPE_INVALID;
 }
 
-/*
- * brake_dimers(dim, sph, nd)
- * Check all dimers and brake bonds in case at least one of spheres belong
- * to channel.
- */
-int brake_dimers(DIM3D *dim, SPH *sph, int nd)
-{
-  int i;
-  int atom0, atom1;
-  int broken_dimers = 0;
-  for(i=0; i<nd; i++){
-
-    // Check for type set by make_channel() or make_slit()
-    // NOTE update this comment when the above changes.
-    if(dim[i].type == TYPE_INVALID){
-      // Get atom indexes
-      atom0 = dim[i].sph_ind[0];
-      atom1 = dim[i].sph_ind[1];
-
-      // Delete indexes of spheres forming a dimer
-      dim[i].sph_ind[0] = -1;
-      dim[i].sph_ind[1] = -1;
-
-      // NOTE: is this still relevant ? ##########################
-      // Set the free (non-channel) sphere (if any) to type '3'
-      if(atom0 >= 0 && sph[atom0].type == 1){
-        sph[atom0].type = TYPE_SPHERE;
-      }
-      if(atom1 >= 0 && sph[atom1].type == 1){
-        sph[atom1].type = TYPE_SPHERE;
-      }
-      // ##########################################################
-
-      // Remove dimer index from the sphere data
-      if(atom0 >= 0){
-        sph[atom0].dim_ind = -1;
-      }
-      if(atom1 >= 0){
-        sph[atom1].dim_ind = -1;
-      }
-
-      // Count broken dimers
-      broken_dimers++;
-    }
-  }
-  return broken_dimers;
-}
-
 
 /*
  * update_dimer_parameters(dim,sph,box,d)
@@ -451,60 +403,6 @@ int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d){
   }else{
     fprintf(stderr, fmt_data_corruption, __func__, d, atom0, atom1);
     return EXIT_FAILURE;
-  }
-}
-
-/*
- * update_sphere_positions(dim, sph, d)
- * Updates positions of spheres for the dimer 'd' with regard to the periodic
- * boundaries (the simulation box is assumed to be -L/2;L/2)
- */
-void update_sphere_positions(DIM3D *dim, SPH *sph, double box[3], int d)
-{
-  int j;
-  int atom0 = dim[d].sph_ind[0];
-  int atom1 = dim[d].sph_ind[1];
-  double sp_r0[3], sp_r1[3];
-
-  for(j=0;j<3;j++){
-    // Generate position component for the first atom
-    sp_r0[j] = dim[d].R[j] + dim[d].O[j] * dim[d].L / two;
-
-    // Generate position component for the second atom
-    sp_r1[j] = dim[d].R[j] - dim[d].O[j] * dim[d].L / two;
-
-    // Apply paeriodic boundaries
-    sp_r0[j] = sp_r0[j] - box[j] * round( sp_r0[j]/box[j] );
-    sp_r1[j] = sp_r1[j] - box[j] * round( sp_r1[j]/box[j] );
-
-    // Assign values to sphere array
-    sph[atom0].r[j] = sp_r0[j];
-    sph[atom1].r[j] = sp_r1[j];
-  }
-
-}
-
-/*
- * bind_spheres_to_dimers(dim, sph, nd)
- * Set links between dimers and spheres data structures (i.e. bind which spheres
- * beong to which dimmers and vice vesra)
- */
-void bind_spheres_to_dimers(DIM3D *dim, SPH *sph, int nd)
-{
-  int i=0, j=0;
-
-  while(i<nd){
-    // Assign sphere indexes to dimers array
-    dim[i].sph_ind[0] = j;
-    dim[i].sph_ind[1] = j+1;
-
-    // Assign dimer index to spheres array
-    sph[j  ].dim_ind = i;
-    sph[j+1].dim_ind = i;
-
-    // Incremend counters
-    i++;
-    j=j+2;
   }
 }
 
