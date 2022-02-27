@@ -154,7 +154,7 @@ static int set_fcc(SPH *sph, int ns, int cells[3]){
  * periodic image that is not the nearest to the channel axis)
  *
  */
-void make_channel(MODEL md, DIM3D *dim, SPH *sph, INC *inc){
+void make_channel(MODEL md, SPH *sph, INC *inc){
   int i;
   double c[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
@@ -228,13 +228,6 @@ void make_channel(MODEL md, DIM3D *dim, SPH *sph, INC *inc){
 
       // ... and assign the respective inclusion-sphere-diameter
       sph[i].d = inc->sph_d;
-
-      // Mark dimers that cross the channel as invalid
-      // TODO: Move this outside ###############
-      if( sph[i].dim_ind >= 0 ){
-        dim[ sph[i].dim_ind ].type = TYPE_INVALID;
-      }
-      // #######################################
     }
   }
 }
@@ -246,7 +239,7 @@ void make_channel(MODEL md, DIM3D *dim, SPH *sph, INC *inc){
  * atoms belong to the plane, are flagged for braking.
  * NOTE: periodic boundaries are not taken into account here
  */
-void make_slit(MODEL md, DIM3D *dim, SPH *sph, INC *inc){
+void make_slit(MODEL md, SPH *sph, INC *inc){
   int i,j;
   double cd[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double p[7][3];
@@ -301,12 +294,7 @@ void make_slit(MODEL md, DIM3D *dim, SPH *sph, INC *inc){
       if(fabs(dist) < inc->thickness){
         // Mark sphere as 'inclusion-sphere'
         sph[i].type = TYPE_INCLUSION_SPHERE;
-        // Mark dimers that cross the layer as invalid
-        // TODO: Move this outside ###############
-        if( sph[i].dim_ind >= 0 ){
-          dim[ sph[i].dim_ind ].type = TYPE_INVALID;
-        }
-        // #######################################
+
         // Assign the sphere the respective inclusion-sphere-diameter
         sph[i].d = inc->sph_d;
         // Escape the j-loop if sphere is found to lie on the plane

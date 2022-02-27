@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
         // Test channel data
         if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 || channels[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "channel", i);
-          make_channel(mdl, dimers, spheres, &channels[i]);
+          make_channel(mdl, spheres, &channels[i]);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
                   cfg.num_channels);
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
         // Test slit data
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "layer", i);
-          make_slit(mdl, dimers, spheres, &slits[i]);
+          make_slit(mdl, spheres, &slits[i]);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                   cfg.num_slits);
