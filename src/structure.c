@@ -392,7 +392,8 @@ int sph_assign_lattice_indexes( SPH *sph, int ns)
  */
 void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL md){
   int s_id, s_ngb_id, s_ngb_qty;
-  const char *fmt_mk_dimers_at_random = " Randomly join spheres into dimers\n";
+  const char *fmt_mk_dimers_at_random =
+    "\n Randomly join spheres into dimers\n";
 
   fprintf(stdout, fmt_mk_dimers_at_random);
   do{

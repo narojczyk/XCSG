@@ -29,6 +29,8 @@ extern const int TYPE_SPHERE;
 extern const int TYPE_SPHERE_DIMER;
 extern const int TYPE_DIMER;
 extern const int TYPE_INCLUSION_SPHERE;
+extern const int TYPE_INCLUSION_SPHERE_DIMER;
+extern const int TYPE_INCLUSION_DIMER;
 
 const char *fcc = "fcc";
 
@@ -46,8 +48,8 @@ int str_validate(const char *src, const char *tgt){
 
 int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
   int i;
-  int tp_sph = 0, tp_inc_sph = 0;
-  int tp_sph_dim = 0, tp_dim = 0;
+  int tp_sph = 0, tp_inc_sph = 0, tp_inc_sph_dim = 0;
+  int tp_sph_dim = 0, tp_dim = 0, tp_inc_dim = 0;
 
   const char *fmt_data_corruption =
     " [%s] ERR: data corruption found in sphere and dimer arrays\n";
@@ -55,21 +57,24 @@ int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
     if(sph[i].type == TYPE_SPHERE) tp_sph++;
     if(sph[i].type == TYPE_SPHERE_DIMER) tp_sph_dim++;
     if(sph[i].type == TYPE_INCLUSION_SPHERE) tp_inc_sph++;
+    if(sph[i].type == TYPE_INCLUSION_SPHERE_DIMER) tp_inc_sph_dim++;
   }
 
   for(i=0; i<md->Ndim; i++){
     if(dim[i].type == TYPE_DIMER) tp_dim++;
+    if(dim[i].type == TYPE_INCLUSION_DIMER) tp_inc_dim++;
   }
 
   // Check for data corruption between tables;
-  if(tp_sph_dim != 2*tp_dim){
+  if(tp_sph_dim != 2*tp_dim || tp_inc_sph_dim != 2*tp_inc_dim){
     fprintf(stderr, fmt_data_corruption, __func__);
     return EXIT_FAILURE;
   }
 
   md->mtrx_sph = tp_sph;
   md->mtrx_dim = tp_dim;
-  md->incl_sph = tp_inc_sph;
+  md->incl_sph = tp_inc_sph + tp_inc_sph_dim;
+  md->incl_dim = tp_inc_dim;
   return EXIT_SUCCESS;
 }
 

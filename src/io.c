@@ -40,8 +40,8 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
 
   fprintf(stdout," # %s - configuration summary\n", prog_name);
   fprintf(stdout,"\n ## Ini file parameters\n");
-  fprintf(stdout," System size (cells)    : %d by %d by %d\n",
-          cfg.cells[0], cfg.cells[1], cfg.cells[2]);
+  fprintf(stdout," System size (cells)    : %d by %d by %d (%d spheres)\n",
+          cfg.cells[0], cfg.cells[1], cfg.cells[2], md.Nsph);
   fprintf(stdout, fmt_ss, "Symmetry", cfg.symmetry);
   fprintf(stdout," Structure indices      : from %d to %d (%d files total)\n",
           cfg.first, cfg.last, cfg.last-cfg.first+1);
@@ -57,8 +57,6 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
   fprintf(stdout, fmt_ses, "Box dimensions", md.box[0], "x");
   fprintf(stdout, fmt_ses, "", md.box[1], "y");
   fprintf(stdout, fmt_ses, "", md.box[2], "z");
-  fprintf(stdout, fmt_sd, "spheres", md.Nsph);
-  fprintf(stdout, fmt_sd, "dimers", md.Ndim);
 
   fprintf(stdout,"\n ## Inclusions settings\n");
   if (cfg.mk_channel){
@@ -93,19 +91,23 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
  */
 void display_stats(MODEL md, CONFIG cfg)
 {
-  const char *fmt_sde = " %-17s (if any): %4d %6.2lf %%\n";
+  const char *fmt_sde = " %-17s: %4d %6.2lf %%\n";
 
   double fNsph = one * md.Nsph;
   double hdim = (double) (200 * md.mtrx_dim); // (hekto dimers x2)
   double hsph = (double) (100 * md.mtrx_sph); // (hekto spheres)
+  double hidm = (double) (200 * md.incl_dim); // (hekto inc. dimers x2)
   double hisp = (double) (100 * md.incl_sph); // (hekto inc. spheres)
 
   fprintf(stdout, fmt_sde, "Matrix spheres",    md.mtrx_sph, hsph/fNsph);
+  if(cfg.mk_dimers){
+    fprintf(stdout, fmt_sde, "Matrix dimers",      md.mtrx_dim, hdim/fNsph);
+  }
   if(cfg.mk_channel | cfg.mk_slit){
     fprintf(stdout, fmt_sde, "Inclusion spheres", md.incl_sph, hisp/fNsph);
   }
-  if(cfg.mk_dimers){
-    fprintf(stdout, fmt_sde, "Dimers valid",      md.mtrx_dim, hdim/fNsph);
+  if(md.incl_dim){
+    fprintf(stdout, fmt_sde, "Inclusion dimers", md.incl_dim, hidm/fNsph);
   }
 }
 
