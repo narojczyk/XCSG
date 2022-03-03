@@ -11,6 +11,9 @@
 
 /*
  * TODO:
+ *  #1 BUG [INCDMRFLOOD] non-critical: Cannot make mix sphere-dimer inclusions
+ *  #2 introduce locking mechanism in SPH to block type from beeing changed.
+ *    Thus, lock selected spheres before being converted into dimers
  *
  */
 
@@ -43,7 +46,7 @@ int main(int argc, char *argv[])
 
   int Odistrib[6] = {0,0,0,0,0,0};
   int i, s;
-  int low_on_dimers = 0;
+  int low_on_dimers = 0, insert_inclusion_dimers = 0;
 
   const char *fmt_missing_inclusion_normal =
     " [%s] WRN: missing normal vector for %s inc. no %d, skipping\n";
@@ -155,8 +158,10 @@ int main(int argc, char *argv[])
     if(cfg.mk_channel){
       for(i=0; i<cfg.num_channels; i++){
         // Test channel data
-        if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 || channels[i].nm[2] != 0){
+        if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 ||
+          channels[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "channel", i);
+          if(channels[i].tgt_Nmer == 2) insert_inclusion_dimers = 1;
           make_channel(mdl, spheres, &channels[i]);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
@@ -171,12 +176,21 @@ int main(int argc, char *argv[])
         // Test slit data
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "layer", i);
+          if(slits[i].tgt_Nmer == 2) insert_inclusion_dimers = 1;
           make_slit(mdl, spheres, &slits[i]);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                   cfg.num_slits);
         }
       }
+    }
+
+    // Create dimers inside the inclusions
+    // NOTE: BUG (INCDMRFLOOD):
+    // Whole inclusion will be converted into dimers (regardless of individual
+    // inclusions' settings)
+    if(insert_inclusion_dimers){
+      introduce_random_dimers(dimers, spheres, mdl, TYPE_INCLUSION_SPHERE, TYPE_INCLUSION_DIMER);
     }
 
     // Check the number of different spheres
@@ -187,13 +201,13 @@ int main(int argc, char *argv[])
     // Display current statistics
     display_stats(mdl,cfg);
 
-    // Create dimers
+    // Create dimers in the matrix
     if(cfg.mk_dimers == 1){
       // Inserting dimers - Method #1
       if(mdl.mtrx_sph > 1){
         // Randomly (where possible) connect neighbouring spheres into dimers.
         // In critical cases start with spheres with fewest possible connections.
-        introduce_random_dimers(dimers, spheres, mdl);
+        introduce_random_dimers(dimers, spheres, mdl, TYPE_SPHERE, TYPE_DIMER);
 
         if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE
           || count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
@@ -242,10 +256,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
       }
     } // end if(cfg.mk_dimers)
-
-    /* TODO:
-     * Here insert code to connect inclusion spheres into dimers
-     */
 
     // Generate required output files for structure 's'
     if( exp_str_data(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){

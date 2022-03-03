@@ -55,10 +55,10 @@ typedef struct
   int Nsph;       // Number of monomers forming system (based on structure)
   int Ndim;       // Maximum possible number of dimers (based on Nsph)
   int mtrx_sph;   // Current number of single spheres in matrix
-  int mtrx_dim;   // Current number of dimers in matrix (not in inclusion)
+  int mtrx_dim;   // Current number of dimers in matrix
   int incl_sph;   // Current number of spheres forming inclusion
   int incl_dim;   // Current number of dimers forming inclusion
-  double box[3];  // Size of the container for the structure  //old: box_edge
+  double box[3];  // Size of the container for the structure
 } MODEL;
 
 #endif

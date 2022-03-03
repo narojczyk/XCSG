@@ -91,7 +91,7 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
  */
 void display_stats(MODEL md, CONFIG cfg)
 {
-  const char *fmt_sde = " %-17s: %4d %6.2lf %%\n";
+  const char *fmt_sde = " %-17s: %4d %6.2lf%%\n";
 
   double fNsph = one * md.Nsph;
   double hdim = (double) (200 * md.mtrx_dim); // (hekto dimers x2)
@@ -130,6 +130,8 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   const char *fmt_exp_sph = "s3d1_monomers_%05d.csv";
   const char *fmt_exp_sph_pov = "v_s3d1_monomers_%05d.pov";
   const char *fmt_exp_dim = "s3d2_dimers_%05d.csv";
+  const char *fmt_particle_qty_d  = "%-24s: %5d\n";
+  const char *fmt_particle_qty_dd = "%-24s: %5d %5d\n";
 
   // Set the file name for info data and open the file for write
   sprintf(f_out, fmt_exp_dsc, strn);
@@ -142,15 +144,11 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
 
   fprintf(stdout, fmt_write_notify, "ini", f_out);
   // Export str. descrip. data to file
-  fprintf(file,"Number of spheres       : %d\n", md.Nsph);
-  // TODO: replace this with Nmon
-  fprintf(file,"Number of particles     : %d\n", md.Nsph - md.mtrx_dim);
-  // TODO: should be: Nmon(*), Ndim(*), ...
-  // (*) all x-mers, matrix and inclusion alike
-  fprintf(file,"Number of x-mers        : %d %d\n",md.Nsph - md.mtrx_dim,
-          md.mtrx_dim);
-  // TODO: add additional info about Nmatrix and Ninclusion particles
-  // fprintf(file,...);
+  fprintf(file, fmt_particle_qty_d, "Number of spheres", md.Nsph);
+  fprintf(file, fmt_particle_qty_dd, "Matrix particles",
+            md.mtrx_sph, md.mtrx_dim);
+  fprintf(file, fmt_particle_qty_dd, "Inclusion particles",
+            md.incl_sph, md.incl_dim);
   fprintf(file,"Box matrix h00 h01 h02  : %.16le %.16le %.16le\n",
           md.box[0], 0e0, 0e0);
   fprintf(file,"Box matrix     h11 h12  : %.16le %.16le\n",
@@ -175,7 +173,7 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   }
   file = NULL;
 
-  if(cf.mk_dimers){
+  if(cf.mk_dimers || md.incl_dim){
     // Set the file name for dimer data and open the file for write
     sprintf(f_out, fmt_exp_dim, strn);
   #ifdef DEBUG_MODE
@@ -264,6 +262,7 @@ static int povray_export_spheres(FILE *file, SPH *sph, int ns){
 static int export_dimers(FILE *file, DIM3D *dim, int nd)
 {
   extern const int TYPE_DIMER;
+  extern const int TYPE_INCLUSION_DIMER;
   extern const char *fmt_writting_failed;
   const char *fmt_exp_dim =
     "%5d  %3d % .16le % .16le % .16le % .16le % .16le % .16le %.16le %5d %5d\n";
@@ -271,7 +270,7 @@ static int export_dimers(FILE *file, DIM3D *dim, int nd)
 
   for(i=0; i<nd; i++){
     // Export information about molecule
-    if(dim[i].type == TYPE_DIMER){
+    if(dim[i].type == TYPE_DIMER || dim[i].type == TYPE_INCLUSION_DIMER){
       if(fprintf(file, fmt_exp_dim,
           k++, dim[i].type,
           dim[i].R[0], dim[i].R[1], dim[i].R[2],
@@ -422,7 +421,9 @@ static int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
  */
 static int legacy_GLexport_dimer_type_converter(int type){
   extern const int TYPE_DIMER;
+  extern const int TYPE_INCLUSION_DIMER;
   if(type == TYPE_DIMER) return 1;
+  if(type == TYPE_INCLUSION_DIMER) return 1;
   return type;
 }
 
@@ -430,9 +431,11 @@ static int legacy_GLexport_sphere_type_converter(int type){
   extern const int TYPE_SPHERE;
   extern const int TYPE_SPHERE_DIMER;
   extern const int TYPE_INCLUSION_SPHERE;
+  extern const int TYPE_INCLUSION_SPHERE_DIMER;
 
   if(type == TYPE_SPHERE) return 3;
   if(type == TYPE_INCLUSION_SPHERE) return 2;
+  if(type == TYPE_INCLUSION_SPHERE_DIMER) return 2;
   if(type == TYPE_SPHERE_DIMER) return 1;
   return -1;
 }

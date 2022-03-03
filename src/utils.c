@@ -73,7 +73,7 @@ int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
 
   md->mtrx_sph = tp_sph;
   md->mtrx_dim = tp_dim;
-  md->incl_sph = tp_inc_sph + tp_inc_sph_dim;
+  md->incl_sph = tp_inc_sph;
   md->incl_dim = tp_inc_dim;
   return EXIT_SUCCESS;
 }
@@ -217,20 +217,20 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
 }
 
 /*
- * find_critical_sphere(sph,ns)
- * Find an id of sphere with the lowest count of TYPE_SPHERE neigbours
+ * find_critical_sphere(sph, type_x, ns)
+ * Find an id of sphere of type_x, with the lowest count of type_x neigbours
  */
 
-int find_critical_sphere(SPH *sph, int ns)
+int find_critical_sphere(SPH *sph, int type_x, int ns)
 {
   int i, ngb_count;
-  int min_ngb_count = 100000;
+  int min_ngb_count = 12;
   int crit_fs = -1;
 
   for(i=0; i<ns; i++){
-    if(sph[i].type == TYPE_SPHERE){
-      // Count TYPE_SPHERE neighbours for i'th sphere
-      ngb_count = count_typeX_sp_neighbours(sph, TYPE_SPHERE, i, ns);
+    if(sph[i].type == type_x){
+      // Count type_x neighbours for i'th sphere
+      ngb_count = count_typeX_sp_neighbours(sph, type_x, i, ns);
 
       // remember 'i' index if calculated ngb_count is minimal
       if(ngb_count > 0 && ngb_count < min_ngb_count){
@@ -245,22 +245,22 @@ int find_critical_sphere(SPH *sph, int ns)
 }
 
 /*
- * count_typeX_sp_neighbours(sph,x,id)
+ * count_typeX_sp_neighbours(sph, type_x, id)
  *
- * check the neighbours list of sphere 'id' and count all neighbours of type x
+ * check the neighbours list of sphere 'id' and count all neighbours of type_x
  */
-int count_typeX_sp_neighbours(SPH *sph, int x, int id, int nsph)
+int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
 {
   int ic = 0, i;
 
   // Check if id is valid array index
-  if(id < 0 && id >= nsph){
+  if(id < 0 && id >= ns){
     return -1;
   }
 
   // count possible neighbours to connect.
   for(i=0; i<12; i++){
-    if(sph[sph[id].ngb[i]].type == x){
+    if(sph[sph[id].ngb[i]].type == type_x){
       ic++;
     }
   }
