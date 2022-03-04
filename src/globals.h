@@ -15,12 +15,14 @@ const double two = (double) 2;
 
 // particle types identifiers
 const int TYPE_INVALID = -1;
+const int TYPE_MATRIX_LIMIT = 10;
 const int TYPE_SPHERE = 1;
 const int TYPE_SPHERE_DIMER = 2;
 const int TYPE_DIMER = TYPE_SPHERE_DIMER;
-const int TYPE_INCLUSION_SPHERE = 100 + TYPE_SPHERE;
-const int TYPE_INCLUSION_SPHERE_DIMER = 100 + TYPE_SPHERE_DIMER;
-const int TYPE_INCLUSION_DIMER = 100 + TYPE_DIMER;
+const int TYPE_INCLUSION_BASE = 100;
+const int TYPE_INCLUSION_SPHERE       = TYPE_INCLUSION_BASE + TYPE_SPHERE;
+const int TYPE_INCLUSION_SPHERE_DIMER = TYPE_INCLUSION_BASE + TYPE_SPHERE_DIMER;
+const int TYPE_INCLUSION_DIMER        = TYPE_INCLUSION_BASE + TYPE_DIMER;
 
 // zipper work length
 const int lazy = 10;
@@ -32,6 +34,9 @@ const int display_interval = 1000000;
 const int max_flips = 100000000;
 //  * optimise DC structure if this % of dimers is present
 const double minimal_dimer_qty = 2e-1;
+
+// symmetry
+const char *fcc = "fcc";
 
 // general purpose global variables
 char *prog_name;
