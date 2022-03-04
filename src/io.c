@@ -219,8 +219,6 @@ int export_structure(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
 static int povray_export_spheres(FILE *file, SPH *sph, int ns){
   extern const int TYPE_MATRIX_LIMIT;
   extern const int TYPE_INCLUSION_BASE;
-  extern const int TYPE_SPHERE;
-  extern const int TYPE_INCLUSION_SPHERE;
   extern const char *fmt_writting_failed;
   const char *fmt_data_corruption =
     " [%s] ERR: incomplete sphere data (%d/%d) exported to file\n";
