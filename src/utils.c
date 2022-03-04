@@ -25,14 +25,8 @@ extern const double one;
 extern const double two;
 
 extern const int TYPE_INVALID;
-extern const int TYPE_SPHERE;
-extern const int TYPE_SPHERE_DIMER;
-extern const int TYPE_DIMER;
-extern const int TYPE_INCLUSION_SPHERE;
-extern const int TYPE_INCLUSION_SPHERE_DIMER;
-extern const int TYPE_INCLUSION_DIMER;
 
-const char *fcc = "fcc";
+extern const char *fcc;
 
 static int find_free_ngb_slot(SPH *sph);
 
@@ -47,6 +41,12 @@ int str_validate(const char *src, const char *tgt){
 }
 
 int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
+  extern const int TYPE_SPHERE;
+  extern const int TYPE_SPHERE_DIMER;
+  extern const int TYPE_DIMER;
+  extern const int TYPE_INCLUSION_SPHERE;
+  extern const int TYPE_INCLUSION_SPHERE_DIMER;
+  extern const int TYPE_INCLUSION_DIMER;
   int i;
   int tp_sph = 0, tp_inc_sph = 0, tp_inc_sph_dim = 0;
   int tp_sph_dim = 0, tp_dim = 0, tp_inc_dim = 0;
@@ -269,6 +269,7 @@ int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
 
 int check_dimer_direction(DIM3D *dim, int i)
 {
+  extern const int TYPE_DIMER;
   int j;
   double fcc_dir[6][3];
   const char *fmt_unknown_orientation =

@@ -276,7 +276,7 @@ int parse_inclusions(FILE *file, INC inc[], int num)
   extern const char *fmt_sudden_eof;
   extern const char *fmt_null_ptr;
   const char *fmt_IO_8f1d = "%lf %lf %lf %lf %lf %lf %lf %lf %d\n";
-  int i=0, n_mer/* = 0*/;
+  int i=0, n_mer;
   double off[3] = {zero, zero, zero};
   double nor[3] = {zero, zero, zero};
   double size = zero;

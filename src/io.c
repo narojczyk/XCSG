@@ -24,8 +24,9 @@ static int legacy_GLexport_sphere_type_converter(int type);
 // These function can close program on error
 static FILE* open_file(const char *file, const char *mode);
 
-void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
-                                   INC *channels){
+/* # SEC ############## CONSOLE OUTPUT ###################################### */
+
+void show_cfg_summary(CONFIG cfg, MODEL md, INC *slits, INC *channels){
   int i;
   const char *fmt_sees = " %-23s: %.16le %.16le (%1s)\n";
   const char *fmt_ses  = " %-23s: %.16le (%1s)\n";
@@ -87,9 +88,9 @@ void display_configuration_summary(CONFIG cfg, MODEL md, INC *slits,
 }
 
 /*
- * display_stats()
+ * show_particle_stats()
  */
-void display_stats(MODEL md, CONFIG cfg)
+void show_particle_stats(MODEL md, CONFIG cfg)
 {
   const char *fmt_sde = " %-17s: %4d %6.2lf%%\n";
 
@@ -111,14 +112,16 @@ void display_stats(MODEL md, CONFIG cfg)
   }
 }
 
+/* # SEC ############## FILE OUTPUT ######################################### */
+
 /*
- * export_structure_data()
+ * export_structure()
  * Use export_spheres(), export_dimers(), ... (possibly other -mers())
  * to write the complete set of informations for the final structure.
  * Use export_to_GLviewer() and povray_export_spheres() to export sphere data
  * in formats readable to graphic viewers. TODO: add povray_export_dimers()
  */
-int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
+int export_structure(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
 {
 #ifdef DEBUG_MODE
   extern const char *fmt_dbg_opening_file;
@@ -214,43 +217,61 @@ int exp_str_data(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
  * Export sphere data in format readable by POV-Ray
  */
 static int povray_export_spheres(FILE *file, SPH *sph, int ns){
+  extern const int TYPE_MATRIX_LIMIT;
+  extern const int TYPE_INCLUSION_BASE;
   extern const int TYPE_SPHERE;
   extern const int TYPE_INCLUSION_SPHERE;
   extern const char *fmt_writting_failed;
+  const char *fmt_data_corruption =
+    " [%s] ERR: incomplete sphere data (%d/%d) exported to file\n";
   const char *fmt_exp_sph_0 =
-    " sph(<% .6le, % .6le, % .6le> + TL, %s, %s) // sph %5d type %d\n";
-  int i;
+    " sph(<% .6le, % .6le, % .6le> + TL, %s, %s%04d) // sph %5d type %d\n";
+  int i, exp_count = 0;
 
   fprintf(file, "#declare matrixSpheres = union{\n");
 
   for(i=0; i<ns; i++){
     // Write sphere positions and properties
-    if(sph[i].type == TYPE_SPHERE){
+    if(sph[i].type < TYPE_MATRIX_LIMIT){
       if(fprintf(file, fmt_exp_sph_0, sph[i].r[0], sph[i].r[1], sph[i].r[2],
-        "Dmtr", "Tmtr", i, sph[i].type) == EOF){
+        "Dmtr", "Tmtr", sph[i].type, i, sph[i].type) == EOF){
         fprintf(stderr, fmt_writting_failed, __func__, "sphere (povray)");
         fclose(file);
         return EXIT_FAILURE;
       }
+      exp_count++;
     }
   }
+  fprintf(file, "}\n\n#declare inclusionSpheres = ");
 
-  fprintf(file, "}\n\n#declare inclusionSpheres = union{\n");
+  // If all spheres are exported, there is no inclusion particles to export
+  if(exp_count == ns){
+    fprintf(file, "0;\n");
+    fclose(file);
+    return EXIT_SUCCESS;
+  }
 
+  // In not, proceed with writing inclusion spheres
+  fprintf(file, "union{\n");
   for(i=0; i<ns; i++){
     // Write sphere positions and properties
-    if(sph[i].type == TYPE_INCLUSION_SPHERE){
+    if(sph[i].type > TYPE_INCLUSION_BASE){
       if(fprintf(file, fmt_exp_sph_0, sph[i].r[0], sph[i].r[1], sph[i].r[2],
-        "Dinc", "Tinc", i, sph[i].type) == EOF){
+        "Dinc", "Tinc", sph[i].type, i, sph[i].type) == EOF){
         fprintf(stderr, fmt_writting_failed, __func__, "sphere (povray)");
         fclose(file);
         return EXIT_FAILURE;
       }
+      exp_count++;
     }
   }
-
   fprintf(file, "}\n");
   fclose(file);
+
+  if(exp_count != ns){
+    fprintf(stderr, fmt_data_corruption, __func__, exp_count, ns);
+    return EXIT_FAILURE;
+  }
   return EXIT_SUCCESS;
 }
 
@@ -416,6 +437,8 @@ static int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn){
   return EXIT_SUCCESS;
 }
 
+/* # SUB-SEC ########## FILE OUTPUT - DATA CONVERTERS ####################### */
+
 /*
  * Old (but still used) export functions
  */
@@ -439,6 +462,8 @@ static int legacy_GLexport_sphere_type_converter(int type){
   if(type == TYPE_SPHERE_DIMER) return 1;
   return -1;
 }
+
+/* # SEC ############## LOW LEVEL FILE OPERATIONS ########################### */
 
 /*
  * open_to_read(file)

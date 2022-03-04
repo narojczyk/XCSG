@@ -46,7 +46,7 @@ static void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2,
  * Call particular function based on the selected symmetry.
  */
 int set_structure(CONFIG cf, MODEL md, SPH *sph){
-  const char *fcc = "fcc";
+  extern const char *fcc;
   const char *fmt_generate_structure = " Generating initial %s structure\n";
 
   if(!str_validate(cf.symmetry, fcc)){
@@ -157,6 +157,7 @@ static int set_fcc(SPH *sph, int ns, int cells[3]){
  *
  */
 void make_channel(MODEL md, SPH *sph, INC *inc){
+  extern const int TYPE_INCLUSION_BASE;
   int i;
   double c[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
@@ -192,7 +193,7 @@ void make_channel(MODEL md, SPH *sph, INC *inc){
 
   for(i=0; i<md.Nsph; i++){
     // Skip spheres that already belong to any inclusion
-    if(sph[i].type < 100){
+    if(sph[i].type < TYPE_INCLUSION_BASE){
       // Determine vector from point 'i' to lower-left-corner atom of the cube
       p1[0] = llc[0] - sph[i].r[0];
       p1[1] = llc[1] - sph[i].r[1];
@@ -234,7 +235,7 @@ void make_channel(MODEL md, SPH *sph, INC *inc){
         // ... and assign the respective inclusion-sphere-diameter
         sph[i].d = inc->sph_d;
       }
-    } // end if sph.type <100 condition
+    } // end if sph.type <TYPE_INCLUSION_BASE condition
   } // end for loop
 }
 
@@ -246,6 +247,7 @@ void make_channel(MODEL md, SPH *sph, INC *inc){
  * NOTE: periodic boundaries are not taken into account here
  */
 void make_slit(MODEL md, SPH *sph, INC *inc){
+  extern const int TYPE_INCLUSION_BASE;
   int i,j;
   double cd[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double p[7][3];
@@ -257,7 +259,7 @@ void make_slit(MODEL md, SPH *sph, INC *inc){
   // Loop over all spheres in the structure
   for(i=0; i<md.Nsph; i++){
     // Skip spheres that already belong to any inclusion
-    if(sph[i].type < 100){
+    if(sph[i].type < TYPE_INCLUSION_BASE){
       // Get the i'th sphere position relative to the plane inside periodic md.box
       p[0][0] = sph[i].r[0] - inc->os[0];
       p[0][1] = sph[i].r[1] - inc->os[1];
@@ -309,7 +311,7 @@ void make_slit(MODEL md, SPH *sph, INC *inc){
           break;
         }
       }
-    } // end if sph.type <100 condition
+    } // end if sph.type <TYPE_INCLUSION_BASE condition
   } // end for loop
 }
 

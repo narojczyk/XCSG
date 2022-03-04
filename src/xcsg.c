@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
   }
 
   // Summary of configuration variables
-  display_configuration_summary(cfg, mdl, slits, channels);
+  show_cfg_summary(cfg, mdl, slits, channels);
 
   // Allocate memory for spheres and dimers
   spheres = malloc( mdl.Nsph * sizeof(SPH));
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
     }
 
     // Display current statistics
-    display_stats(mdl,cfg);
+    show_particle_stats(mdl,cfg);
 
     // Create dimers in the matrix
     if(cfg.mk_dimers == 1){
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
         }
 
         // Display current statistics
-        display_stats(mdl, cfg);
+        show_particle_stats(mdl, cfg);
       }
 
       // Inserting dimers - Method #2
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
         }
 
         // Display current statistics
-        display_stats(mdl, cfg);
+        show_particle_stats(mdl, cfg);
       } // Done eliminating type-spheres
 
       // ## Make a good DC structure
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
     } // end if(cfg.mk_dimers)
 
     // Generate required output files for structure 's'
-    if( exp_str_data(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){
+    if( export_structure(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){
       return EXIT_FAILURE;
     }
   } // End structure loop
