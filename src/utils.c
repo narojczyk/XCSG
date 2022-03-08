@@ -90,11 +90,13 @@ int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
  * draw_sphere_typeX(sph,x,ns)
  *
  * Randomly select a sphere of type x
- * BEWARE of the infinite loop possibility.
  */
 int draw_sphere_typeX(SPH *sph, int x, int ns)
 {
+  extern const char *fmt_watchdog_activated;
   int sp_id = (int) (u_RNG() * ns);
+  int nseek = 0, nmax = 1000 * ns;
+  const char *fmt_no_valid_sphere = " [%s] ERR: Cannot locate type %d sphere\n";
 
   while(1){
     // Check not to go outside the sphere tab
@@ -105,6 +107,13 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
     }else{
       // Draw another index if type is not correct.
       sp_id = (int) (u_RNG() * ns);
+    }
+    // Watchdog: count attempts to select valid neighbour
+    nseek++;
+    if(nseek > nmax){
+      fprintf(stderr, fmt_no_valid_sphere, __func__, x);
+      fprintf(stderr, fmt_watchdog_activated, __func__);
+      return -1;
     }
   }
 }
@@ -117,11 +126,11 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
 int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
 {
   extern const int TYPE_SPHERE_DIMER;
+  extern const char *fmt_watchdog_activated;
   const char *fmt_no_valid_neighbour =
     " [%s] ERR: Cannot locate type %d neighbour of %d sphere\n";
-  const char *fmt_watchdog_activated =
-    " [%s] Function terminated by watchdog\n";
-  int nseek = 0;
+
+  int nseek = 0, nmax = 500;
   int sngb_id, sngb_type, rand_ngb, valid_ngb;
 
   // Check if sph_ind is a valid array index
@@ -150,7 +159,7 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
     }
     // Watchdog: count attempts to select valid neighbour
     nseek++;
-    if(nseek > 500){
+    if(nseek > nmax){
       fprintf(stderr, fmt_no_valid_neighbour, __func__, x, sph_ind);
       fprintf(stderr, fmt_watchdog_activated, __func__);
       return -1;
