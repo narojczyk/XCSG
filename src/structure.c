@@ -324,13 +324,10 @@ static double shortest_distance_to_line(MODEL md, double c[3], double r[3],
   double p2[3] = {cp[0] - r[0], cp[1] - r[1], cp[2] - r[2]};
 
   // Apply boundary conditions
-  p1[0] = p1[0] - md.box[0] * round( p1[0]/md.box[0] );
-  p1[1] = p1[1] - md.box[1] * round( p1[1]/md.box[1] );
-  p1[2] = p1[2] - md.box[2] * round( p1[2]/md.box[2] );
-
-  p2[0] = p2[0] - md.box[0] * round( p2[0]/md.box[0] );
-  p2[1] = p2[1] - md.box[1] * round( p2[1]/md.box[1] );
-  p2[2] = p2[2] - md.box[2] * round( p2[2]/md.box[2] );
+  for(int i=0; i<3; i++){
+    p1[i] = p1[i] - md.box[i] * round( p1[i]/md.box[i] );
+    p2[i] = p2[i] - md.box[i] * round( p2[i]/md.box[i] );
+  }
 
   // Calculate the cross product pxcd = p x cd
   vcrossu(p1, c, pxcd);
