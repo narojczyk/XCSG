@@ -534,9 +534,8 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload)
     do{
       valid_ngb = 0;
       // Select neighbor index randomly
-      rand_ngb = (int) (u_RNG() * 12);
-      // Check not to go outside the naighbor list
-      rand_ngb = (rand_ngb < 12) ? rand_ngb : 11;
+      rand_ngb = get_random_range12();
+
       // Get neighbor id and type
       sngb_id = sph[s_id].ngb[rand_ngb];
       sngb_type = sph[sngb_id].type;
@@ -686,11 +685,8 @@ static void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]){
     a1 = dim[d0].sph_ind[1];
 
     // Randomly get the index of neighboring spheres
-    rn_id0 = (int) (u_RNG() * 12);
-    rn_id0 = (rn_id0 >= 12) ? 11 : rn_id0;
-
-    rn_id1 = (int) (u_RNG() * 12);
-    rn_id1 = (rn_id1 >= 12) ? 11 : rn_id1;
+    rn_id0 = get_random_range12();
+    rn_id1 = get_random_range12();
 
     // Get indexes of respective neighbors of atoms a0,a1
     b0 = sph[a0].ngb[rn_id0];

@@ -11,6 +11,7 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind);
 int draw_sphere_typeX(SPH *sph, int x, int ns);
 int find_critical_sphere(SPH *sph, int type_x, int ns);
 int find_ngb_spheres(SPH sph[], int ns, double box[3]);
+int get_random_range12();
 int number_of_spheres(CONFIG cf);
 int sph_assign_lattice_indexes( SPH *sph, int ns);
 int str_validate(const char *src, const char *tgt);

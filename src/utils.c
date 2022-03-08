@@ -144,9 +144,8 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
   do{
     valid_ngb = 0;
     // Select neighbour index randomly
-    rand_ngb = (int) (u_RNG() * ngb_list_size);
-    // Check not to go outside the naighbor list
-    rand_ngb = (rand_ngb < ngb_list_size) ? rand_ngb : ngb_list_size - 1;
+    rand_ngb = get_random_range12();
+
     // Get neighbour id and type
     sngb_id = sph[sph_ind].ngb[rand_ngb];
     sngb_type = sph[ sngb_id ].type;
@@ -538,6 +537,16 @@ int str_validate(const char *src, const char *tgt){
 
 
 /* # SEC ############## P. R. N. G. ######################################### */
+
+/*
+ * get_random_range12()
+ *
+ * Draw random integer number in the range <0:11>
+ */
+int get_random_range12(){
+  int rn = (int) (u_RNG() * 12);
+  return (rn < 12) ? rn : 11;
+}
 
 /*
  * u_RNG()
