@@ -367,6 +367,7 @@ int parse_config(FILE *file, CONFIG *cfg)
              &cfg->num_channels);
       fscanf(file, fmt_dsd, &cfg->mk_slit, cfg->cfg_slits, &cfg->num_slits);
       fscanf(file, fmt_d,  &cfg->mk_dimers);
+      fscanf(file, fmt_d,  &cfg->rough_inclusions);
 
       fclose(file);
     // Switch between parsing functions in different formats if required

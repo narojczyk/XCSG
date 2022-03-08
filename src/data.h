@@ -45,6 +45,8 @@ typedef struct
                              to dimers */
   int num_channels;       // Number of channels described in cfg_channels
   int num_slits;          // Number of slits described in cfg_slits
+  int rough_inclusions;   /* Bolean [0|1] flag to allow molecules to extend
+                             beyond the inclusion boundary */
   char cfg_channels[41];  // File name for the channels' parameters
   char cfg_slits[41];     // File name for the slits' parameters
   char symmetry[8];       // Symmetry of the generated structure
