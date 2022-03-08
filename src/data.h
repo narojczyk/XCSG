@@ -4,6 +4,7 @@
 typedef struct 
 {
   int type;         // Sphere type
+  int type_locked;  // Bolean [0|1] flag to enable channel inclusion
   int ngb[12];      // Neighbors list
   int dim_ind;      // Index of dimer the sphere belongs to
   int lattice_ind[3]; //sphere lattice coordinates
