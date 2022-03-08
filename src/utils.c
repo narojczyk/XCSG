@@ -29,56 +29,15 @@ extern const int TYPE_INVALID;
 extern const char *fcc;
 
 static int find_free_ngb_slot(SPH *sph);
+static void bouble_sort_double(double *array, int s, int ascending);
 
-int str_validate(const char *src, const char *tgt){
-  int len_src = strlen(src);
-  int len_tgt = strlen(tgt);
+/* # SEC ############## GENERAL STRUCTURE ################################### */
 
-  if(len_src == len_tgt && !strncmp(src, tgt, len_tgt)){
-    return 0;
-  }
-  return 1;
-}
-
-int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
-  extern const int TYPE_SPHERE;
-  extern const int TYPE_SPHERE_DIMER;
-  extern const int TYPE_DIMER;
-  extern const int TYPE_INCLUSION_SPHERE;
-  extern const int TYPE_INCLUSION_SPHERE_DIMER;
-  extern const int TYPE_INCLUSION_DIMER;
-  int i;
-  int tp_sph = 0, tp_inc_sph = 0, tp_inc_sph_dim = 0;
-  int tp_sph_dim = 0, tp_dim = 0, tp_inc_dim = 0;
-
-  const char *fmt_data_corruption =
-    " [%s] ERR: data corruption found in sphere and dimer arrays\n";
-  for(i=0; i<md->Nsph; i++){
-    if(sph[i].type == TYPE_SPHERE) tp_sph++;
-    if(sph[i].type == TYPE_SPHERE_DIMER) tp_sph_dim++;
-    if(sph[i].type == TYPE_INCLUSION_SPHERE) tp_inc_sph++;
-    if(sph[i].type == TYPE_INCLUSION_SPHERE_DIMER) tp_inc_sph_dim++;
-  }
-
-  for(i=0; i<md->Ndim; i++){
-    if(dim[i].type == TYPE_DIMER) tp_dim++;
-    if(dim[i].type == TYPE_INCLUSION_DIMER) tp_inc_dim++;
-  }
-
-  // Check for data corruption between tables;
-  if(tp_sph_dim != 2*tp_dim || tp_inc_sph_dim != 2*tp_inc_dim){
-    fprintf(stderr, fmt_data_corruption, __func__);
-    return EXIT_FAILURE;
-  }
-
-  md->mtrx_sph = tp_sph;
-  md->mtrx_dim = tp_dim;
-  md->incl_sph = tp_inc_sph;
-  md->incl_dim = tp_inc_dim;
-  return EXIT_SUCCESS;
-}
-
-
+/*
+ * container_dimensions()
+ * Calculate box dimensions for the specified number of unit cells of
+ * given symmetry.
+ */
 int container_dimensions(MODEL *md, CONFIG cf){
   if(!str_validate(cf.symmetry, fcc)){
     for(int i=0; i<3; i++){
@@ -89,6 +48,11 @@ int container_dimensions(MODEL *md, CONFIG cf){
   return EXIT_FAILURE;
 }
 
+/*
+ * number_of_spheres()
+ * Returns the number of spheres for the specified number of unit cells of
+ * given symmetry.
+ */
 int number_of_spheres(CONFIG cf){
   // Variant for f.c.c. structure
   if(!str_validate(cf.symmetry, fcc)){
@@ -97,100 +61,29 @@ int number_of_spheres(CONFIG cf){
   return EXIT_FAILURE;
 }
 
-void bouble_sort_double(double *array, int s, int ascending){
-  int sorted=1;
-  int i,j;
-  double tmp;
+/* # SEC ############## PARTICLES - SPHERES ################################# */
 
-  if( ascending == 0){
-    // Sort in descending order
-    // Before starting, check if the array is sorted.
-    for(i=0; i<s-1; i++){
-      if(array[i] < array[i+1]){
-        sorted = 0;
-        break;
-      }
-    }
-
-    // Start sorting if required
-    if(sorted != 1){
-      for(j=0;j<s;j++){
-        for(i=0;i<s-1;i++){
-          if(array[i] < array[i+1]){
-            tmp = array[i+1];
-            array[i+1] = array[i];
-            array[i] = tmp;
-          }
-        }
-      }
-    }
-  }else{
-    // Sort in ascending order
-    // Before starting, check if the array is sorted.
-    for(i=1; i<s; i++){
-      if(array[i-1] > array[i]){
-        sorted = 0;
-        break;
-      }
-    }
-
-    // Start sorting if required
-    if(sorted != 1){
-      for(j=0;j<s;j++){
-        for(i=1;i<s;i++){
-          if(array[i-1] > array[i]){
-            tmp = array[i-1];
-            array[i-1] = array[i];
-            array[i] = tmp;
-          }
-        }
-      }
-    }
-  }
-
-}
-
-int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
+/*
+ * count_typeX_sp_neighbours(sph, type_x, id)
+ *
+ * check the neighbours list of sphere 'id' and count all neighbours of type_x
+ */
+int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
 {
-  int nseek = 0;
-  int sngb_id, sngb_type, rand_ngb, valid_ngb;
+  int ic = 0, i;
 
-  // Check if sph_ind is a valid array index
-  if(sph_ind == -1){
+  // Check if id is valid array index
+  if(id < 0 && id >= ns){
     return -1;
   }
 
-  // Select random neighbor of sph_ind
-  do{
-    valid_ngb = 0;
-    // Select neighbor index randomly
-    rand_ngb = (int) (u_RNG() * 12);
-    // Check not to go outside the naighbor list
-    rand_ngb = (rand_ngb < 12) ? rand_ngb : 11;
-    // Get neighbor id and type
-    sngb_id = sph[sph_ind].ngb[rand_ngb];
-    sngb_type = sph[ sngb_id ].type;
-
-    // Select type-x sphere
-    if(sngb_type == x ) {
-      valid_ngb = 1;
+  // count possible neighbours to connect.
+  for(i=0; i<12; i++){
+    if(sph[sph[id].ngb[i]].type == type_x){
+      ic++;
     }
-    // Security check not to select type-2 spheres EVER!
-    if(sngb_type == 2){
-      valid_ngb = 0;
-    }
-    // Watchdog: count attempts to select valid neighbor
-    nseek++;
-    if(nseek > 500){
-      fprintf(stderr,
-              " [%s] error: Cannot locate type %d neighbour of %d sphere\n",
-              __func__, x, sph_ind);
-      fprintf(stderr," [%s] terminated by Watchdog\n", __func__);
-      return -1;
-    }
-  }while(!valid_ngb);
-
-  return sngb_id;
+  }
+  return ic;
 }
 
 /*
@@ -214,6 +107,57 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
       sp_id = (int) (u_RNG() * ns);
     }
   }
+}
+
+/*
+ * draw_ngb_sphere_typeX()
+ * Randomly select neighbour of sphere 'sph_ind'. The neighbour must be of
+ * type 'x'.
+ */
+int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
+{
+  extern const int TYPE_SPHERE_DIMER;
+  const char *fmt_no_valid_neighbour =
+    " [%s] ERR: Cannot locate type %d neighbour of %d sphere\n";
+  const char *fmt_watchdog_activated =
+    " [%s] Function terminated by watchdog\n";
+  int nseek = 0;
+  int sngb_id, sngb_type, rand_ngb, valid_ngb;
+
+  // Check if sph_ind is a valid array index
+  if(sph_ind == -1){
+    return -1;
+  }
+
+  // Select random neighbour of sph_ind
+  do{
+    valid_ngb = 0;
+    // Select neighbour index randomly
+    rand_ngb = (int) (u_RNG() * 12);
+    // Check not to go outside the naighbor list
+    rand_ngb = (rand_ngb < 12) ? rand_ngb : 11;
+    // Get neighbour id and type
+    sngb_id = sph[sph_ind].ngb[rand_ngb];
+    sngb_type = sph[ sngb_id ].type;
+
+    // Select type-x sphere
+    if(sngb_type == x ) {
+      valid_ngb = 1;
+    }
+    // Security check not to select type-2 spheres EVER!
+    if(sngb_type == TYPE_SPHERE_DIMER){
+      valid_ngb = 0;
+    }
+    // Watchdog: count attempts to select valid neighbour
+    nseek++;
+    if(nseek > 500){
+      fprintf(stderr, fmt_no_valid_neighbour, __func__, x, sph_ind);
+      fprintf(stderr, fmt_watchdog_activated, __func__);
+      return -1;
+    }
+  }while(!valid_ngb);
+
+  return sngb_id;
 }
 
 /*
@@ -245,75 +189,6 @@ int find_critical_sphere(SPH *sph, int type_x, int ns)
 }
 
 /*
- * count_typeX_sp_neighbours(sph, type_x, id)
- *
- * check the neighbours list of sphere 'id' and count all neighbours of type_x
- */
-int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
-{
-  int ic = 0, i;
-
-  // Check if id is valid array index
-  if(id < 0 && id >= ns){
-    return -1;
-  }
-
-  // count possible neighbours to connect.
-  for(i=0; i<12; i++){
-    if(sph[sph[id].ngb[i]].type == type_x){
-      ic++;
-    }
-  }
-  return ic;
-}
-
-int check_dimer_direction(DIM3D *dim, int i)
-{
-  extern const int TYPE_DIMER;
-  int j;
-  double fcc_dir[6][3];
-  const char *fmt_unknown_orientation =
-    " [%s] ERR: unrecognized dimer orientation\n";
-  const char *fmt_error_details =
-    " dimer ID %d O: %.16le %.16le %.16le (no match)\n";
-
-  fcc_dir[0][0] =  one;
-  fcc_dir[0][1] =  one;
-  fcc_dir[0][2] = zero;
-
-  fcc_dir[1][0] = -one;
-  fcc_dir[1][1] =  one;
-  fcc_dir[1][2] = zero;
-
-  fcc_dir[2][0] =  one;
-  fcc_dir[2][1] = zero;
-  fcc_dir[2][2] =  one;
-
-  fcc_dir[3][0] = -one;
-  fcc_dir[3][1] = zero;
-  fcc_dir[3][2] =  one;
-
-  fcc_dir[4][0] = zero;
-  fcc_dir[4][1] =  one;
-  fcc_dir[4][2] =  one;
-
-  fcc_dir[5][0] = zero;
-  fcc_dir[5][1] = -one;
-  fcc_dir[5][2] =  one;
-
-  if(dim[i].type == TYPE_DIMER){
-    for(j=0; j<6; j++){
-      if( fabs(fabs(vdotu(fcc_dir[j], dim[i].O)) -sqrt(two)) < 1e-10 ){
-        return j;
-      }
-    }
-  }
-  fprintf(stderr, fmt_unknown_orientation, __func__);
-  fprintf(stderr, fmt_error_details, i, dim[i].O[0], dim[i].O[1], dim[i].O[2]);
-  return -1;
-}
-
-/*
  * find_ngb_spheres(sph,ns,box)
  * Build neighburs data for spheres.
  */
@@ -327,7 +202,7 @@ int find_ngb_spheres(SPH sph[], int ns, double box[3]){
 
   // Loop over all spheres
   for(i=0; i<ns-1; i++){
-    // get free neighbor index
+    // get free neighbour index
     slot_id = find_free_ngb_slot(&sph[i]);
 
     // Loop over all spheres other than 'i'
@@ -358,7 +233,6 @@ int find_ngb_spheres(SPH sph[], int ns, double box[3]){
 }
 
 static int find_free_ngb_slot(SPH *sph){
-  // NOTE: This should be global (maybe inside SPH declaration)
   const int ngb_list_size = 12;
 
   for(int i=0; i<ngb_list_size; i++){
@@ -448,6 +322,109 @@ int sph_assign_lattice_indexes( SPH *sph, int ns)
   return EXIT_SUCCESS;
 }
 
+static void bouble_sort_double(double *array, int s, int ascending){
+  int sorted=1;
+  int i,j;
+  double tmp;
+
+  if( ascending == 0){
+    // Sort in descending order
+    // Before starting, check if the array is sorted.
+    for(i=0; i<s-1; i++){
+      if(array[i] < array[i+1]){
+        sorted = 0;
+        break;
+      }
+    }
+
+    // Start sorting if required
+    if(sorted != 1){
+      for(j=0;j<s;j++){
+        for(i=0;i<s-1;i++){
+          if(array[i] < array[i+1]){
+            tmp = array[i+1];
+            array[i+1] = array[i];
+            array[i] = tmp;
+          }
+        }
+      }
+    }
+  }else{
+    // Sort in ascending order
+    // Before starting, check if the array is sorted.
+    for(i=1; i<s; i++){
+      if(array[i-1] > array[i]){
+        sorted = 0;
+        break;
+      }
+    }
+
+    // Start sorting if required
+    if(sorted != 1){
+      for(j=0;j<s;j++){
+        for(i=1;i<s;i++){
+          if(array[i-1] > array[i]){
+            tmp = array[i-1];
+            array[i-1] = array[i];
+            array[i] = tmp;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* # SEC ############## PARTICLES - DIMERS ################################## */
+
+/*
+ * check_dimer_direction()
+ * Return id 'j' of one of six possible dimer orientations in f.c.c. symmetry
+ */
+int check_dimer_direction(DIM3D *dim, int i)
+{
+  extern const int TYPE_DIMER;
+  int j;
+  double fcc_dir[6][3];
+  const char *fmt_unknown_orientation =
+    " [%s] ERR: unrecognized dimer orientation\n";
+  const char *fmt_error_details =
+    " dimer ID %d O: %.16le %.16le %.16le (no match)\n";
+
+  fcc_dir[0][0] =  one;
+  fcc_dir[0][1] =  one;
+  fcc_dir[0][2] = zero;
+
+  fcc_dir[1][0] = -one;
+  fcc_dir[1][1] =  one;
+  fcc_dir[1][2] = zero;
+
+  fcc_dir[2][0] =  one;
+  fcc_dir[2][1] = zero;
+  fcc_dir[2][2] =  one;
+
+  fcc_dir[3][0] = -one;
+  fcc_dir[3][1] = zero;
+  fcc_dir[3][2] =  one;
+
+  fcc_dir[4][0] = zero;
+  fcc_dir[4][1] =  one;
+  fcc_dir[4][2] =  one;
+
+  fcc_dir[5][0] = zero;
+  fcc_dir[5][1] = -one;
+  fcc_dir[5][2] =  one;
+
+  if(dim[i].type == TYPE_DIMER){
+    for(j=0; j<6; j++){
+      if( fabs(fabs(vdotu(fcc_dir[j], dim[i].O)) -sqrt(two)) < 1e-10 ){
+        return j;
+      }
+    }
+  }
+  fprintf(stderr, fmt_unknown_orientation, __func__);
+  fprintf(stderr, fmt_error_details, i, dim[i].O[0], dim[i].O[1], dim[i].O[2]);
+  return -1;
+}
 
 /*
  * update_dimer_parameters(dim,sph,box,d)
@@ -490,11 +467,117 @@ int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d){
   }
 }
 
+/* # SEC ############## MISCELLANEOUS ####################################### */
+
+/*
+ * count_particles_by_type()
+ * Calculate all the different particle types currently in the structure
+ */
+int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
+  extern const int TYPE_SPHERE;
+  extern const int TYPE_SPHERE_DIMER;
+  extern const int TYPE_DIMER;
+  extern const int TYPE_INCLUSION_SPHERE;
+  extern const int TYPE_INCLUSION_SPHERE_DIMER;
+  extern const int TYPE_INCLUSION_DIMER;
+  int i;
+  int tp_sph = 0, tp_inc_sph = 0, tp_inc_sph_dim = 0;
+  int tp_sph_dim = 0, tp_dim = 0, tp_inc_dim = 0;
+  const char *fmt_data_corruption =
+    " [%s] ERR: data corruption found in sphere and dimer arrays\n";
+
+  for(i=0; i<md->Nsph; i++){
+    if(sph[i].type == TYPE_SPHERE) tp_sph++;
+    if(sph[i].type == TYPE_SPHERE_DIMER) tp_sph_dim++;
+    if(sph[i].type == TYPE_INCLUSION_SPHERE) tp_inc_sph++;
+    if(sph[i].type == TYPE_INCLUSION_SPHERE_DIMER) tp_inc_sph_dim++;
+  }
+
+  for(i=0; i<md->Ndim; i++){
+    if(dim[i].type == TYPE_DIMER) tp_dim++;
+    if(dim[i].type == TYPE_INCLUSION_DIMER) tp_inc_dim++;
+  }
+
+  // Check for data corruption between tables;
+  if(tp_sph_dim != 2*tp_dim || tp_inc_sph_dim != 2*tp_inc_dim){
+    fprintf(stderr, fmt_data_corruption, __func__);
+    return EXIT_FAILURE;
+  }
+
+  md->mtrx_sph = tp_sph;
+  md->mtrx_dim = tp_dim;
+  md->incl_sph = tp_inc_sph;
+  md->incl_dim = tp_inc_dim;
+  return EXIT_SUCCESS;
+}
+
+/*
+ * str_validate(s, t)
+ * Compare two strings s and t, and check if they match
+ */
+int str_validate(const char *src, const char *tgt){
+  int len_src = strlen(src);
+  int len_tgt = strlen(tgt);
+
+  if(len_src == len_tgt && !strncmp(src, tgt, len_tgt)){
+    return 0;
+  }
+  return 1;
+}
+
+
+/* # SEC ############## P. R. N. G. ######################################### */
+
+/*
+ * u_RNG()
+ *
+ * Returns a pseudo random number uniformly distributed [0:1]
+ */
+double u_RNG()
+{
+#ifdef PRNG_64BIT_MT19937
+  return genrand64_real1();
+#endif
+
+#ifdef PRNG_32BIT_MT19937
+  return genrand_real1();
+#endif
+
+#ifdef PRNG_DRAND48
+  return drand48();
+#endif
+
+  // In case of failure of the above
+  return zero;
+}
+
+/*
+ * init_RNG( s )
+ *
+ * This function initiates MT19937 rng (either 32 or 64bit, as selected
+ * with includes) with a unsigned long int 's' seed.
+ */
+void init_RNG(unsigned long int s)
+{
+  #ifdef PRNG_64BIT_MT19937
+    init_genrand64( s );
+  #endif
+
+  #ifdef PRNG_32BIT_MT19937
+    init_genrand( s );
+  #endif
+
+  #ifdef PRNG_DRAND48
+    srand48( s );
+  #endif
+}
+
+/* # SEC ############## MEMORY CLEANING AND INITIATING ###################### */
+
 /*
  * memory_clean_spheres(sph, ns)
  * memory_clean_dimers(dim, nd)
- * memory_clean_slits(sl, nsl)
- * memory_clean_channels(cha, nch)
+ * memory_clean_inclusion(inc, n)
  *
  * Assign default values to data structures' arrays
  */
@@ -575,50 +658,6 @@ void memory_clean_inclusion(INC *inc, int n)
   for(i=0; i<n; i++){
     inc[i] = template;
   }
-}
-
-/*
- * u_RNG()
- *
- * Returns a pseudo random number uniformly distributed [0:1]
- */
-double u_RNG()
-{
-#ifdef PRNG_64BIT_MT19937
-  return genrand64_real1();
-#endif
-
-#ifdef PRNG_32BIT_MT19937
-  return genrand_real1();
-#endif
-
-#ifdef PRNG_DRAND48
-  return drand48();
-#endif
-
-  // In case of failure of the above
-  return zero;
-}
-
-/*
- * init_RNG( s )
- *
- * This function initiates MT19937 rng (either 32 or 64bit, as selected
- * with includes) with a unsigned long int 's' seed.
- */
-void init_RNG(unsigned long int s)
-{
-  #ifdef PRNG_64BIT_MT19937
-    init_genrand64( s );
-  #endif
-
-  #ifdef PRNG_32BIT_MT19937
-    init_genrand( s );
-  #endif
-
-  #ifdef PRNG_DRAND48
-    srand48( s );
-  #endif
 }
 
 /* vim: set tw=80 ts=2 sw=2 et: */
