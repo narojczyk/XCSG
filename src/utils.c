@@ -427,6 +427,7 @@ void memory_clean_spheres(SPH *sph, int ns)
 
   // Default values for initial array of spheres
   template.type = TYPE_INVALID;
+  template.type_locked = 0;
   template.dim_ind = TYPE_INVALID;
   template.r[0] = zero;
   template.r[1] = zero;
