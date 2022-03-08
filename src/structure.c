@@ -33,6 +33,9 @@ static int chk_dim_config(DIM3D *dim, SPH *sph, double box[3], int d0, int d1);
 static int validate_distrib(int od[6], int nd1, int step);
 static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload);
 
+static double shortest_distance_to_line(MODEL md, double c[3], double r[3],
+                                        double lc[3], double cp[3]);
+
 static void display_dimer_distribution(int od[6]); //(->i/o ?)
 static void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2]);
 static void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]);
@@ -162,7 +165,7 @@ void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
   int i;
   double c[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
-  double p1[3], p2[3], pxcd[3], dist, dist0, dist1;
+  double /*p1[3], p2[3],*/ /*pxcd[3],*/ dist/*, dist0, dist1*/;
   double ref[3] = {-md.box[0]/two, -md.box[1]/two, -md.box[2]/two};
   double min_dist = md.box[0]; // any relatively large number will do
 
@@ -195,52 +198,24 @@ void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
   for(i=0; i<md.Nsph; i++){
     // Skip spheres that already belong to any inclusion
     if(sph[i].type < TYPE_INCLUSION_BASE){
-      // Determine vector from point 'i' to lower-left-corner atom of the cube
-      p1[0] = llc[0] - sph[i].r[0];
-      p1[1] = llc[1] - sph[i].r[1];
-      p1[2] = llc[2] - sph[i].r[2];
-
-      // Determine vector from point 'i' to channel-center-point of the cube
-      p2[0] = ccp[0] - sph[i].r[0];
-      p2[1] = ccp[1] - sph[i].r[1];
-      p2[2] = ccp[2] - sph[i].r[2];
-
-      // Apply boundary conditions
-      p1[0] = p1[0] - md.box[0] * round( p1[0]/md.box[0] );
-      p1[1] = p1[1] - md.box[1] * round( p1[1]/md.box[1] );
-      p1[2] = p1[2] - md.box[2] * round( p1[2]/md.box[2] );
-
-      p2[0] = p2[0] - md.box[0] * round( p2[0]/md.box[0] );
-      p2[1] = p2[1] - md.box[1] * round( p2[1]/md.box[1] );
-      p2[2] = p2[2] - md.box[2] * round( p2[2]/md.box[2] );
-      // Calculate the cross product pxcd = p x cd
-      vcrossu(p1, c, pxcd);
-
-      // Calculate the shortest distance of the sphere center from the line
-      // with reference to p1 (lower left atom)
-      dist0 = vmodule(pxcd) / vmodule(c);
-
-      // Calculate the cross product pxcd = p x cd
-      vcrossu(p2, c, pxcd);
-
-      // Calculate the shortest distance of the sphere center from the line
-      // with reference to p2 (center point on the channel axis)
-      dist1 = vmodule(pxcd) / vmodule(c);
-
-      // If the sphere lies within the channel radius include the former into
-      // channel and continue to the next sphere
-      if(dist0 < inc->radius || dist1 < inc->radius){
-        // If the sphere belongs to a dimer, include the dimer into inclusion
-          if(sph[i].type == TYPE_SPHERE_DIMER){
+      // Check if the shortest distance from the sphere position 'r' to
+      // the channel's axis is less than inclusion radius
+      if(shortest_distance_to_line(md, c, sph[i].r, llc, ccp) < inc->radius){
+        // Based on the sphere type
+        if(sph[i].type == TYPE_SPHERE){
+          // ... mark regular spheres as 'inclusion-spheres'
+          sph[i].type = TYPE_INCLUSION_SPHERE;
+          // ... and assign the respective inclusion-sphere-diameter
+          sph[i].d = inc->sph_d;
+        }else if (sph[i].type == TYPE_SPHERE_DIMER){
+          // ... mark regular dimers as inclusion dimers only if their
+          // ceters of mass are inside the channel
+          if(shortest_distance_to_line(md, c, dim[sph[i].dim_ind].R, llc, ccp)
+            < inc->radius){
             update_dimer_type(&dim[sph[i].dim_ind], sph,
-                              TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
-          }else{
-            // Mark sphere as 'inclusion-sphere'
-            sph[i].type = TYPE_INCLUSION_SPHERE;
+                                TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
           }
-
-        // ... and assign the respective inclusion-sphere-diameter
-        sph[i].d = inc->sph_d;
+        }
       }
     } // end if sph.type <TYPE_INCLUSION_BASE condition
   } // end for loop
@@ -309,22 +284,70 @@ void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
         // If the sphere lies within the plane, include the sphere into
         // plane and continue to the next sphere
         if(fabs(dist) < inc->thickness){
-          // If the sphere belongs to a dimer, include the dimer into inclusion
-          if(sph[i].type == TYPE_SPHERE_DIMER){
-            update_dimer_type(&dim[sph[i].dim_ind], sph,
-                              TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
-          }else{
-            // Mark sphere as 'inclusion-sphere'
+          // Based on the sphere type
+          if(sph[i].type == TYPE_SPHERE){
+            // ... mark regular spheres as 'inclusion-spheres'
             sph[i].type = TYPE_INCLUSION_SPHERE;
+            // ... and assign the respective inclusion-sphere-diameter
+            sph[i].d = inc->sph_d;
+          }else if (sph[i].type == TYPE_SPHERE_DIMER){
+            // ... mark regular dimers as inclusion dimers only if their
+            // ceters of mass are inside the slit
+            if(
+              fabs(zero - cd[0]*dim[sph[i].dim_ind].R[0]
+                - cd[1]*dim[sph[i].dim_ind].R[1]
+                - cd[2]*dim[sph[i].dim_ind].R[2]) < inc->thickness){
+              update_dimer_type(&dim[sph[i].dim_ind], sph,
+                                  TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
+            }
           }
-          // Assign the sphere the respective inclusion-sphere-diameter
-          sph[i].d = inc->sph_d;
+
           // Escape the j-loop if sphere is found to lie on the plane
           break;
         }
       }
     } // end if sph.type <TYPE_INCLUSION_BASE condition
   } // end for loop
+}
+
+/*
+ * shortest_distance_to_line()
+ * Calculates the shortest distance from point r to the line described by
+ * wersor c and two points on the axis lc and cp
+ */
+static double shortest_distance_to_line(MODEL md, double c[3], double r[3],
+                                        double lc[3], double cp[3]){
+  double pxcd[3], dist0, dist1;
+  // Determine vector from point 'i' to lower-left-corner atom of the cube
+  double p1[3] = {lc[0] - r[0], lc[1] - r[1], lc[2] - r[2]};
+  // Determine vector from point 'i' to channel-center-point of the cube
+  double p2[3] = {cp[0] - r[0], cp[1] - r[1], cp[2] - r[2]};
+
+  // Apply boundary conditions
+  p1[0] = p1[0] - md.box[0] * round( p1[0]/md.box[0] );
+  p1[1] = p1[1] - md.box[1] * round( p1[1]/md.box[1] );
+  p1[2] = p1[2] - md.box[2] * round( p1[2]/md.box[2] );
+
+  p2[0] = p2[0] - md.box[0] * round( p2[0]/md.box[0] );
+  p2[1] = p2[1] - md.box[1] * round( p2[1]/md.box[1] );
+  p2[2] = p2[2] - md.box[2] * round( p2[2]/md.box[2] );
+
+  // Calculate the cross product pxcd = p x cd
+  vcrossu(p1, c, pxcd);
+
+  // Calculate the shortest distance of the sphere center from the line
+  // with reference to p1 (lower left atom)
+  dist0 = vmodule(pxcd) / vmodule(c);
+
+  // Calculate the cross product pxcd = p x cd
+  vcrossu(p2, c, pxcd);
+
+  // Calculate the shortest distance of the sphere center from the line
+  // with reference to p2 (center point on the channel axis)
+  dist1 = vmodule(pxcd) / vmodule(c);
+
+  // return the shorter distance
+  return (dist0 < dist1) ? dist0 : dist1;
 }
 
 /*
@@ -356,9 +379,9 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL md, int type_src,
                              int type_tgt){
   int s_id, s_ngb_id, s_ngb_qty;
   const char *fmt_mk_dimers_at_random =
-    "\n Randomly join spheres into dimers\n";
+    "\n Randomly join type-%d spheres into dimers\n";
 
-  fprintf(stdout, fmt_mk_dimers_at_random);
+  fprintf(stdout, fmt_mk_dimers_at_random, type_src);
   do{
     // Find a type_src sphere with the lowes count of chanses to form a dimer
     s_id = find_critical_sphere(sph, type_src, md.Nsph);
@@ -396,7 +419,7 @@ void introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL md){
   const char *fmt_required_zipper_runs =
     " Running zipper %d times to create dimers\n";
   const char *fmt_mk_dimers_with_zipper =
-    " Connecting remaining spheres with zipper\n";
+    "\n Connecting remaining spheres with zipper\n";
 
   fprintf(stdout, fmt_mk_dimers_with_zipper);
 

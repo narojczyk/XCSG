@@ -100,6 +100,7 @@ void show_particle_stats(MODEL md, CONFIG cfg)
   double hidm = (double) (200 * md.incl_dim); // (hekto inc. dimers x2)
   double hisp = (double) (100 * md.incl_sph); // (hekto inc. spheres)
 
+  fprintf(stdout, "\n");
   fprintf(stdout, fmt_sde, "Matrix spheres",    md.mtrx_sph, hsph/fNsph);
   if(cfg.mk_dimers){
     fprintf(stdout, fmt_sde, "Matrix dimers",      md.mtrx_dim, hdim/fNsph);
