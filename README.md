@@ -5,9 +5,9 @@ Additional inclusions can be introduced into the structure. The inclusions
 can form channels or layers of arbitraty orientation and diameter or 
 thickness respectively. The diameters of particles that form inclusions 
 can be controlled. Multiple inclusions in arbitrary orientations are
-possible. Monomers (spheres) outside inclusions can be paired into dimers, 
-forming a *Degenerated Crystal* (DC) of dimers, in no inclusions are set, or
-a mixed system of monomer and dimers. 
+possible. Monomers (spheres) inside or outside inclusions can be paired into
+dimers, forming a *Degenerated Crystal* (DC) of dimers (without inclusions)
+or a mixed system of monomer and dimers.
 
 ###### Acknowledgements
 The project build upon older code by M. Kowalik
@@ -22,9 +22,9 @@ Project directory should contain:
 
 ## Project Roadmap
 
-- [ ] Change sphere types ID's with respect to monomers they form (1 - 8) or
-  inclusions (100+). *in progress*
-- [ ] Inclusions may be formed by multimers. *in progress*
+- [x] Change sphere types ID's with respect to monomers they form (1 - 8) or
+  inclusions (100+).
+- [x] Inclusions may be formed by multimers.
 - [ ] Finite size inclusions. *in progress*
 - [ ] Add hcp and bcc lattices.
 - [ ] Add 3+ multimer particles.

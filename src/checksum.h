@@ -4,10 +4,10 @@
 char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 char* buildAt = "decker";
-char* build = "wto, 8 mar 2022, 21:44:00 CET";
+char* build = "wto, 8 mar 2022, 21:50:21 CET";
 char* code_version = "1.2";
-char* code_comit_id = "df7a5c125fd1cf90f34d4947ca67302cf0877f3b";
-char* code_comit_date = "2022-03-08 21:07:53 +0100";
+char* code_comit_id = "cf2e11a8627ddb2f2d584cc07ffb4843302e1d27";
+char* code_comit_date = "2022-03-08 21:50:12 +0100";
 
 char* xcsg_c_SHA1 = "369164ef639a054b8c253a5b9cdf880463652f54";
 char* globals_h_SHA1 = "1b3a17833088a62df31b922aa319b9413bac7fab";
