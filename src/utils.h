@@ -12,6 +12,7 @@ int find_critical_sphere(SPH *sph, int type_x, int ns);
 int draw_sphere_typeX(SPH *sph, int x, int ns);
 int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind);
 int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d);
+int sph_assign_lattice_indexes( SPH *sph, int ns);
 
 void memory_clean_spheres(SPH *sph, int nd);
 void memory_clean_dimers(DIM3D *dim, int nd);

@@ -370,6 +370,84 @@ static int find_free_ngb_slot(SPH *sph){
   return TYPE_INVALID;
 }
 
+/*
+ * sph_assign_lattice_indexes( sph, ns)
+ *
+ * Based on posisions at closepacking assign lattice indexes (x,y,z) to all
+ * spheres
+ * TODO: Maybe move to utils or misc section
+ */
+
+int sph_assign_lattice_indexes( SPH *sph, int ns)
+{
+  const char *fmt_sph_number = " Sphere number %d\n";
+  const char *fmt_unassigned_latt_idx =
+    " [%s] ERR: Unasigned lattice index for the direction %d\n";
+  const char *fmt_index_out_of_range = " [%s] ERR: index out of range\n";
+  int tmp_size = 300;
+  int dir, i=0, j=0, c, present;
+  double uniq_coords[tmp_size];
+  double c_value;
+
+  for(dir=0; dir<3; dir++){
+    c=0;
+    present=0;
+
+    // Assign the coordinate of the first sphere into the array
+    uniq_coords[c++] = sph[0].r[dir];
+
+    // Counting from the next sphere, check whether its coordinate
+    // matches any of previously found and stored in the array
+    for(i=1; i<ns; i++){
+      // flag to signal that value was previously found
+      present=0;
+      // get the coordinate of the next sphere
+      c_value = sph[i].r[dir];
+      // sweep the array from the start to the current number of found
+      // elements and try to match the current coordinate
+      for(j=0; j<c; j++){
+        if( fabs(c_value/uniq_coords[j] -1) < 1e-10 ){
+          // set flag and brake the loop if value already found in the array
+          present=1;
+          break;
+        }
+      }
+      // if the flag is not set after the sweep add the current coordinate
+      // to the array and increment the array counter
+      if(present==0){
+        if(c < tmp_size){
+          uniq_coords[c++] = c_value;
+        }else{
+          fprintf(stderr, fmt_index_out_of_range, __func__);
+          return EXIT_FAILURE;
+        }
+      }
+    }
+
+    // Make sure the array is sorted ascending
+    bouble_sort_double(uniq_coords, c, 1);
+
+    // For all spheres compare their coordinats ...
+    for(i=0; i<ns; i++){
+      // ... with consecutive values from the array ...
+      for(j=0; j<c; j++){
+        if( fabs(sph[i].r[dir]/uniq_coords[j] -1) < 1e-10 ){
+          // ... and assing respective index value when found
+          sph[i].lattice_ind[dir] = j+1;
+          break;
+        }
+      }
+      // For security check if the index does not remain unassigned
+      if(sph[i].lattice_ind[dir] == -1){
+        fprintf(stderr, fmt_unassigned_latt_idx, __func__, dir);
+        fprintf(stderr, fmt_sph_number, i);
+        return EXIT_FAILURE;
+      }
+    }
+  }
+  return EXIT_SUCCESS;
+}
+
 
 /*
  * update_dimer_parameters(dim,sph,box,d)

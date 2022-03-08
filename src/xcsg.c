@@ -56,6 +56,8 @@ int main(int argc, char *argv[])
     " [%s] ERR: failed to calculate continer dimensions\n";
   const char *fmt_generating_structure = "\n ### Processing structure %d\n";
   const char *fmt_inserting_inclusion = " Inserting %-10s of ID %2d\n";
+  const char *fmt_inserting_rough_inclusions =
+    "\n Inserting rough inclusions\n";
   const char *fmt_refine_DC_params =
     "\n Improve structure parameters\n"
     " Perfect DC orientation %s possible (%.2lf/dir.)\n";
@@ -154,15 +156,16 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
     }
 
+    // Insert inclusions into sphere system
     // Make channel
-    if(cfg.mk_channel){
+    if(cfg.mk_channel && ! cfg.rough_inclusions){
       for(i=0; i<cfg.num_channels; i++){
         // Test channel data
         if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 ||
           channels[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "channel", i);
           if(channels[i].tgt_Nmer == 2) insert_inclusion_dimers = 1;
-          make_channel(mdl, spheres, &channels[i]);
+          make_channel(mdl, &channels[i], spheres, dimers);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
                   cfg.num_channels);
@@ -171,13 +174,13 @@ int main(int argc, char *argv[])
     }
 
     // Make slit
-    if(cfg.mk_slit){
+    if(cfg.mk_slit  && ! cfg.rough_inclusions){
       for(i=0; i<cfg.num_slits; i++){
         // Test slit data
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "layer", i);
           if(slits[i].tgt_Nmer == 2) insert_inclusion_dimers = 1;
-          make_slit(mdl, spheres, &slits[i]);
+          make_slit(mdl, &slits[i], spheres, dimers);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                   cfg.num_slits);
@@ -255,7 +258,49 @@ int main(int argc, char *argv[])
       if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE){
         return EXIT_FAILURE;
       }
+
+      // Insert inclusions into dimer system
+      if(cfg.rough_inclusions){
+        fprintf(stdout, fmt_inserting_rough_inclusions);
+        // Make channel
+        if(cfg.mk_channel){
+          for(i=0; i<cfg.num_channels; i++){
+            // Test channel data
+            if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 ||
+              channels[i].nm[2] != 0){
+              fprintf(stdout, fmt_inserting_inclusion, "channel", i);
+              make_channel(mdl, &channels[i], spheres, dimers);
+            }else{
+              fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
+                      cfg.num_channels);
+            }
+          }
+        }
+
+        // Make slit
+        if(cfg.mk_slit){
+          for(i=0; i<cfg.num_slits; i++){
+            // Test slit data
+            if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 ||
+              slits[i].nm[2] != 0){
+              fprintf(stdout, fmt_inserting_inclusion, "layer", i);
+              make_slit(mdl, &slits[i], spheres, dimers);
+            }else{
+              fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
+                      cfg.num_slits);
+            }
+          }
+        }
+
+        // Check the number of different spheres
+        if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
+          return EXIT_FAILURE;
+        }
+        // Display current statistics
+        show_particle_stats(mdl, cfg);
+      }
     } // end if(cfg.mk_dimers)
+
 
     // Generate required output files for structure 's'
     if( export_structure(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){

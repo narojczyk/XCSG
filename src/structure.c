@@ -38,6 +38,7 @@ static void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2])
 static void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]);
 static void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2,
                        int type_tgt);
+static void update_dimer_type(DIM3D *dim, SPH *sph, int type, double sph_d);
 
 /* # SEC ############## SYMMETRY OF THE STRUCTURE ########################### */
 
@@ -156,7 +157,7 @@ static int set_fcc(SPH *sph, int ns, int cells[3]){
  * periodic image that is not the nearest to the channel axis)
  *
  */
-void make_channel(MODEL md, SPH *sph, INC *inc){
+void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
   extern const int TYPE_INCLUSION_BASE;
   int i;
   double c[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
@@ -229,8 +230,14 @@ void make_channel(MODEL md, SPH *sph, INC *inc){
       // If the sphere lies within the channel radius include the former into
       // channel and continue to the next sphere
       if(dist0 < inc->radius || dist1 < inc->radius){
-        // Mark sphere as 'inclusion-sphere'
-        sph[i].type = TYPE_INCLUSION_SPHERE;
+        // If the sphere belongs to a dimer, include the dimer into inclusion
+          if(sph[i].type == TYPE_SPHERE_DIMER){
+            update_dimer_type(&dim[sph[i].dim_ind], sph,
+                              TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
+          }else{
+            // Mark sphere as 'inclusion-sphere'
+            sph[i].type = TYPE_INCLUSION_SPHERE;
+          }
 
         // ... and assign the respective inclusion-sphere-diameter
         sph[i].d = inc->sph_d;
@@ -246,7 +253,7 @@ void make_channel(MODEL md, SPH *sph, INC *inc){
  * atoms belong to the plane, are flagged for braking.
  * NOTE: periodic boundaries are not taken into account here
  */
-void make_slit(MODEL md, SPH *sph, INC *inc){
+void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
   extern const int TYPE_INCLUSION_BASE;
   int i,j;
   double cd[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
@@ -302,9 +309,14 @@ void make_slit(MODEL md, SPH *sph, INC *inc){
         // If the sphere lies within the plane, include the sphere into
         // plane and continue to the next sphere
         if(fabs(dist) < inc->thickness){
-          // Mark sphere as 'inclusion-sphere'
-          sph[i].type = TYPE_INCLUSION_SPHERE;
-
+          // If the sphere belongs to a dimer, include the dimer into inclusion
+          if(sph[i].type == TYPE_SPHERE_DIMER){
+            update_dimer_type(&dim[sph[i].dim_ind], sph,
+                              TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
+          }else{
+            // Mark sphere as 'inclusion-sphere'
+            sph[i].type = TYPE_INCLUSION_SPHERE;
+          }
           // Assign the sphere the respective inclusion-sphere-diameter
           sph[i].d = inc->sph_d;
           // Escape the j-loop if sphere is found to lie on the plane
@@ -316,90 +328,29 @@ void make_slit(MODEL md, SPH *sph, INC *inc){
 }
 
 /*
- * sph_assign_lattice_indexes( sph, ns)
- *
- * Based on posisions at closepacking assign lattice indexes (x,y,z) to all
- * spheres
- * TODO: Maybe move to utils or misc section
+ * update_dimer_type()
+ * Changes the dimer and its spheres to the selected 'type' and assign 'sph_d'
+ * as sphere diameters
  */
+static void update_dimer_type(DIM3D *dim, SPH *sph, int type, double sph_d){
+  SPH *sph0 = &sph[dim->sph_ind[0]];
+  SPH *sph1 = &sph[dim->sph_ind[1]];
 
-int sph_assign_lattice_indexes( SPH *sph, int ns)
-{
-  const char *fmt_sph_number = " Sphere number %d\n";
-  const char *fmt_unassigned_latt_idx =
-    " [%s] ERR: Unasigned lattice index for the direction %d\n";
-  const char *fmt_index_out_of_range = " [%s] ERR: index out of range\n";
-  int tmp_size = 300;
-  int dir, i=0, j=0, c, present;
-  double uniq_coords[tmp_size];
-  double c_value;
+  dim->type = type;
+  sph0->type = type;
+  sph1->type = type;
 
-  for(dir=0; dir<3; dir++){
-    c=0;
-    present=0;
-
-    // Assign the coordinate of the first sphere into the array
-    uniq_coords[c++] = sph[0].r[dir];
-
-    // Counting from the next sphere, check whether its coordinate
-    // matches any of previously found and stored in the array
-    for(i=1; i<ns; i++){
-      // flag to signal that value was previously found
-      present=0;
-      // get the coordinate of the next sphere
-      c_value = sph[i].r[dir];
-      // sweep the array from the start to the current number of found
-      // elements and try to match the current coordinate
-      for(j=0; j<c; j++){
-        if( fabs(c_value/uniq_coords[j] -1) < 1e-10 ){
-          // set flag and brake the loop if value already found in the array
-          present=1;
-          break;
-        }
-      }
-      // if the flag is not set after the sweep add the current coordinate
-      // to the array and increment the array counter
-      if(present==0){
-        if(c < tmp_size){
-          uniq_coords[c++] = c_value;
-        }else{
-          fprintf(stderr, fmt_index_out_of_range, __func__);
-          return EXIT_FAILURE;
-        }
-      }
-    }
-
-    // Make sure the array is sorted ascending
-    bouble_sort_double(uniq_coords, c, 1);
-
-    // For all spheres compare their coordinats ...
-    for(i=0; i<ns; i++){
-      // ... with consecutive values from the array ...
-      for(j=0; j<c; j++){
-        if( fabs(sph[i].r[dir]/uniq_coords[j] -1) < 1e-10 ){
-          // ... and assing respective index value when found
-          sph[i].lattice_ind[dir] = j+1;
-          break;
-        }
-      }
-      // For security check if the index does not remain unassigned
-      if(sph[i].lattice_ind[dir] == -1){
-        fprintf(stderr, fmt_unassigned_latt_idx, __func__, dir);
-        fprintf(stderr, fmt_sph_number, i);
-        return EXIT_FAILURE;
-      }
-    }
-  }
-  return EXIT_SUCCESS;
+  sph0->d = sph_d;
+  sph1->d = sph_d;
 }
 
 /* # SEC ############## INSERTING DIMERS #################################### */
 
 /*
  * introduce_random_dimers()
- * Randomly (where possible) connect neighbouring spheres into dimers.
- * In critical cases start with spheres with fewest possible connections.
- * TODO: Add possibility to select TYPE_* of spheres to join
+ * Randomly (where possible) connect neighbouring spheres of type_src into
+ * dimers. In critical cases start with spheres with fewest possible
+ * connections.
  */
 void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL md, int type_src,
                              int type_tgt){
