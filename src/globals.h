@@ -37,6 +37,7 @@ const double minimal_dimer_qty = 2e-1;
 
 // symmetry
 const char *fcc = "fcc";
+const int ngb_list_size = 12; // valid for fcc and hcp
 
 // general purpose global variables
 char *prog_name;

@@ -70,6 +70,7 @@ int number_of_spheres(CONFIG cf){
  */
 int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
 {
+  extern const int ngb_list_size;
   int ic = 0, i;
 
   // Check if id is valid array index
@@ -78,7 +79,7 @@ int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
   }
 
   // count possible neighbours to connect.
-  for(i=0; i<12; i++){
+  for(i=0; i<ngb_list_size; i++){
     if(sph[sph[id].ngb[i]].type == type_x){
       ic++;
     }
@@ -126,6 +127,7 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
 int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
 {
   extern const int TYPE_SPHERE_DIMER;
+  extern const int ngb_list_size;
   extern const char *fmt_watchdog_activated;
   const char *fmt_no_valid_neighbour =
     " [%s] ERR: Cannot locate type %d neighbour of %d sphere\n";
@@ -142,9 +144,9 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
   do{
     valid_ngb = 0;
     // Select neighbour index randomly
-    rand_ngb = (int) (u_RNG() * 12);
+    rand_ngb = (int) (u_RNG() * ngb_list_size);
     // Check not to go outside the naighbor list
-    rand_ngb = (rand_ngb < 12) ? rand_ngb : 11;
+    rand_ngb = (rand_ngb < ngb_list_size) ? rand_ngb : ngb_list_size - 1;
     // Get neighbour id and type
     sngb_id = sph[sph_ind].ngb[rand_ngb];
     sngb_type = sph[ sngb_id ].type;
@@ -242,7 +244,7 @@ int find_ngb_spheres(SPH sph[], int ns, double box[3]){
 }
 
 static int find_free_ngb_slot(SPH *sph){
-  const int ngb_list_size = 12;
+  extern const int ngb_list_size;
 
   for(int i=0; i<ngb_list_size; i++){
     if(sph->ngb[i] == TYPE_INVALID){
@@ -592,6 +594,7 @@ void init_RNG(unsigned long int s)
  */
 void memory_clean_spheres(SPH *sph, int ns)
 {
+  extern const int ngb_list_size;
   SPH template;
   int i;
 
@@ -607,7 +610,7 @@ void memory_clean_spheres(SPH *sph, int ns)
   template.lattice_ind[2] = TYPE_INVALID;
   template.d = one;
 
-  for(i=0; i<12; i++){
+  for(i=0; i<ngb_list_size; i++){
     template.ngb[i] = TYPE_INVALID;
   }
 
