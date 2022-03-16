@@ -231,7 +231,7 @@ static int povray_export_spheres(FILE *file, SPH *sph, int ns){
 
   for(i=0; i<ns; i++){
     // Write sphere positions and properties
-    if(sph[i].type < TYPE_MATRIX_LIMIT){
+    if(sph[i].type <= TYPE_MATRIX_LIMIT){
       if(fprintf(file, fmt_exp_sph_0, sph[i].r[0], sph[i].r[1], sph[i].r[2],
         "Dmtr", "Tmtr", sph[i].type, i, sph[i].type) == EOF){
         fprintf(stderr, fmt_writting_failed, __func__, "sphere (povray)");

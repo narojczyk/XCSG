@@ -14,11 +14,12 @@ const double one = (double) 1;
 const double two = (double) 2;
 
 // particle types identifiers
-const int TYPE_INVALID = -1;
-const int TYPE_MATRIX_LIMIT = 10;
-const int TYPE_SPHERE = 1;
-const int TYPE_SPHERE_DIMER = 2;
-const int TYPE_DIMER = TYPE_SPHERE_DIMER;
+const int TYPE_INVALID        = -1;
+const int TYPE_MATRIX_BASE    =  0;
+const int TYPE_MATRIX_LIMIT   =  9;
+const int TYPE_SPHERE         =  1;
+const int TYPE_SPHERE_DIMER   =  2;
+const int TYPE_DIMER          = TYPE_SPHERE_DIMER;
 const int TYPE_INCLUSION_BASE = 100;
 const int TYPE_INCLUSION_SPHERE       = TYPE_INCLUSION_BASE + TYPE_SPHERE;
 const int TYPE_INCLUSION_SPHERE_DIMER = TYPE_INCLUSION_BASE + TYPE_SPHERE_DIMER;

@@ -505,6 +505,7 @@ int refine_dimer_distribution(DIM3D *dim, SPH *sph, MODEL md, int od[6]){
 // (DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
 static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload)
 {
+  const unsigned short nseek_limit = 100;
   int i=0, nseek=0, step=0;
   int sngb_id, sngb_type, rand_ngb, valid_ngb, next_s_id;
   int d_id, dngb_id;
@@ -542,9 +543,9 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload)
 
       // If enough steps passed OR if type-sphere-dimer is NOT on the list,
       // allow type-sphere selection
-      allow_tp_sph =
-        ((sngb_type == TYPE_SPHERE) && ((step > workload) || (nseek > 100) ))
-        ? 1 : 0;
+      allow_tp_sph = (
+        (sngb_type == TYPE_SPHERE) &&
+        ((step > workload) || (nseek > nseek_limit)) ) ? 1 : 0;
 
       // Select type-sphere-dimer or, if enough steps passed allow regular
       // sphere selection
