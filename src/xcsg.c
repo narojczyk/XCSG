@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
       // Inserting dimers - Method #2
       if(mdl.mtrx_sph > 1){
         // Eliminate remaining spheres (if necesarry) using zipper
-        introduce_dimers_by_zipper(dimers, spheres, mdl);
+        introduce_dimers_by_zipper(dimers, spheres, mdl, TYPE_MATRIX_BASE);
 
         if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE
           || count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
