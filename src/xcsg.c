@@ -193,7 +193,9 @@ int main(int argc, char *argv[])
     // Whole inclusion will be converted into dimers (regardless of individual
     // inclusions' settings)
     if(insert_inclusion_dimers){
-      introduce_random_dimers(dimers, spheres, mdl, TYPE_INCLUSION_SPHERE, TYPE_INCLUSION_DIMER);
+//       introduce_random_dimers(dimers, spheres, mdl, TYPE_INCLUSION_SPHERE,
+//                               TYPE_INCLUSION_DIMER);
+      introduce_dimers_by_zipper(dimers, spheres, mdl, TYPE_INCLUSION_BASE);
     }
 
     // Check the number of different spheres

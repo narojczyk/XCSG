@@ -412,6 +412,10 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL md, int type_src,
  */
 int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL md, int TYPE){
   extern const int lazy;
+  // local redefinition of TYPE* variables basen on whether matix or inclusion
+  // particles are to be considered
+  const int TYPE_sphere = TYPE + TYPE_SPHERE;
+
   int i, zipper_runs = 0, zip_init_sph = -1;
   const char *fmt_ziper_run =
     " Zipper from sphere ID %5d completed after %7d steps\n";
@@ -437,7 +441,7 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL md, int TYPE){
   while(zipper_runs != 0){
     // Select type-sphere object as the starting point for zipper
     for(i=0; i<md.Nsph; i++){
-      if(sph[i].type == TYPE_SPHERE){
+      if(sph[i].type == TYPE_sphere){
         zip_init_sph = i;
         break;
       }
@@ -523,7 +527,7 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
   const int TYPE_BASE = TYPE;
   const int TYPE_BASE_FORBIDDEN = fabs(TYPE - TYPE_INCLUSION_BASE);
   // local redefinition of TYPE* variables basen on whether matix or inclusion
-  // particles are considered
+  // particles are to be considered
   const int TYPE_sphere_dimer     = TYPE_BASE + TYPE_SPHERE_DIMER;
   const int TYPE_sphere           = TYPE_BASE + TYPE_SPHERE;
   const int TYPE_dimer            = TYPE_BASE + TYPE_DIMER;
@@ -569,12 +573,12 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
       // If enough steps passed OR if type-sphere-dimer is NOT on the list,
       // allow type-sphere selection
       allow_tp_sph = (
-        (sngb_type == TYPE_SPHERE) &&
+        (sngb_type == TYPE_sphere) &&
         ((step > workload) || (nseek > nseek_limit)) ) ? 1 : 0;
 
       // Select type-sphere-dimer or, if enough steps passed allow regular
       // sphere selection
-      valid_ngb = (allow_tp_sph || (sngb_type == TYPE_SPHERE_DIMER)) ? 1 : 0;
+      valid_ngb = (allow_tp_sph || (sngb_type == TYPE_sphere_dimer)) ? 1 : 0;
 
       // Security check not to select
       // type-(inclusion|matrix)-sphere spheres (depending on selected TYPE)
