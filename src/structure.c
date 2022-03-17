@@ -164,7 +164,8 @@ static int set_fcc(SPH *sph, int ns, int cells[3]){
  *
  */
 void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
-  int i;
+  int i,k;
+  int type_lock = (inc->tgt_Nmer == 1) ? 1 : 0;
   double c[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
   double /*p1[3], p2[3],*/ /*pxcd[3],*/ dist/*, dist0, dist1*/;
@@ -209,13 +210,16 @@ void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
           sph[i].type = TYPE_INCLUSION_SPHERE;
           // ... and assign the respective inclusion-sphere-diameter
           sph[i].d = inc->sph_d;
+          // set type lock flag for this inclusion
+          sph[i].type_locked = type_lock;
         }else if (sph[i].type == TYPE_SPHERE_DIMER){
           // ... mark regular dimers as inclusion dimers only if their
           // ceters of mass are inside the channel
-          if(shortest_distance_to_line(md, c, dim[sph[i].dim_ind].R, llc, ccp)
+          k = sph[i].dim_ind;
+          if(shortest_distance_to_line(md, c, dim[k].R, llc, ccp)
             < inc->radius){
-            update_dimer_type(&dim[sph[i].dim_ind], sph,
-                                TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
+            update_dimer_type(&dim[k], sph, TYPE_INCLUSION_SPHERE_DIMER,
+                              inc->sph_d);
           }
         }
       }
@@ -231,7 +235,8 @@ void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
  * NOTE: periodic boundaries are not taken into account here
  */
 void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
-  int i,j;
+  int i,j,k;
+  int type_lock = (inc->tgt_Nmer == 1) ? 1 : 0;
   double cd[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double p[7][3];
   double dist;
@@ -291,15 +296,17 @@ void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
             sph[i].type = TYPE_INCLUSION_SPHERE;
             // ... and assign the respective inclusion-sphere-diameter
             sph[i].d = inc->sph_d;
+            // set type lock flag for this inclusion
+            sph[i].type_locked = type_lock;
           }else if (sph[i].type == TYPE_SPHERE_DIMER){
             // ... mark regular dimers as inclusion dimers only if their
             // ceters of mass are inside the slit
+            k = sph[i].dim_ind;
             if(
-              fabs(zero - cd[0]*dim[sph[i].dim_ind].R[0]
-                - cd[1]*dim[sph[i].dim_ind].R[1]
-                - cd[2]*dim[sph[i].dim_ind].R[2]) < inc->thickness){
-              update_dimer_type(&dim[sph[i].dim_ind], sph,
-                                  TYPE_INCLUSION_SPHERE_DIMER, inc->sph_d);
+              fabs(zero - cd[0]*dim[k].R[0] - cd[1]*dim[k].R[1]
+                - cd[2]*dim[k].R[2]) < inc->thickness){
+              update_dimer_type(&dim[k], sph, TYPE_INCLUSION_SPHERE_DIMER,
+                                inc->sph_d);
             }
           }
 
