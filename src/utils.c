@@ -71,7 +71,7 @@ int number_of_spheres(CONFIG cf){
 int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
 {
   extern const int ngb_list_size;
-  int ic = 0, i;
+  int ic = 0, i, i_ngb;
 
   // Check if id is valid array index
   if(id < 0 && id >= ns){
@@ -80,7 +80,8 @@ int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
 
   // count possible neighbours to connect.
   for(i=0; i<ngb_list_size; i++){
-    if(sph[sph[id].ngb[i]].type == type_x){
+    i_ngb = sph[id].ngb[i];
+    if(sph[i_ngb].type == type_x && sph[i_ngb].type_locked == 0){
       ic++;
     }
   }
@@ -103,7 +104,7 @@ int draw_sphere_typeX(SPH *sph, int x, int ns)
     // Check not to go outside the sphere tab
     sp_id = (sp_id < ns) ? sp_id : ns - 1;
     // Check if the type is ok
-    if(sph[sp_id].type == x){
+    if(sph[sp_id].type == x && sph[sp_id].type_locked == 0){
       return sp_id;
     }else{
       // Draw another index if type is not correct.
@@ -133,7 +134,7 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
     " [%s] ERR: Cannot locate type %d neighbour of %d sphere\n";
 
   int nseek = 0, nmax = 500;
-  int sngb_id, sngb_type, rand_ngb, valid_ngb;
+  int sngb_id, sngb_type, sngb_type_lock, rand_ngb, valid_ngb;
 
   // Check if sph_ind is a valid array index
   if(sph_ind == -1){
@@ -149,9 +150,10 @@ int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind)
     // Get neighbour id and type
     sngb_id = sph[sph_ind].ngb[rand_ngb];
     sngb_type = sph[ sngb_id ].type;
+    sngb_type_lock = sph[ sngb_id ].type_locked;
 
     // Select type-x sphere
-    if(sngb_type == x ) {
+    if(sngb_type == x && sngb_type_lock == 0) {
       valid_ngb = 1;
     }
     // Security check not to select type-2 spheres EVER!
@@ -182,7 +184,7 @@ int find_critical_sphere(SPH *sph, int type_x, int ns)
   int crit_fs = -1;
 
   for(i=0; i<ns; i++){
-    if(sph[i].type == type_x){
+    if(sph[i].type == type_x && sph[i].type_locked == 0){
       // Count type_x neighbours for i'th sphere
       ngb_count = count_typeX_sp_neighbours(sph, type_x, i, ns);
 

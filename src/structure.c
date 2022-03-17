@@ -378,7 +378,9 @@ static void update_dimer_type(DIM3D *dim, SPH *sph, int type, double sph_d){
  * introduce_random_dimers()
  * Randomly (where possible) connect neighbouring spheres of type_src into
  * dimers. In critical cases start with spheres with fewest possible
- * connections. NOTE: make the function return success or failure code.
+ * connections.
+ * NOTE: make the function return success or failure code.
+ * BUG: infinite loop possible.
  */
 void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
                              int type_tgt){
@@ -391,8 +393,8 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
   do{
     // Find a type_src sphere with the lowes count of chanses to form a dimer
     s_id = find_critical_sphere(sph, type_src, nsph);
-    s_ngb_qty =
-      count_typeX_sp_neighbours(sph, type_src, s_id, nsph);
+    s_ngb_qty = count_typeX_sp_neighbours(sph, type_src, s_id, nsph);
+
     // If the possibilities are high enough, select sphere randomly
     if(s_ngb_qty >= 5){
       s_id = draw_sphere_typeX(sph, type_src, nsph);
