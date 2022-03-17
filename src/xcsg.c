@@ -11,9 +11,6 @@
 
 /*
  * TODO:
- *  #1 BUG [INCDMRFLOOD] non-critical: Cannot make mix sphere-dimer inclusions
- *  #2 introduce locking mechanism in SPH to block type from beeing changed.
- *    Thus, lock selected spheres before being converted into dimers
  *
  */
 
