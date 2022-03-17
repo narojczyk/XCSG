@@ -430,7 +430,7 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
   // particles are to be considered
   const int TYPE_sphere = TYPE + TYPE_SPHERE;
 
-  int i, zipper_runs = 0, zip_init_sph = -1;
+  int i, zipper_steps_passed, zipper_runs = 0, zip_init_sph;
   const char *fmt_ziper_run =
     " Zipper from sphere ID %5d completed after %7d steps\n";
   const char *fmt_required_zipper_runs =
@@ -439,6 +439,8 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
     "\n Connecting remaining spheres with zipper\n";
   const char *fmt_illegal_type =
     " [%s] ERR: Not recognized value of TYPE (%d)\n";
+  const char *fmt_no_valid_startpoint =
+    " No valid starting point to initiate zipper\n";
 
   if(TYPE != TYPE_MATRIX_BASE && TYPE != TYPE_INCLUSION_BASE){
     fprintf(stderr, fmt_mk_dimers_with_zipper, __func__);
@@ -461,18 +463,30 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
   }
 
   while(zipper_runs != 0){
-    // Select type-sphere object as the starting point for zipper
+    // Select a valid type-sphere object as the starting point for zipper
+    zip_init_sph = -1;
     for(i=0; i<md->Nsph; i++){
-      if(sph[i].type == TYPE_sphere){
+      if(sph[i].type == TYPE_sphere && sph[i].type_locked == 0){
         zip_init_sph = i;
         break;
       }
     }
 
+    // Do not start zipper when no valid staring point found
+    if(zip_init_sph == -1){
+      fprintf(stdout, fmt_no_valid_startpoint);
+      break;
+    }
+
     // Start zipper from selected sphere
     fprintf(stdout,"  (%d)", zipper_runs);
-    fprintf(stdout, fmt_ziper_run, zip_init_sph,
-        zipper( *md, dim, sph, zip_init_sph, lazy, TYPE));
+    zipper_steps_passed = zipper( *md, dim, sph, zip_init_sph, lazy, TYPE);
+    // Terminate if zipper failed
+    if(zipper_steps_passed == EXIT_FAILURE){
+      fprintf(stderr, fmt_internal_call_failed, __func__);
+      return EXIT_FAILURE;
+    }
+    fprintf(stdout, fmt_ziper_run, zip_init_sph, zipper_steps_passed);
     zipper_runs--;
   }
 
@@ -556,6 +570,7 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
     " [%s] WRN: Unable to close a zipper run."
     " Probably no available spheres left\n";
   const char *fmt_brake_zipper_at = " [%s] Braking cycle at sphere id %d\n";
+  const char *fmt_invalid_id = " [%s] ERR: invalid ID (%d) at input\n";
   const int TYPE_BASE = TYPE;
   const int TYPE_BASE_FORBIDDEN = fabs(TYPE - TYPE_INCLUSION_BASE);
   // local redefinition of TYPE* variables basen on whether matix or inclusion
@@ -567,9 +582,15 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
 
   const unsigned short nseek_limit = 100;
   int i=0, nseek=0, step=0, s0, s1;
-  int sngb_id, sngb_type, rand_ngb, valid_ngb, next_s_id;
+  int sngb_id, sngb_type, sngb_type_lock, rand_ngb, valid_ngb, next_s_id;
   int d_id, dngb_id;
   int allow_tp_sph=0;
+
+  // Check input parameters to avoid reading from outside the array
+  if(s_id < 0 || s_id >= md.Nsph){
+    fprintf(stderr, fmt_invalid_id, __func__, s_id);
+    return EXIT_FAILURE;
+  }
 
   if(sph[s_id].type == TYPE_sphere_dimer){
     // Get the index of dimer for type-sphere-dimer object and id's of both
@@ -613,11 +634,12 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
       // Get neighbor id and type
       sngb_id = sph[s_id].ngb[rand_ngb];
       sngb_type = sph[sngb_id].type;
+      sngb_type_lock = sph[sngb_id].type_locked;
 
       // If enough steps passed OR if type-sphere-dimer is NOT on the list,
       // allow type-sphere selection
       allow_tp_sph = (
-        (sngb_type == TYPE_sphere) &&
+        (sngb_type == TYPE_sphere) && (sngb_type_lock == 0) &&
         ((step > workload) || (nseek > nseek_limit)) ) ? 1 : 0;
 
       // Select type-sphere-dimer or, if enough steps passed allow regular
