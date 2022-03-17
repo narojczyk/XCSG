@@ -35,7 +35,15 @@ int main(int argc, char *argv[])
 {
   FILE *f = NULL;
   CONFIG cfg;
-  MODEL mdl;
+  MODEL mdl = {
+      .Nsph = 0,
+      .Ndim = 0,
+      .mtrx_sph = 0,
+      .mtrx_dim = 0,
+      .incl_sph = 0,
+      .incl_dim = 0,
+      .box = {zero, zero, zero}
+    };
 
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
@@ -188,23 +196,27 @@ int main(int argc, char *argv[])
       }
     }
 
+    // Check the number of the respective types of particles
+    if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
+      return EXIT_FAILURE;
+    }
+    // Display current statistics
+    show_particle_stats(mdl,cfg);
+
     // Create dimers inside the inclusions
     // NOTE: BUG (INCDMRFLOOD):
     // Whole inclusion will be converted into dimers (regardless of individual
     // inclusions' settings)
     if(insert_inclusion_dimers){
-//       introduce_random_dimers(dimers, spheres, mdl, TYPE_INCLUSION_SPHERE,
-//                               TYPE_INCLUSION_DIMER);
-      introduce_dimers_by_zipper(dimers, spheres, mdl, TYPE_INCLUSION_BASE);
-    }
+      // Connect spheres in radom pairs ...
+      introduce_random_dimers(dimers, spheres, &mdl, TYPE_INCLUSION_SPHERE,
+                              TYPE_INCLUSION_DIMER);
+      // ... and use zipper to finish the job if need be.
+      introduce_dimers_by_zipper(dimers, spheres, &mdl, TYPE_INCLUSION_BASE);
 
-    // Check the number of different spheres
-    if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
-      return EXIT_FAILURE;
+      // Display current statistics
+      show_particle_stats(mdl,cfg);
     }
-
-    // Display current statistics
-    show_particle_stats(mdl,cfg);
 
     // Create dimers in the matrix
     if(cfg.mk_dimers == 1){
@@ -212,10 +224,9 @@ int main(int argc, char *argv[])
       if(mdl.mtrx_sph > 1){
         // Randomly (where possible) connect neighbouring spheres into dimers.
         // In critical cases start with spheres with fewest possible connections.
-        introduce_random_dimers(dimers, spheres, mdl, TYPE_SPHERE, TYPE_DIMER);
+        introduce_random_dimers(dimers, spheres, &mdl, TYPE_SPHERE, TYPE_DIMER);
 
-        if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE
-          || count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
+        if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE){
           return EXIT_FAILURE;
         }
 
@@ -226,10 +237,9 @@ int main(int argc, char *argv[])
       // Inserting dimers - Method #2
       if(mdl.mtrx_sph > 1){
         // Eliminate remaining spheres (if necesarry) using zipper
-        introduce_dimers_by_zipper(dimers, spheres, mdl, TYPE_MATRIX_BASE);
+        introduce_dimers_by_zipper(dimers, spheres, &mdl, TYPE_MATRIX_BASE);
 
-        if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE
-          || count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
+        if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE){
           return EXIT_FAILURE;
         }
 

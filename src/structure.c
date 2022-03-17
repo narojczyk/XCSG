@@ -371,25 +371,26 @@ static void update_dimer_type(DIM3D *dim, SPH *sph, int type, double sph_d){
  * introduce_random_dimers()
  * Randomly (where possible) connect neighbouring spheres of type_src into
  * dimers. In critical cases start with spheres with fewest possible
- * connections.
+ * connections. NOTE: make the function return success or failure code.
  */
-void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL md, int type_src,
+void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
                              int type_tgt){
   int s_id, s_ngb_id, s_ngb_qty;
+  int nsph = md->Nsph;
   const char *fmt_mk_dimers_at_random =
     "\n Randomly join type-%d spheres into dimers\n";
 
   fprintf(stdout, fmt_mk_dimers_at_random, type_src);
   do{
     // Find a type_src sphere with the lowes count of chanses to form a dimer
-    s_id = find_critical_sphere(sph, type_src, md.Nsph);
+    s_id = find_critical_sphere(sph, type_src, nsph);
     s_ngb_qty =
-      count_typeX_sp_neighbours(sph, type_src, s_id, md.Nsph);
+      count_typeX_sp_neighbours(sph, type_src, s_id, nsph);
     // If the possibilities are high enough, select sphere randomly
     if(s_ngb_qty >= 5){
-      s_id = draw_sphere_typeX(sph, type_src, md.Nsph);
+      s_id = draw_sphere_typeX(sph, type_src, nsph);
       s_ngb_qty =
-        count_typeX_sp_neighbours(sph, type_src, s_id, md.Nsph);
+        count_typeX_sp_neighbours(sph, type_src, s_id, nsph);
     }
 
     // Randomly select neighbour of s_id
@@ -397,11 +398,16 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL md, int type_src,
 
     // Create a valid dimer from the pair of spheres
     if( s_id != -1 && s_ngb_id != -1){
-      make_dimer(dim, sph, md, s_id, s_ngb_id, type_tgt);
+      make_dimer(dim, sph, *md, s_id, s_ngb_id, type_tgt);
       // Update free spheres count
-      md.mtrx_sph -= 2;
+      md->mtrx_sph -= 2;
     }
   }while(s_ngb_qty > 0);
+
+  if(count_particles_by_type(md, sph, dim) == EXIT_FAILURE){
+    fprintf(stderr, fmt_internal_call_failed, __func__);
+//     return EXIT_FAILURE;
+  }
 }
 
 /*
@@ -410,7 +416,7 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL md, int type_src,
  * is used to restrict zipper to run on matrix (TYPE_MATRIX_BASE) or inclusion
  * (TYPE_INCLUSION_BASE) particles.
  */
-int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL md, int TYPE){
+int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
   extern const int lazy;
   // local redefinition of TYPE* variables basen on whether matix or inclusion
   // particles are to be considered
@@ -426,8 +432,6 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL md, int TYPE){
   const char *fmt_illegal_type =
     " [%s] ERR: Not recognized value of TYPE (%d)\n";
 
-  fprintf(stdout, fmt_mk_dimers_with_zipper);
-
   if(TYPE != TYPE_MATRIX_BASE && TYPE != TYPE_INCLUSION_BASE){
     fprintf(stderr, fmt_mk_dimers_with_zipper, __func__);
     fprintf(stderr, fmt_illegal_type, __func__, TYPE);
@@ -435,12 +439,22 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL md, int TYPE){
   }
 
   // Calculate the number of zipper runs to perform
-  zipper_runs = (md.mtrx_sph - (md.mtrx_sph & 1))/2;
-  fprintf(stdout, fmt_required_zipper_runs, zipper_runs);
+  // NOTE: This condition only holds while there are two base types
+  // of particles: matrix and inclusion
+  zipper_runs = (TYPE == TYPE_MATRIX_BASE)
+    ? (md->mtrx_sph - (md->mtrx_sph & 1))/2
+    : (md->incl_sph - (md->incl_sph & 1))/2;
+
+  if(zipper_runs != 0){
+    fprintf(stdout, fmt_mk_dimers_with_zipper);
+    fprintf(stdout, fmt_required_zipper_runs, zipper_runs);
+  }else{
+    return EXIT_SUCCESS;
+  }
 
   while(zipper_runs != 0){
     // Select type-sphere object as the starting point for zipper
-    for(i=0; i<md.Nsph; i++){
+    for(i=0; i<md->Nsph; i++){
       if(sph[i].type == TYPE_sphere){
         zip_init_sph = i;
         break;
@@ -450,8 +464,13 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL md, int TYPE){
     // Start zipper from selected sphere
     fprintf(stdout,"  (%d)", zipper_runs);
     fprintf(stdout, fmt_ziper_run, zip_init_sph,
-        zipper(md, dim, sph, zip_init_sph, lazy, TYPE));
+        zipper( *md, dim, sph, zip_init_sph, lazy, TYPE));
     zipper_runs--;
+  }
+
+  if(count_particles_by_type(md, sph, dim) == EXIT_FAILURE){
+    fprintf(stderr, fmt_internal_call_failed, __func__);
+    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
