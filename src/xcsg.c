@@ -209,8 +209,8 @@ int main(int argc, char *argv[])
     // inclusions' settings)
     if(insert_inclusion_dimers){
       // Connect spheres in radom pairs ...
-      introduce_random_dimers(dimers, spheres, &mdl, TYPE_INCLUSION_SPHERE,
-                              TYPE_INCLUSION_DIMER);
+//       introduce_random_dimers(dimers, spheres, &mdl, TYPE_INCLUSION_SPHERE,
+//                               TYPE_INCLUSION_DIMER);
       // ... and use zipper to finish the job if need be.
       introduce_dimers_by_zipper(dimers, spheres, &mdl, TYPE_INCLUSION_BASE);
 

@@ -396,8 +396,7 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
     // If the possibilities are high enough, select sphere randomly
     if(s_ngb_qty >= 5){
       s_id = draw_sphere_typeX(sph, type_src, nsph);
-      s_ngb_qty =
-        count_typeX_sp_neighbours(sph, type_src, s_id, nsph);
+      s_ngb_qty = count_typeX_sp_neighbours(sph, type_src, s_id, nsph);
     }
 
     // Randomly select neighbour of s_id
@@ -546,10 +545,15 @@ int refine_dimer_distribution(DIM3D *dim, SPH *sph, MODEL md, int od[6]){
  * Run zipper on the structure, starting from sphere sph_ind, and continue
  * untill another free sphere is found.
  */
-// (DIM3D *dim, SPH *sph, double box[3], int nd, int sph_ind, int ms)
 static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
                   int TYPE)
 {
+  extern const int diligent;
+  extern const char *fmt_watchdog_activated;
+  const char *fmt_ziper_failed =
+    " [%s] WRN: Unable to close a zipper run."
+    " Probably no available spheres left\n";
+  const char *fmt_brake_zipper_at = " [%s] Braking cycle at sphere id %d\n";
   const int TYPE_BASE = TYPE;
   const int TYPE_BASE_FORBIDDEN = fabs(TYPE - TYPE_INCLUSION_BASE);
   // local redefinition of TYPE* variables basen on whether matix or inclusion
@@ -560,19 +564,22 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
   const int TYPE_forbidden_sphere = TYPE_BASE_FORBIDDEN + TYPE_SPHERE;
 
   const unsigned short nseek_limit = 100;
-  int i=0, nseek=0, step=0;
+  int i=0, nseek=0, step=0, s0, s1;
   int sngb_id, sngb_type, rand_ngb, valid_ngb, next_s_id;
   int d_id, dngb_id;
   int allow_tp_sph=0;
 
   if(sph[s_id].type == TYPE_sphere_dimer){
-    // Get the index of dimer for type-sphere-dimer object
+    // Get the index of dimer for type-sphere-dimer object and id's of both
+    // spheres NOTE: one of them is s_id, but who cares.
     d_id = sph[s_id].dim_ind;
+    s0 = dim[d_id].sph_ind[0];
+    s1 = dim[d_id].sph_ind[1];
     // Flag its spheres as type-spheres and brake dimer
-    sph[ dim[d_id].sph_ind[0] ].type = TYPE_sphere;
-    sph[ dim[d_id].sph_ind[1] ].type = TYPE_sphere;
-    sph[ dim[d_id].sph_ind[0] ].dim_ind = TYPE_INVALID;
-    sph[ dim[d_id].sph_ind[1] ].dim_ind = TYPE_INVALID;
+    sph[s0].type = TYPE_sphere;
+    sph[s1].type = TYPE_sphere;
+    sph[s0].dim_ind = TYPE_INVALID;
+    sph[s1].dim_ind = TYPE_INVALID;
 
     dim[d_id].type = TYPE_INVALID;
     dim[d_id].sph_ind[0] = TYPE_INVALID;
@@ -585,6 +592,15 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
 
   // Loop until the two spheres meet
   while(1){
+    // Master Watchdog on zipper steps, to brake infinite loop when zipper ran
+    // on single free sphere in the system.
+    if(step > 10 * diligent){
+      fprintf(stdout, fmt_ziper_failed , __func__);
+      fprintf(stdout, fmt_brake_zipper_at, __func__, s_id);
+      fprintf(stderr, fmt_watchdog_activated, __func__);
+      break;
+    }
+
     // Select random neighbor of s_id
     nseek=0;
     do{
