@@ -4,12 +4,12 @@
 char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 char* buildAt = "decker";
-char* build = "czw, 17 mar 2022, 23:21:21 CET";
+char* build = "pią, 18 mar 2022, 18:39:54 CET";
 char* code_version = "1.2";
-char* code_comit_id = "6f14e5ee2f9f932224fc553669862e7a9013c76a";
-char* code_comit_date = "2022-03-17 23:21:17 +0100";
+char* code_comit_id = "fd565db4c0f6361d967126810472d66fa34c1402";
+char* code_comit_date = "2022-03-17 23:31:19 +0100";
 
-char* xcsg_c_SHA1 = "5ff254626502781941fc11406c9d32d4415bd4fe";
+char* xcsg_c_SHA1 = "7863a175859bea97240f51c37213f9dd813a07c0";
 char* globals_h_SHA1 = "742041e54525f7e7deedb452a9ad79c9eed16073";
 char* mt19937_h_SHA1 = "08961c2d0bfffac380ab1ee575c0e530c95d762d";
 char* mt19937_64_h_SHA1 = "b442092d46c546522b41f0e9995901f78d6d1d6e";
@@ -18,7 +18,7 @@ char* data_h_SHA1 = "fb5bcf6d6832262e7eb83cbaad6d85324b18cedf";
 char* algebra_h_SHA1 = "7959fa3309d72265076b1cab0c289dface12a19f";
 char* algebra_c_SHA1 = "76ce324aaeecb2a913270acf6c9fbd72d2092b8e";
 char* initials_h_SHA1 = "3d92ad720398d4189bbd5e196cdae130315a1f75";
-char* initials_c_SHA1 = "a9988d72a57f8e0dbca84de8f66a3c9df680e60d";
+char* initials_c_SHA1 = "cf9257b956dee006c0748cb56dbf60ef11d7e579";
 char* io_h_SHA1 = "967bd7685f85f1a4c850fd62f839fd0096f500d1";
 char* io_c_SHA1 = "540672b536465a8c411317b0f6351a22b9f8e38a";
 char* structure_h_SHA1 = "969b997a736af2e8abe148789c77dd3d20162fd8";

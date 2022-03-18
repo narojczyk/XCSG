@@ -74,9 +74,61 @@ void print_help(int status)
  */
 void print_info(int status)
 {
-  fprintf(stdout, "  %s usage description\n\n", prog_name);
+  const char *fmt_usage_info =
+"%s is controlled by one main config file  and two more (optional) files  with\n"
+"the description of inclusions. Running the program with -t option will generate\n"
+"all possible config file templates. Details of the setup options:\n"
+"\n\tMain configuration file\n"
+"* line 1: version compliance signature (current sig. written by default),\n"
+"* line 2: random number generator seed (long integer),\n"
+"* line 3: number of unit cells in each direction (three integers),\n"
+"* line 4: symmetry of the output structure (string) - only 'fcc' at the  moment,\n"
+"* line 5: number of the first and last of generated  structures (two  integers),\n"
+"* line 6,7: channel and  layer  inclusion, respectively.  Integer string integer\n"
+"  [0|1] flag  to insert  inclusion,  name  of  the file  with inclusion details,\n"
+"  integer value with the number of inclusions in said file,\n"
+"* line 8: Integer  [0|1] flag  whether to join  particles  outside the inclusion\n"
+"  into dimers and arrange them into a disordered (degenerate crystal) phase,\n"
+"* line 9: 'Rough'  inclusions - concerns  inclusions  inserted into DC phase and\n"
+"  filled with molecules.  This flag [0|1] has no effect in  monomer systems, but\n"
+"  in molecular systems, it toggles whether the molecules that cross the boundary\n"
+"  of the inclusion are broken (0) or added to inclusion as a whole (1).\n"
+"Values must be entered after the colon ':', first 26 characters  in each line is\n"
+"omitted.\n"
+"\n\tInclusion configuration files\n"
+"The first line is a header and is omited. The generated template contains header\n"
+"line describing each field(s). They are: inclusion offset (three floats), inclu-\n"
+"sion orientation vector (three floats), inclusion size (one float),  diameter of\n"
+"spheres forming this inclusion, and an integer value indicating  targeted parti-\n"
+"cles, that this inclusion should be  filled with (e.g. 1 - spheres, 2 - dimers).\n"
+"By default, an inclusion is pinned to the atom with the smallest coordinates (at\n"
+"one of the corners of the system). Inclusion offset is a vector  translating the\n"
+"point of the axis (channel) or the position of the  layer in  the  crystal.  The\n"
+"orientation vector is  the vector along  the axis (channel) or the normal to the\n"
+"plane (layer).\n"
+"\n\tOutput files\n"
+"The program outputs structure in at least two files:\n"
+"\ta) s3d0_summary_XXXXX.ini\n"
+"\tb) s3d1_monomers_XXXXX.csv\n"
+"\tc) s3d2_dimers_XXXXX.csv (if and dimers are present)\n"
+"In a) the statistics of different types of particles and parameters  of the  box\n"
+"matrix are given. In b) spheres data is saved. The columns  represent  (resp.):\n"
+"sphere id, sphere type (depending if it forms a molecule or belongs to an inclu-\n"
+"sion), sphere  position (three  floats), sphere diameter, twelve integer indica-\n"
+"ting id of the nearest neighbours,and three integers being indices of the sphere\n"
+"position in the crystalline  structure.  The positions  correspond to  the close\n"
+"packing of monodisperse spheres of the diameter equal to one. In c)  the columns\n"
+"represent: id of the dimer, id of its type, position  of  the  centre of  dimers\n"
+"mass (three floats), dimer orientation (unit vector - three floats),  and  dimer\n"
+"length along with the two integer id's of spheres that create the  dimer.  Other\n"
+"files that contain structure data in formats that can be easily fed to graphical\n"
+"programs are also generated. At the moment this includes PoV-RAY scripts as well\n"
+"as the not-generally available OpenGL viewer used by the authors of this code.\n";
 
-  fprintf(stdout, "  will be provided here eventually :)\n");
+
+  fprintf(stdout, "\tUsing %s\n\n", prog_name);
+
+  fprintf(stdout, fmt_usage_info, prog_name);
 
   exit(status);
 }
@@ -225,6 +277,7 @@ void generate_template_config(int status)
   fprintf(f, "Channels (bool file qty) : INT STRING INT\n");
   fprintf(f, "Slits    (bool file qty) : INT STRING INT\n");
   fprintf(f, "Insert dimers DC  (bool) : INT\n");
+  fprintf(f, "Rough inclusions (bool)  : INT\n");
 
   gen_template_confirmation(fclose(f), "Main  program", template_cfg);
 
