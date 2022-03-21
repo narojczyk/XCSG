@@ -14,7 +14,7 @@
 // #define DEBUG_MODE
 
 // Uncoment the following to enable verbose output
-#define VERBOSE_MDOE
+// #define VERBOSE_MDOE
 
 /* 
  * Pseudo random number generator section

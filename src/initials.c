@@ -140,9 +140,12 @@ void print_info(int status)
  */
 void print_version(int status)
 {
-  const char *fmt_version = "  %s version %s\n";
-  const char *fmt_comit_id = "  git comit ID: %s\n";
-  const char *fmt_comit_date = "  committed on: %s\n\n";
+  const char *fmt_version = "\n  %s version %s\n";
+  const char *fmt_commit_id = "  git commit ID: %s on branch: %s\n";
+  const char *fmt_commit_date = "  committed on: %s\n";
+  const char *fmt_cc_vendor = "  build with: %s\n";
+  const char *fmt_cc_version = "  CC version: %s\n";
+  const char *fmt_cc_flags = "  CC flags: %s\n\n";
   const char *fmt_sha1 = "  %s  %s\n";
   const char *fmt_greet   = "  %-12s\t%s\n";
   const char *fmt_bullets = "  * %-34s: ";
@@ -180,9 +183,13 @@ void print_version(int status)
   #endif
 
   fprintf(stdout, "  X-mer Crystal Structure Generator (XCSG)\n");
-  fprintf(stdout, fmt_version,  prog_name, code_version);
-  fprintf(stdout, fmt_comit_id,  code_comit_id);
-  fprintf(stdout, fmt_comit_date,  code_comit_date);
+  fprintf(stdout, fmt_version,     prog_name, code_version);
+  fprintf(stdout, fmt_commit_id,   code_commit_id, code_branch_name);
+  fprintf(stdout, fmt_commit_date, code_commit_date);
+  fprintf(stdout, fmt_cc_vendor,   cc_vendor);
+  fprintf(stdout, fmt_cc_version,  cc_version);
+  fprintf(stdout, fmt_cc_flags,    cc_flags);
+
   print_greetings();
 
   fprintf(stdout, fmt_greet, "Created by:", author0);
@@ -209,7 +216,7 @@ void print_version(int status)
   fprintf(stdout, "\n");
 
   fprintf(stdout, "  Version control:\t  sources checksum's (SHA1)\n");
-  fprintf(stdout, fmt_sha1, xcsg_c_SHA1,         "xcsg.c");
+  fprintf(stdout, fmt_sha1, xcsg_c_SHA1,        "xcsg.c");
   fprintf(stdout, fmt_sha1, config_h_SHA1,      "config.h");
   fprintf(stdout, fmt_sha1, data_h_SHA1,        "data.h");
   fprintf(stdout, fmt_sha1, globals_h_SHA1,     "globals.h");

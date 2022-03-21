@@ -1,32 +1,36 @@
 #ifndef _CHECKSUMS_H
 #define _CHECKSUMS_H
 
-char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
-char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
-char* buildAt = "decker";
-char* build = "pią, 18 mar 2022, 18:39:54 CET";
-char* code_version = "1.2";
-char* code_comit_id = "fd565db4c0f6361d967126810472d66fa34c1402";
-char* code_comit_date = "2022-03-17 23:31:19 +0100";
+const char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
+const char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
+const char* buildAt = "decker";
+const char* build = "pon, 21 mar 2022, 16:40:12 CET";
+const char* code_version = "1.4.0";
+const char* code_commit_id = "ed291f3130ed48e8c431081a19559f7263395358";
+const char* code_branch_name = "master";
+const char* code_commit_date = "2022-03-18 18:42:44 +0100";
+const char* cc_vendor = "gcc";
+const char* cc_version = "8.3.0 (Debian 8.3.0-6) ";
+const char* cc_flags = "-std=gnu99 -Wall -O2 -march=native -mtune=native";
 
-char* xcsg_c_SHA1 = "7863a175859bea97240f51c37213f9dd813a07c0";
-char* globals_h_SHA1 = "742041e54525f7e7deedb452a9ad79c9eed16073";
-char* mt19937_h_SHA1 = "08961c2d0bfffac380ab1ee575c0e530c95d762d";
-char* mt19937_64_h_SHA1 = "b442092d46c546522b41f0e9995901f78d6d1d6e";
-char* config_h_SHA1 = "fa1ea207d355bd53a02c0051f512ce059e193f96";
-char* data_h_SHA1 = "fb5bcf6d6832262e7eb83cbaad6d85324b18cedf";
-char* algebra_h_SHA1 = "7959fa3309d72265076b1cab0c289dface12a19f";
-char* algebra_c_SHA1 = "76ce324aaeecb2a913270acf6c9fbd72d2092b8e";
-char* initials_h_SHA1 = "3d92ad720398d4189bbd5e196cdae130315a1f75";
-char* initials_c_SHA1 = "cf9257b956dee006c0748cb56dbf60ef11d7e579";
-char* io_h_SHA1 = "967bd7685f85f1a4c850fd62f839fd0096f500d1";
-char* io_c_SHA1 = "540672b536465a8c411317b0f6351a22b9f8e38a";
-char* structure_h_SHA1 = "969b997a736af2e8abe148789c77dd3d20162fd8";
-char* structure_c_SHA1 = "85f2b18f91768b5825f1cb96ef2892398399da6d";
-char* terminators_h_SHA1 = "5a77a00d7fc60f92d2302c9e8da47a7883e5e1a2";
-char* terminators_c_SHA1 = "307d7054b368f2902b959225ffaf0214de23f003";
-char* utils_h_SHA1 = "79fbf88b46913c920502c26ab72779b86d1b5fbd";
-char* utils_c_SHA1 = "1849c4c5c70444b59c6107363d8d07b6016d2781";
+const char* xcsg_c_SHA1 = "7863a175859bea97240f51c37213f9dd813a07c0";
+const char* globals_h_SHA1 = "742041e54525f7e7deedb452a9ad79c9eed16073";
+const char* mt19937_h_SHA1 = "08961c2d0bfffac380ab1ee575c0e530c95d762d";
+const char* mt19937_64_h_SHA1 = "b442092d46c546522b41f0e9995901f78d6d1d6e";
+const char* config_h_SHA1 = "97d550656d9a46d3e209d88e23dd98bce8474882";
+const char* data_h_SHA1 = "fb5bcf6d6832262e7eb83cbaad6d85324b18cedf";
+const char* algebra_h_SHA1 = "7959fa3309d72265076b1cab0c289dface12a19f";
+const char* algebra_c_SHA1 = "76ce324aaeecb2a913270acf6c9fbd72d2092b8e";
+const char* initials_h_SHA1 = "3d92ad720398d4189bbd5e196cdae130315a1f75";
+const char* initials_c_SHA1 = "79ddfdc410d49f147927a15eacdce2ed5df3cc1b";
+const char* io_h_SHA1 = "967bd7685f85f1a4c850fd62f839fd0096f500d1";
+const char* io_c_SHA1 = "540672b536465a8c411317b0f6351a22b9f8e38a";
+const char* structure_h_SHA1 = "969b997a736af2e8abe148789c77dd3d20162fd8";
+const char* structure_c_SHA1 = "85f2b18f91768b5825f1cb96ef2892398399da6d";
+const char* terminators_h_SHA1 = "5a77a00d7fc60f92d2302c9e8da47a7883e5e1a2";
+const char* terminators_c_SHA1 = "307d7054b368f2902b959225ffaf0214de23f003";
+const char* utils_h_SHA1 = "79fbf88b46913c920502c26ab72779b86d1b5fbd";
+const char* utils_c_SHA1 = "1849c4c5c70444b59c6107363d8d07b6016d2781";
 
 #endif
 
