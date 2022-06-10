@@ -438,6 +438,8 @@ int parse_config(FILE *file, CONFIG *cfg)
       fprintf(stderr, fmt_legacy_config, __func__);
       fseek(file, 0, SEEK_SET);
       parse_config_legacy(file, cfg); // fclose() inside
+      // assume f.c.c. symmetry when parsing config in legacy format
+      sprintf(cfg->symmetry,"fcc");
     }
   }else{
     fprintf(stderr, fmt_null_ptr, __func__);
