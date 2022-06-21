@@ -491,6 +491,9 @@ int parse_config_legacy(FILE *file, CONFIG *cfg)
     fscanf(file, fmt_d,  &cfg->num_slits);
     fscanf(file, fmt_s,   cfg->cfg_slits);
 
+		// Setting parameters to comply with the updated standards
+    cfg->rough_inclusions=0;
+
     // Parameters sanity check
     if(cfg->last < cfg->first || cfg->first < 0 || cfg->last < 0){
       fprintf(stderr, fmt_bad_range_values, __func__);
