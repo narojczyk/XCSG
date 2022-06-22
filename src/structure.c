@@ -384,12 +384,13 @@ static void update_dimer_type(DIM3D *dim, SPH *sph, int type, double sph_d){
  */
 void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
                              int type_tgt){
-  int s_id, s_ngb_id, s_ngb_qty;
+  int s_id=-1, s_ngb_id=-1, s_ngb_qty=0;
   int nsph = md->Nsph;
   const char *fmt_mk_dimers_at_random =
     "\n Randomly join type-%d spheres into dimers\n";
 
   fprintf(stdout, fmt_mk_dimers_at_random, type_src);
+
   do{
     // Find a type_src sphere with the lowes count of chanses to form a dimer
     s_id = find_critical_sphere(sph, type_src, nsph);
@@ -401,20 +402,20 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
       s_ngb_qty = count_typeX_sp_neighbours(sph, type_src, s_id, nsph);
     }
 
-    // Randomly select neighbour of s_id
-    s_ngb_id = draw_ngb_sphere_typeX(sph, type_src, s_id);
-
+    // Randomly select neighbour of s_id only when valid index found
+    if(s_id >= 0 && s_id < nsph){
+      s_ngb_id = draw_ngb_sphere_typeX(sph, type_src, s_id);
+    }
     // Create a valid dimer from the pair of spheres
     if( s_id != -1 && s_ngb_id != -1){
       make_dimer(dim, sph, *md, s_id, s_ngb_id, type_tgt);
       // Update free spheres count
       md->mtrx_sph -= 2;
     }
-  }while(s_ngb_qty > 0);
+  }while(s_ngb_qty > 0 && md->mtrx_sph > 0);
 
   if(count_particles_by_type(md, sph, dim) == EXIT_FAILURE){
     fprintf(stderr, fmt_internal_call_failed, __func__);
-//     return EXIT_FAILURE;
   }
 }
 

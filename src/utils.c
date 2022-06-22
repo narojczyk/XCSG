@@ -74,8 +74,8 @@ int count_typeX_sp_neighbours(SPH *sph, int type_x, int id, int ns)
   int ic = 0, i, i_ngb;
 
   // Check if id is valid array index
-  if(id < 0 && id >= ns){
-    return -1;
+  if(id < 0 || id >= ns){
+    return 0;
   }
 
   // count possible neighbours to connect.
@@ -189,7 +189,7 @@ int find_critical_sphere(SPH *sph, int type_x, int ns)
       ngb_count = count_typeX_sp_neighbours(sph, type_x, i, ns);
 
       // remember 'i' index if calculated ngb_count is minimal
-      if(ngb_count > 0 && ngb_count < min_ngb_count){
+      if(ngb_count > 0 && ngb_count <=min_ngb_count){
         min_ngb_count = ngb_count;
         crit_fs = i;
       }

@@ -3,14 +3,14 @@
 
 const char* author0 = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
 const char* builder = "Jakub W. Narojczyk <narojczyk@ifmpan.poznan.pl>";
-const char* buildAt = "decker";
-const char* build = "wto, 21 cze 2022, 15:26:23 CEST";
-const char* code_version = "1.4.2";
-const char* code_commit_id = "d0b34bf856e6d4abf25c72c5a879865f5b0ca7ee";
+const char* buildAt = "e0182";
+const char* build = "śro, 22 cze 2022, 14:09:55 CEST";
+const char* code_version = "1.4.3";
+const char* code_commit_id = "e8911612b5e37fec61e12dbcb6a600ae57eeeaee";
 const char* code_branch_name = "master";
-const char* code_commit_date = "2022-06-10 14:34:50 +0200";
+const char* code_commit_date = "2022-06-21 15:28:50 +0200";
 const char* cc_vendor = "gcc";
-const char* cc_version = "8.3.0 (Debian 8.3.0-6) ";
+const char* cc_version = "9.3.0 (GCC) ";
 const char* cc_flags = "-std=gnu99 -Wall -O2 -march=native -mtune=native";
 
 const char* xcsg_c_SHA1 = "7863a175859bea97240f51c37213f9dd813a07c0";
@@ -26,11 +26,11 @@ const char* initials_c_SHA1 = "e01fa56ba0ebb401c20481048befddf6e84d6027";
 const char* io_h_SHA1 = "967bd7685f85f1a4c850fd62f839fd0096f500d1";
 const char* io_c_SHA1 = "540672b536465a8c411317b0f6351a22b9f8e38a";
 const char* structure_h_SHA1 = "969b997a736af2e8abe148789c77dd3d20162fd8";
-const char* structure_c_SHA1 = "85f2b18f91768b5825f1cb96ef2892398399da6d";
+const char* structure_c_SHA1 = "2c2e69216335b66c9a13368fd9e74c9414ebb3c6";
 const char* terminators_h_SHA1 = "5a77a00d7fc60f92d2302c9e8da47a7883e5e1a2";
 const char* terminators_c_SHA1 = "307d7054b368f2902b959225ffaf0214de23f003";
 const char* utils_h_SHA1 = "79fbf88b46913c920502c26ab72779b86d1b5fbd";
-const char* utils_c_SHA1 = "1849c4c5c70444b59c6107363d8d07b6016d2781";
+const char* utils_c_SHA1 = "843a30b79f715d7dba7e325a6373bfa418d3cc3e";
 
 #endif
 
