@@ -926,6 +926,7 @@ static int validate_distrib(int od[6], int Ndim, int flip)
   int dimer_per_dir;
   int exit_code = 1; // Assume the structure is good ;)
   extern const int display_interval;
+  extern const int min_flips;
   extern const int max_flips;
 
   // Set exit code criteria depending on the number of dimers in the system
@@ -943,6 +944,10 @@ static int validate_distrib(int od[6], int Ndim, int flip)
     }
     fprintf(stdout,"cond.: <= %d\n",dimer_per_dir);
   }
+
+  // Force a minimum number of flips to be made
+  if(flip < min_flips) exit_code = 0 ;
+
   return exit_code;
 }
 

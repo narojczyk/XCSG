@@ -30,8 +30,9 @@ const int lazy = 10;
 const int diligent = 1000000;
 
 // DC structure
-const int run_zipper = 1000000;
+const int run_zipper = 500000;
 const int display_interval = 1000000;
+const int min_flips =   5000000;
 const int max_flips = 100000000;
 //  * optimise DC structure if this % of dimers is present
 const double minimal_dimer_qty = 2e-1;
