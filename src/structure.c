@@ -254,53 +254,43 @@ void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
  * NOTE: periodic boundaries are not taken into account here
  */
 void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
-  int i,j,k;
+  POINT p[7];
+  DIM3D *d = NULL;
+  SPH *s = NULL;
+  int i, j;
   int type_lock = (inc->tgt_Nmer == 1) ? 1 : 0;
-  double cd[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
-  double p[7][3];
+  double n[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
   double dist;
 
   // Transform the plane vector to unit vector;
-  vnorm(cd);
+  vnorm(n);
 
   // Loop over all spheres in the structure
   for(i=0; i<md.Nsph; i++){
+    s = &sph[i];
+
     // Skip spheres that already belong to any inclusion
-    if(sph[i].type < TYPE_INCLUSION_BASE){
+    if((*s).type < TYPE_INCLUSION_BASE){
       // Get the i'th sphere position relative to the plane inside periodic md.box
-      p[0][0] = sph[i].r[0] - inc->os[0];
-      p[0][1] = sph[i].r[1] - inc->os[1];
-      p[0][2] = sph[i].r[2] - inc->os[2];
+      p[0].c[0] = (*s).r[0] - inc->os[0];
+      p[0].c[1] = (*s).r[1] - inc->os[1];
+      p[0].c[2] = (*s).r[2] - inc->os[2];
 
       // ... and in the six of the sorrounding images
-      p[1][0] = p[0][0] + md.box[0];
-      p[1][1] = p[0][1];
-      p[1][2] = p[0][2];
-
-      p[2][0] = p[0][0];
-      p[2][1] = p[0][1] + md.box[1];
-      p[2][2] = p[0][2];
-
-      p[3][0] = p[0][0];
-      p[3][1] = p[0][1];
-      p[3][2] = p[0][2] + md.box[2];
-
-      p[4][0] = p[0][0] - md.box[0];
-      p[4][1] = p[0][1];
-      p[4][2] = p[0][2];
-
-      p[5][0] = p[0][0];
-      p[5][1] = p[0][1] - md.box[1];
-      p[5][2] = p[0][2];
-
-      p[6][0] = p[0][0];
-      p[6][1] = p[0][1];
-      p[6][2] = p[0][2] - md.box[2];
+      for(j=1; j<7; j++){
+        p[j] = p[0];
+      }
+      p[1].c[0] += md.box[0];
+      p[2].c[1] += md.box[1];
+      p[3].c[2] += md.box[2];
+      p[4].c[0] -= md.box[0];
+      p[5].c[1] -= md.box[1];
+      p[6].c[2] -= md.box[2];
 
       for(j=0; j<=6; j++){
         // Calculate the dot product of the normal to the plane located at
         // axes origin and a position vector of i'th sphere
-        dist = zero - cd[0]*p[j][0] - cd[1]*p[j][1] - cd[2]*p[j][2];
+        dist = zero - n[0]*p[j].c[0] - n[1]*p[j].c[1] - n[2]*p[j].c[2];
 
         // To get the distance of a sphere's center from the plane one should
         // (in principle) divide the above by the length of the plane's normal.
@@ -310,21 +300,21 @@ void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
         // plane and continue to the next sphere
         if(fabs(dist) < inc->thickness){
           // Based on the sphere type
-          if(sph[i].type == TYPE_SPHERE){
+          if( (*s).type == TYPE_SPHERE ){
             // ... mark regular spheres as 'inclusion-spheres'
-            sph[i].type = TYPE_INCLUSION_SPHERE;
+            (*s).type = TYPE_INCLUSION_SPHERE;
             // ... and assign the respective inclusion-sphere-diameter
-            sph[i].d = inc->sph_d;
+            (*s).d = inc->sph_d;
             // set type lock flag for this inclusion
-            sph[i].type_locked = type_lock;
-          }else if (sph[i].type == TYPE_SPHERE_DIMER){
+            (*s).type_locked = type_lock;
+          }else if ( (*s).type == TYPE_SPHERE_DIMER ){
             // ... mark regular dimers as inclusion dimers only if their
             // ceters of mass are inside the slit
-            k = sph[i].dim_ind;
-            if(
-              fabs(zero - cd[0]*dim[k].R[0] - cd[1]*dim[k].R[1]
-                - cd[2]*dim[k].R[2]) < inc->thickness){
-              update_dimer_type(&dim[k], sph, TYPE_INCLUSION_SPHERE_DIMER,
+            d = &dim[(*s).dim_ind];
+            if(fabs(zero
+                - n[0] * (*d).R[0] - n[1] * (*d).R[1] - n[2] * (*d).R[2])
+                  < inc->thickness){
+              update_dimer_type(d, sph, TYPE_INCLUSION_SPHERE_DIMER,
                                 inc->sph_d);
             }
           }
