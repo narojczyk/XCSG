@@ -150,6 +150,8 @@ int main(int argc, char *argv[])
     if(set_structure(cfg, mdl, spheres) == EXIT_FAILURE){
       return EXIT_FAILURE;
     }
+    // Update model structure with position of the sphere with smallest coords
+    find_smallest_coordinates(spheres, &mdl);
 
     // Find neighbors for spheres
     if(find_ngb_spheres(spheres, mdl.Nsph, mdl.box) == EXIT_FAILURE){

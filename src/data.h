@@ -62,7 +62,12 @@ typedef struct
   int incl_sph;   // Current number of spheres forming inclusion
   int incl_dim;   // Current number of dimers forming inclusion
   double box[3];  // Size of the container for the structure
+  double lcs[3];  // Position of a sphere with smallest coordinates
 } MODEL;
+
+typedef struct{
+  double c[3];    // Coordinates of a point in 3D space (x,y,z -> 0,1,2)
+} POINT;
 
 #endif
 /* vim: set tw=80 ts=2 sw=2 et: */

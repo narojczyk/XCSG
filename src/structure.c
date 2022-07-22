@@ -36,8 +36,8 @@ static int validate_distrib(int od[6], int nd1, int step);
 static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
                   int TYPE);
 
-static double shortest_distance_to_line(MODEL md, double c[3], double r[3],
-                                        double lc[3], double cp[3]);
+static double shortest_distance_to_line(MODEL md, POINT r, POINT a, POINT b);
+static double p_AB_distance(POINT p, POINT a, POINT b);
 
 static void display_dimer_distribution(int od[6]); //(->i/o ?)
 static void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2]);
@@ -153,6 +153,37 @@ static int set_fcc(SPH *sph, int ns, int cells[3]){
   return EXIT_SUCCESS;
 }
 
+/*
+ * find_smallest_coordinates()
+ *
+ * Look for sphere with position closest to the corner of the periodic box
+ * with the lowest coordinates
+ */
+void find_smallest_coordinates(SPH *sph, MODEL *md){
+  int i;
+  double lcs[3] = {zero, zero, zero};
+  double ref[3] = {-md->box[0]/two, -md->box[1]/two, -md->box[2]/two};
+  double dist, min_dist = md->box[0]; // any relatively large number will do
+
+  for(i=0; i < md->Nsph; i++){
+    // Calculate distance (no p.b.) of a sphere from a reference point
+    dist = distance_absolute(ref, sph[i].r);
+    if(dist < min_dist){
+      // remember coordinates if they are closer to ref than the previous one
+      lcs[0] = sph[i].r[0];
+      lcs[1] = sph[i].r[1];
+      lcs[2] = sph[i].r[2];
+      // remember the new minimal distance
+      min_dist = dist;
+    }
+  }
+
+  // Store the coordinates in the MODEL structure
+  for(i=0; i<3; i++){
+    md->lcs[i] = lcs[i];
+  }
+}
+
 /* # SEC ############## INCLUSIONS ########################################## */
 
 /*
@@ -164,46 +195,32 @@ static int set_fcc(SPH *sph, int ns, int cells[3]){
  *
  */
 void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
+  POINT a, b, r;
   int i,k;
   int type_lock = (inc->tgt_Nmer == 1) ? 1 : 0;
-  double c[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
-  double llc[3]={zero,zero,zero}, ccp[3]={zero,zero,zero};
-  double /*p1[3], p2[3],*/ /*pxcd[3],*/ dist/*, dist0, dist1*/;
-  double ref[3] = {-md.box[0]/two, -md.box[1]/two, -md.box[2]/two};
-  double min_dist = md.box[0]; // any relatively large number will do
+  double n[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
+  double L = 0.85 * md.box[0]; // an arbitrary number (box/2 < L < box)
 
-  // Find coordinates of the sphere in lower-left-corner of the cube
-  for(i=0; i<md.Nsph; i++){
-    // Calculate distance (no p.b.) of a sphere from a reference point
-    dist = distance_absolute(ref, sph[i].r);
-
-    if(dist < min_dist){
-      // take the sphere coordinates if they are closer to ref than
-      // the previous one
-      llc[0] = sph[i].r[0];
-      llc[1] = sph[i].r[1];
-      llc[2] = sph[i].r[2];
-      // remember the new distance
-      min_dist = dist;
-    }
-  }
-
-  // Translate channel by specified vector
+  // Determine two points on an axis parallel to inc->nm
   for(i=0; i<3; i++){
-    llc[i] += inc->os[i];
+    // (i) coordinates of the sphere closest to ref (the vertex of the cube
+    // with the lowest coordinates), ofsetted by specified inc->os
+    a.c[i] = md.lcs[i] + inc->os[i];
+    // (ii) find the coordinates of the channel's second point
+    // by translating 'a' by 'L' in the direction of normal vector
+    b.c[i] = a.c[i] + L * n[i];
   }
 
-  // Find the coordinates of the center point on the channel axis
-  ccp[0] = llc[0] * (one - c[0]);
-  ccp[1] = llc[1] * (one - c[1]);
-  ccp[2] = llc[2] * (one - c[2]);
-
+  // Test all sphere positions against channel's axis through 'a' and 'b'
   for(i=0; i<md.Nsph; i++){
     // Skip spheres that already belong to any inclusion
     if(sph[i].type < TYPE_INCLUSION_BASE){
       // Check if the shortest distance from the sphere position 'r' to
       // the channel's axis is less than inclusion radius
-      if(shortest_distance_to_line(md, c, sph[i].r, llc, ccp) < inc->radius){
+      r.c[0] = sph[i].r[0];
+      r.c[1] = sph[i].r[1];
+      r.c[2] = sph[i].r[2];
+      if(shortest_distance_to_line(md, r, a, b) < inc->radius){
         // Based on the sphere type
         if(sph[i].type == TYPE_SPHERE){
           // ... mark regular spheres as 'inclusion-spheres'
@@ -216,8 +233,10 @@ void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
           // ... mark regular dimers as inclusion dimers only if their
           // ceters of mass are inside the channel
           k = sph[i].dim_ind;
-          if(shortest_distance_to_line(md, c, dim[k].R, llc, ccp)
-            < inc->radius){
+          r.c[0] = dim[k].R[0];
+          r.c[1] = dim[k].R[1];
+          r.c[2] = dim[k].R[2];
+          if(shortest_distance_to_line(md, r, a, b) < inc->radius){
             update_dimer_type(&dim[k], sph, TYPE_INCLUSION_SPHERE_DIMER,
                               inc->sph_d);
           }
@@ -320,39 +339,67 @@ void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
 
 /*
  * shortest_distance_to_line()
+ *
  * Calculates the shortest distance from point r to the line described by
  * wersor c and two points on the axis lc and cp
  */
-static double shortest_distance_to_line(MODEL md, double c[3], double r[3],
-                                        double lc[3], double cp[3]){
-  double pxcd[3], dist0, dist1;
-  // Determine vector from point 'i' to lower-left-corner atom of the cube
-  double p1[3] = {lc[0] - r[0], lc[1] - r[1], lc[2] - r[2]};
-  // Determine vector from point 'i' to channel-center-point of the cube
-  double p2[3] = {cp[0] - r[0], cp[1] - r[1], cp[2] - r[2]};
+static double shortest_distance_to_line(MODEL md, POINT r, POINT a, POINT b){
+  POINT p[6]; // periodic images of r
+  int i;
+  double min_distance, distance;
 
-  // Apply boundary conditions
-  for(int i=0; i<3; i++){
-    p1[i] = p1[i] - md.box[i] * round( p1[i]/md.box[i] );
-    p2[i] = p2[i] - md.box[i] * round( p2[i]/md.box[i] );
+  // Get coordinates of 'r' in six adjacent periodic boxes
+  for(i=0; i<6; i++){
+    p[i] = r;
+  }
+  p[0].c[0] += md.box[0];
+  p[1].c[1] += md.box[1];
+  p[2].c[2] += md.box[2];
+  p[3].c[0] -= md.box[0];
+  p[4].c[1] -= md.box[1];
+  p[5].c[2] -= md.box[2];
+
+  // Get distance for r inside the box
+  min_distance = p_AB_distance(r, a, b);
+
+  // Get distance for r in respective images and store the shortest one
+  for(i=0; i<6; i++){
+    distance = p_AB_distance(p[i], a, b);
+    if(distance < min_distance){
+      min_distance = distance;
+    }
   }
 
-  // Calculate the cross product pxcd = p x cd
-  vcrossu(p1, c, pxcd);
+  return min_distance;
+}
 
-  // Calculate the shortest distance of the sphere center from the line
-  // with reference to p1 (lower left atom)
-  dist0 = vmodule(pxcd) / vmodule(c);
+/*
+ * p_AB_distance()
+ *
+ * Returns the shortest distance between point p and a line given by points
+ * a and b, in 3D
+ * Extention of the example for 2D case:
+ * The area of the parallelogram spanned by points A,B (on the line), and P is
+ * |(B-A)x(C-A)| = |(B.x−A.x)(P.y−A.y)−(B.y−A.y)(P.x−A.x)|. If we divide this by
+ * the length Sqrt[(B-A)^2] = Sqrt[(B.x−A.x)^2 + (B.y−A.y)^2] of its base,
+ * we obtain ist height. Final formula:
+ * |(B.x−A.x)(P.y−A.y)−(B.y−A.y)(P.x−A.x) | / Sqrt[(B.x−A.x)^2 + (B.y−A.y)^2]
+ */
+static double p_AB_distance(POINT p, POINT a, POINT b){
+  double ab_xSQ = (a.c[0] - b.c[0]) * (a.c[0] - b.c[0]);
+  double ab_ySQ = (a.c[1] - b.c[1]) * (a.c[1] - b.c[1]);
+  double ab_zSQ = (a.c[2] - b.c[2]) * (a.c[2] - b.c[2]);
 
-  // Calculate the cross product pxcd = p x cd
-  vcrossu(p2, c, pxcd);
+  double exp_1 =  a.c[1]*b.c[0] - a.c[0]*b.c[1] - a.c[1]*p.c[0]
+                  + b.c[1]*p.c[0] + a.c[0]*p.c[1] - b.c[0]*p.c[1];
+  double exp_2 =  a.c[2]*b.c[0] - a.c[0]*b.c[2] - a.c[2]*p.c[0]
+                  + b.c[2]*p.c[0] + a.c[0]*p.c[2] - b.c[0]*p.c[2];
+  double exp_3 =  a.c[2]*b.c[1] - a.c[1]*b.c[2] - a.c[2]*p.c[1]
+                  + b.c[2]*p.c[1] + a.c[1]*p.c[2] - b.c[1]*p.c[2];
 
-  // Calculate the shortest distance of the sphere center from the line
-  // with reference to p2 (center point on the channel axis)
-  dist1 = vmodule(pxcd) / vmodule(c);
+  double denominator = exp_1 * exp_1 + exp_2 * exp_2 + exp_3 * exp_3;
 
-  // return the shorter distance
-  return (dist0 < dist1) ? dist0 : dist1;
+  return one / sqrt( (ab_xSQ + ab_ySQ + ab_zSQ) / denominator );
 }
 
 /*
