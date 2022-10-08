@@ -18,6 +18,8 @@ extern const double one;
 static int export_dimers(FILE *file, DIM3D *dim, int nd);
 static int export_spheres(FILE *file, SPH *sph, int ns);
 static int povray_export_spheres(FILE *file, SPH *sph, int ns);
+static int povray_export_dimers(FILE *file,
+                                DIM3D *dim, SPH *sph, int ns, int nd);
 static int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn);
 static int legacy_GLexport_dimer_type_converter(int type);
 static int legacy_GLexport_sphere_type_converter(int type);
@@ -134,6 +136,7 @@ int export_structure(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   const char *fmt_exp_sph = "s3d1_monomers_%05d.csv";
   const char *fmt_exp_sph_pov = "v_s3d1_monomers_%05d.pov";
   const char *fmt_exp_dim = "s3d2_dimers_%05d.csv";
+  const char *fmt_exp_dim_pov = "v_s3d2_dimers_%05d.pov";
   const char *fmt_particle_qty_d  = "%-24s: %5d\n";
   const char *fmt_particle_qty_dd = "%-24s: %5d %5d\n";
 
@@ -200,6 +203,7 @@ int export_structure(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
 #endif
 
   // Export data in POV-Ray format
+  // export sphere data
   sprintf(f_out, fmt_exp_sph_pov, strn);
 #ifdef DEBUG_MODE
   fprintf(stdout, fmt_dbg_opening_file, __func__, f_out);
@@ -210,6 +214,19 @@ int export_structure(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
     return EXIT_FAILURE;
   }
 
+  // export dimer data
+  if(cf.mk_dimers || md.incl_dim){
+    sprintf(f_out, fmt_exp_dim_pov, strn);
+  #ifdef DEBUG_MODE
+    fprintf(stdout, fmt_dbg_opening_file, __func__, f_out);
+  #endif
+    file = open_to_write(f_out);
+    fprintf(stdout, fmt_write_notify, "dimer", f_out);
+    if(povray_export_dimers(file, dim, sph, md.Nsph,
+      md.incl_dim + md.mtrx_dim) != EXIT_SUCCESS){
+      return EXIT_FAILURE;
+    }
+  }
   return EXIT_SUCCESS;
 }
 
@@ -269,6 +286,77 @@ static int povray_export_spheres(FILE *file, SPH *sph, int ns){
 
   if(exp_count != ns){
     fprintf(stderr, fmt_data_corruption, __func__, exp_count, ns);
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
+}
+
+/*
+ * povray_export_dimers(file, sph, nd)
+ * Export dimer data in format readable by POV-Ray
+ */
+static int povray_export_dimers(FILE *file,
+                                DIM3D *dim, SPH *sph, int ns, int nd){
+  extern const int TYPE_MATRIX_LIMIT;
+  extern const int TYPE_INCLUSION_BASE;
+  extern const char *fmt_writting_failed;
+  const char *fmt_data_corruption =
+    " [%s] ERR: incomplete dimer data (%d/%d) exported to file\n";
+  const char *fmt_exp_dim_0 =
+    " dimSkeleton(<% .6le, % .6le, % .6le>, <% .6le, % .6le, % .6le>, <% .6le, % .6le, % .6le>, SR, TL, %s%04d) // dim %5d type %d\n";
+  int i, s0, s1, exp_count = 0;
+
+  fprintf(file, "#declare matrixDimers = union{\n");
+  for(i=0; i<nd; i++){
+    // Write dimer positions and properties
+    if(dim[i].type <= TYPE_MATRIX_LIMIT){
+      s0 = dim[i].sph_ind[0];
+      s1 = dim[i].sph_ind[1];
+      if(fprintf(file, fmt_exp_dim_0,
+          sph[s0].r[0], sph[s0].r[1], sph[s0].r[2],
+          sph[s1].r[0], sph[s1].r[1], sph[s1].r[2],
+          dim[i].R[0], dim[i].R[1], dim[i].R[2],
+         "TmtrDm", dim[i].type, i, dim[i].type) == EOF){
+        fprintf(stderr, fmt_writting_failed, __func__, "dimer (povray)");
+        fclose(file);
+        return EXIT_FAILURE;
+      }
+      exp_count++;
+    }
+  }
+  fprintf(file, "}\n\n#declare inclusionDimers = ");
+
+  // If all dimers are exported, there is no inclusion particles to export
+  if(exp_count == nd){
+    fprintf(file, "0;\n");
+    fclose(file);
+    return EXIT_SUCCESS;
+  }
+
+  // In not, proceed with writing inclusion dimers
+  fprintf(file, "union{\n");
+  for(i=0; i<nd; i++){
+    // Write dimer positions and properties
+    if(dim[i].type > TYPE_INCLUSION_BASE){
+      s0 = dim[i].sph_ind[0];
+      s1 = dim[i].sph_ind[1];
+      if(fprintf(file, fmt_exp_dim_0,
+          sph[s0].r[0], sph[s0].r[1], sph[s0].r[2],
+          sph[s1].r[0], sph[s1].r[1], sph[s1].r[2],
+          dim[i].R[0], dim[i].R[1], dim[i].R[2],
+         "TincDm", dim[i].type, i, dim[i].type) == EOF){
+        fprintf(stderr, fmt_writting_failed, __func__, "dimer (povray)");
+        fclose(file);
+        return EXIT_FAILURE;
+      }
+      exp_count++;
+    }
+  }
+  fprintf(file, "}\n");
+  fclose(file);
+
+  if(exp_count != nd){
+    fprintf(stderr, fmt_data_corruption, __func__, exp_count, nd);
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
