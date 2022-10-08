@@ -18,8 +18,7 @@ extern const double one;
 static int export_dimers(FILE *file, DIM3D *dim, int nd);
 static int export_spheres(FILE *file, SPH *sph, int ns);
 static int povray_export_spheres(FILE *file, SPH *sph, int ns);
-static int povray_export_dimers(FILE *file,
-                                DIM3D *dim, SPH *sph, int ns, int nd);
+static int povray_export_dimers(FILE *file, DIM3D *dim, int nd);
 static int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn);
 static int legacy_GLexport_dimer_type_converter(int type);
 static int legacy_GLexport_sphere_type_converter(int type);
@@ -222,8 +221,7 @@ int export_structure(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
   #endif
     file = open_to_write(f_out);
     fprintf(stdout, fmt_write_notify, "dimer", f_out);
-    if(povray_export_dimers(file, dim, sph, md.Nsph,
-      md.incl_dim + md.mtrx_dim) != EXIT_SUCCESS){
+    if(povray_export_dimers(file, dim, md.incl_dim + md.mtrx_dim) != EXIT_SUCCESS){
       return EXIT_FAILURE;
     }
   }
@@ -295,8 +293,7 @@ static int povray_export_spheres(FILE *file, SPH *sph, int ns){
  * povray_export_dimers(file, sph, nd)
  * Export dimer data in format readable by POV-Ray
  */
-static int povray_export_dimers(FILE *file,
-                                DIM3D *dim, SPH *sph, int ns, int nd){
+static int povray_export_dimers(FILE *file, DIM3D *dim, int nd){
   extern const int TYPE_MATRIX_LIMIT;
   extern const int TYPE_INCLUSION_BASE;
   extern const char *fmt_writting_failed;
@@ -304,17 +301,20 @@ static int povray_export_dimers(FILE *file,
     " [%s] ERR: incomplete dimer data (%d/%d) exported to file\n";
   const char *fmt_exp_dim_0 =
     " dimSkeleton(<% .6le, % .6le, % .6le>, <% .6le, % .6le, % .6le>, <% .6le, % .6le, % .6le>, SR, TL, %s%04d) // dim %5d type %d\n";
-  int i, s0, s1, exp_count = 0;
+  int i,j, exp_count = 0;
+  double c0[3], c1[3];
 
   fprintf(file, "#declare matrixDimers = union{\n");
   for(i=0; i<nd; i++){
     // Write dimer positions and properties
     if(dim[i].type <= TYPE_MATRIX_LIMIT){
-      s0 = dim[i].sph_ind[0];
-      s1 = dim[i].sph_ind[1];
+      for(j=0; j<3; j++){
+        c0[j] = dim[i].R[j] + dim[i].O[j] * dim[i].L / 2e0;
+        c1[j] = dim[i].R[j] - dim[i].O[j] * dim[i].L / 2e0;
+      }
       if(fprintf(file, fmt_exp_dim_0,
-          sph[s0].r[0], sph[s0].r[1], sph[s0].r[2],
-          sph[s1].r[0], sph[s1].r[1], sph[s1].r[2],
+          c0[0], c0[1], c0[2],
+          c1[0], c1[1], c1[2],
           dim[i].R[0], dim[i].R[1], dim[i].R[2],
          "TmtrDm", dim[i].type, i, dim[i].type) == EOF){
         fprintf(stderr, fmt_writting_failed, __func__, "dimer (povray)");
@@ -338,11 +338,13 @@ static int povray_export_dimers(FILE *file,
   for(i=0; i<nd; i++){
     // Write dimer positions and properties
     if(dim[i].type > TYPE_INCLUSION_BASE){
-      s0 = dim[i].sph_ind[0];
-      s1 = dim[i].sph_ind[1];
+      for(j=0; j<3; j++){
+        c0[j] = dim[i].R[j] + dim[i].O[j] * dim[i].L / 2e0;
+        c1[j] = dim[i].R[j] - dim[i].O[j] * dim[i].L / 2e0;
+      }
       if(fprintf(file, fmt_exp_dim_0,
-          sph[s0].r[0], sph[s0].r[1], sph[s0].r[2],
-          sph[s1].r[0], sph[s1].r[1], sph[s1].r[2],
+          c0[0], c0[1], c0[2],
+          c1[0], c1[1], c1[2],
           dim[i].R[0], dim[i].R[1], dim[i].R[2],
          "TincDm", dim[i].type, i, dim[i].type) == EOF){
         fprintf(stderr, fmt_writting_failed, __func__, "dimer (povray)");
