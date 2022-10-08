@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
     }
 
     // Create dimers in the matrix
-    if(cfg.mk_dimers == 1){
+    if(cfg.mk_dimers == 1 || cfg.rough_inclusions == 1){
       // Inserting dimers - Method #1
       if(mdl.mtrx_sph > 1){
         // Randomly (where possible) connect neighbouring spheres into dimers.
@@ -296,6 +296,29 @@ int main(int argc, char *argv[])
             }else{
               fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                       cfg.num_slits);
+            }
+          }
+        }
+
+        // Brake matrix dimers if not wanted in the model
+        if(cfg.mk_dimers == 0){
+          // TODO: Move this to a function
+          for(i=0; i<mdl.Nsph; i++){
+            if(spheres[i].type == TYPE_DIMER){
+              spheres[i].type = TYPE_SPHERE;
+              dimers[ spheres[i].dim_ind ].type = TYPE_INVALID;
+            }
+          }
+          // Tidy up the dimer array
+          int d=0;
+          for(i=0; i<mdl.Ndim; i++){
+            if(dimers[i].type == TYPE_INVALID) d = i;
+            for(int j = i+1; j<mdl.Ndim; j++){
+              if(dimers[j].type != TYPE_INVALID){
+                dimers[d] = dimers[j];
+                dimers[j].type = TYPE_INVALID;
+                break;
+              }
             }
           }
         }
