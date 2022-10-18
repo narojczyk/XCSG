@@ -51,7 +51,6 @@ const int config_version_length = 64;
 const char *fmt_internal_call_failed = " [%s] ERR: internall call failed\n";
 const char *fmt_writting_failed = "  [%s] ERR: writing %s data failed\n";
 const char *fmt_null_ptr = " [%s] ERR: Null pointer found as input parameter\n";
-const char *fmt_sudden_eof = " [%s] ERR: sudden EOF (%d of %d) lines read\n";
 const char *fmt_watchdog_activated = " [%s] Function terminated by watchdog\n";
 
 // *** warnings

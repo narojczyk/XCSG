@@ -11,6 +11,7 @@
 
 /*
  * TODO:
+ * BUG:  Setting rough_inclusions to 1 will make dimer inclusions regardless of *.dat file setting
  *
  */
 
@@ -31,16 +32,32 @@
 int main(int argc, char *argv[])
 {
   FILE *f = NULL;
-  CONFIG cfg;
+  CONFIG cfg = {
+    .seed = 123456789,
+    .cells = {0, 0, 0},
+    .first = 0,
+    .last = 0,
+    .mk_channel = 0,
+    .mk_slit = 0,
+    .mk_dimers = 0,
+    .mk_inc_dimers = 0,
+    .num_channels = 0,
+    .num_slits = 0,
+    .rough_inclusions = 0,
+    .cfg_channels = "none",
+    .cfg_slits = "none",
+    .symmetry = "fcc"
+  };
+
   MODEL mdl = {
-      .Nsph = 0,
-      .Ndim = 0,
-      .mtrx_sph = 0,
-      .mtrx_dim = 0,
-      .incl_sph = 0,
-      .incl_dim = 0,
-      .box = {zero, zero, zero}
-    };
+    .Nsph = 0,
+    .Ndim = 0,
+    .mtrx_sph = 0,
+    .mtrx_dim = 0,
+    .incl_sph = 0,
+    .incl_dim = 0,
+    .box = {zero, zero, zero}
+  };
 
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
@@ -84,31 +101,25 @@ int main(int argc, char *argv[])
     f = NULL;
   }
 
-  // Allocate and clean memory for channels' data
-  channels = malloc(cfg.num_channels * sizeof(INC));
-  on_exit(releace_memory, channels);
-  memory_clean_inclusion(channels, cfg.num_channels);
-
-  // Allocate and clean memory for slits' data
-  slits = malloc(cfg.num_slits * sizeof(INC));
-  on_exit(releace_memory, slits);
-  memory_clean_inclusion(slits, cfg.num_slits);
-
-  // Open and read channel description data
-  if( cfg.mk_channel != 0 && f == NULL ){
-    f = open_to_read(cfg.cfg_channels);
-    if(parse_inclusions(f, channels, cfg.num_channels) != EXIT_SUCCESS){
-      return EXIT_FAILURE;
+  // Try to open and read channel description data
+  if((f = try_open_to_read(cfg.cfg_channels)) != NULL){
+    if((channels = parse_inclusions(f)) != NULL){
+      on_exit(releace_memory, channels);
+      cfg.mk_channel = 1;
+      cfg.num_channels = count_inclusions(channels);
     }
+    fclose(f);
     f = NULL;
   }
 
-  // Open and read slits description data
-  if( cfg.mk_slit != 0 && f == NULL ){
-    f = open_to_read(cfg.cfg_slits);
-    if(parse_inclusions(f, slits, cfg.num_slits) != EXIT_SUCCESS){
-      return EXIT_FAILURE;
+  // Try to open and read slits description data
+  if((f = try_open_to_read(cfg.cfg_slits)) != NULL){
+    if((slits = parse_inclusions(f)) != NULL){
+      on_exit(releace_memory, slits);
+      cfg.mk_slit = 1;
+      cfg.num_slits = count_inclusions(slits);
     }
+    fclose(f);
     f = NULL;
   }
 
@@ -146,6 +157,7 @@ int main(int argc, char *argv[])
     memory_clean_spheres(spheres, mdl.Nsph);
     memory_clean_dimers(dimers, mdl.Ndim);
 
+// #### CASE 01 > ##############################################################
     // Set requested structure
     if(set_structure(cfg, mdl, spheres) == EXIT_FAILURE){
       return EXIT_FAILURE;
@@ -162,7 +174,9 @@ int main(int argc, char *argv[])
     if(sph_assign_lattice_indexes(spheres, mdl.Nsph) == EXIT_FAILURE){
       return EXIT_FAILURE;
     }
+// ############################################################## > CASE 01 ####
 
+// #### CASE 02 > ##############################################################
     // Insert inclusions into sphere system
     // Make channel
     if(cfg.mk_channel && ! cfg.rough_inclusions){
@@ -199,9 +213,11 @@ int main(int argc, char *argv[])
     if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
       return EXIT_FAILURE;
     }
+// ############################################################## > CASE 02 ####
     // Display current statistics
     show_particle_stats(mdl,cfg);
 
+// #### CASE 06 > ##############################################################
     // Create dimers inside the inclusions
     if(insert_inclusion_dimers){
       // Connect spheres in random pairs ...
@@ -213,7 +229,10 @@ int main(int argc, char *argv[])
       // Display current statistics
       show_particle_stats(mdl,cfg);
     }
+// ############################################################## > CASE 06 ####
 
+
+// #### CASE 03 > ##############################################################
     // Create dimers in the matrix
     if(cfg.mk_dimers == 1 || cfg.rough_inclusions == 1){
       // Inserting dimers - Method #1
@@ -267,6 +286,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
       }
 
+// #### CASE 04 > ##############################################################
       // Insert inclusions into dimer system
       if(cfg.rough_inclusions){
         fprintf(stdout, fmt_inserting_rough_inclusions);
@@ -322,7 +342,7 @@ int main(int argc, char *argv[])
             }
           }
         }
-
+// ############################################################## > CASE 04 ####
         // Check the number of different spheres
         if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
           return EXIT_FAILURE;
@@ -331,7 +351,7 @@ int main(int argc, char *argv[])
         show_particle_stats(mdl, cfg);
       }
     } // end if(cfg.mk_dimers)
-
+// ############################################################## > CASE 03 ####
 
     // Generate required output files for structure 's'
     if( export_structure(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){

@@ -9,7 +9,7 @@ void generate_template_config(int status);
 
  int parse_config(FILE *file, CONFIG *cfg);
  int parse_config_legacy(FILE *file, CONFIG *cfg);
- int parse_inclusions(FILE *file, INC inc[], int num);
+INC* parse_inclusions(FILE *file);
 void parse_options(int argc, char *argv[], char **f);
 
 #endif

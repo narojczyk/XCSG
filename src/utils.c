@@ -482,6 +482,27 @@ int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d){
 /* # SEC ############## MISCELLANEOUS ####################################### */
 
 /*
+ * count_inclusions()
+ * Returns the number of inclusions availiable under the pointer at input
+ */
+int count_inclusions(INC *inclusions){
+  INC *current = inclusions;
+  int n = (current != NULL) ? 1 : 0;
+
+  if(current == NULL){
+    return n;
+  }
+
+  // Cycle through the consecutive elements and count them
+  while((*current).next != NULL){
+    n++;
+    current = (*current).next;
+  }
+
+  return n;
+}
+
+/*
  * count_particles_by_type()
  * Calculate all the different particle types currently in the structure
  */
@@ -667,6 +688,8 @@ void memory_clean_inclusion(INC *inc, int n)
   int i;
 
   // Default values for an initial (undefined) inclusion
+  template.next = NULL;
+  template.tgt_Nmer = 0;
   template.os[0] = zero;
   template.os[1] = zero;
   template.os[2] = zero;
@@ -681,6 +704,16 @@ void memory_clean_inclusion(INC *inc, int n)
   for(i=0; i<n; i++){
     inc[i] = template;
   }
+}
+
+INC template_inclusion()
+{
+  INC template;
+
+  memory_clean_inclusion(&template, 1);
+
+  // Copy default values to the array
+  return template;
 }
 
 /* vim: set tw=80 ts=2 sw=2 et: */

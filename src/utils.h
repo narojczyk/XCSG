@@ -5,6 +5,7 @@ double u_RNG();
 
 int check_dimer_direction(DIM3D *dim, int i);
 int container_dimensions(MODEL *md, CONFIG cf);
+int count_inclusions(INC *inclusions);
 int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim);
 int count_typeX_sp_neighbours(SPH *sph, int x, int id, int ns);
 int draw_ngb_sphere_typeX(SPH *sph, int x, int sph_ind);
@@ -21,5 +22,6 @@ void init_RNG(unsigned long int s);
 void memory_clean_spheres(SPH *sph, int nd);
 void memory_clean_dimers(DIM3D *dim, int nd);
 void memory_clean_inclusion(INC *inc, int n);
+INC template_inclusion();
 
 #endif

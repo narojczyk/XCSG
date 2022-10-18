@@ -24,6 +24,7 @@ typedef struct
 
 typedef struct INC
 {
+  struct INC *next; // Pointer to next instance of INC (eg., if part of a set)
   int tgt_Nmer;     /* Targeted n-mer particle to be formed by spheres
                        of this inclusion */
   double os[3];     // Inclusion offset from the base atom in the structure

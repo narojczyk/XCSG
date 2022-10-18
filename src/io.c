@@ -23,7 +23,7 @@ static int export_to_GLviewer(MODEL md, DIM3D *dim, SPH *sph, int strn);
 static int legacy_GLexport_dimer_type_converter(int type);
 static int legacy_GLexport_sphere_type_converter(int type);
 // These function can close program on error
-static FILE* open_file(const char *file, const char *mode);
+static FILE* open_file(const char *file, const char *mode, int strict);
 
 /* # SEC ############## CONSOLE OUTPUT ###################################### */
 
@@ -558,19 +558,23 @@ static int legacy_GLexport_sphere_type_converter(int type){
  * open_to_read(file)
  * Open file to read and return the pointer to file. Terminate program on error.
  */
+FILE* try_open_to_read(const char *file){
+  return open_file(file, "r", 0);
+}
+
 FILE* open_to_read(const char *file){
-  return open_file(file, "r");
+  return open_file(file, "r", 1);
 }
 
 FILE* open_to_write(const char *file){
-  return open_file(file, "w");
+  return open_file(file, "w", 1);
 }
 
-static FILE* open_file(const char *file, const char *mode){
+static FILE* open_file(const char *file, const char *mode, int strict){
   const char *fmt_open_failed = " [%s] ERR: cannot open file: %s (%c)\n";
   FILE *p = NULL;
 
-  if((p = fopen(file, mode)) == NULL){
+  if((p = fopen(file, mode)) == NULL && strict == 1){
     fprintf(stderr, fmt_open_failed, __func__, file, mode);
     exit(EXIT_FAILURE);
   }

@@ -331,12 +331,15 @@ static void gen_template_confirmation(int ec, const char *desc,
  * Reads inclusions' configuration from 'file' and stores data for each array
  * element of 'inc'.
  */
-int parse_inclusions(FILE *file, INC inc[], int num)
+INC* parse_inclusions(FILE *file)
 {
-  extern const char *fmt_sudden_eof;
+  INC template = template_inclusion();
+  INC *inclusions_array = NULL;
+  INC *list_of_inclusions = NULL;
+  INC *current = NULL, *last = NULL;
   extern const char *fmt_null_ptr;
   const char *fmt_IO_8f1d = "%lf %lf %lf %lf %lf %lf %lf %lf %d\n";
-  int i=0, n_mer;
+  int i=0, incl_counter=0, n_mer;
   double off[3] = {zero, zero, zero};
   double nor[3] = {zero, zero, zero};
   double size = zero;
@@ -350,43 +353,76 @@ int parse_inclusions(FILE *file, INC inc[], int num)
       trash = fgetc(file);
     }while (trash != '\n');
 
-    // Read data from the file
-    for(i=0; i<num; i++){
-      if(fscanf(file, fmt_IO_8f1d,
-            &off[0], &off[1], &off[2],
-            &nor[0], &nor[1], &nor[2], &size, &sd, &n_mer) == EOF){
-        fprintf(stderr, fmt_sudden_eof, __func__, i, num);
-        fclose(file);
-        return EXIT_FAILURE;
-      }else{
+    while(fscanf(file, fmt_IO_8f1d, &off[0], &off[1], &off[2],
+      &nor[0], &nor[1], &nor[2], &size, &sd, &n_mer) != EOF){
 
-      // Store offset for the inclusion 'i'
-      inc[i].os[0] = off[0];
-      inc[i].os[1] = off[1];
-      inc[i].os[2] = off[2];
+        current = malloc(sizeof(INC));
+        (*current) = template;
 
-      // Store normal vector for the inclusion 'i'
-      inc[i].nm[0] = nor[0];
-      inc[i].nm[1] = nor[1];
-      inc[i].nm[2] = nor[2];
+        // Store offset for the inclusion
+        (*current).os[0] = off[0];
+        (*current).os[1] = off[1];
+        (*current).os[2] = off[2];
 
-      // Store size for the inclusion 'i' in all possible cases
-      inc[i].thickness = size;
-      inc[i].radius = size;
+        // Store normal vector for the inclusion
+        (*current).nm[0] = nor[0];
+        (*current).nm[1] = nor[1];
+        (*current).nm[2] = nor[2];
 
-      // Store the diameter of spheres in inclusion 'i'
-      inc[i].sph_d = sd;
+        // Store size of the inclusion for all the possible cases
+        (*current).thickness = size;
+        (*current).radius = size;
 
-      // Store the target n-mer size to be formed
-      inc[i].tgt_Nmer = n_mer;
+        // Store the diameter of spheres in inclusion
+        (*current).sph_d = sd;
+
+        // Store the target n-mer size to be formed
+        (*current).tgt_Nmer = n_mer;
+
+        if(list_of_inclusions != NULL){
+          // On the consecutive iterations update the 'next' field of
+          // the previous entry and advance the end-pointer to the current entry
+          (*last).next = current;
+          last = current;
+        }else{
+          // On first iteration initiate the list of inclusions to
+          // the current, newly generated entry
+          list_of_inclusions = current;
+          last = current;
+        }
+        // Count the number of list elements
+        incl_counter++;
       }
-    }
-    fclose(file);
-    return EXIT_SUCCESS;
-  }else{
-    fprintf(stderr, fmt_null_ptr, __func__);
-    return EXIT_FAILURE;
+
+      // If any inclusions loaded from file
+      if(incl_counter){
+        // allocate an array of the corresponding size
+        inclusions_array = malloc(incl_counter * sizeof(INC));
+        // point at the first inclusion on the linked list
+        current = list_of_inclusions;
+        // For all elelemts on the linked list
+        while(current != NULL){
+          // copy the inclusion into the array
+          inclusions_array[i] = (*current);
+          inclusions_array[i].next = &(inclusions_array[i+1]);
+          i++;
+          // advance the pointer to the next list element and free
+          // the memory for the old one
+          last = current;
+          current = (*current).next;
+          free(last);
+        }
+        // NULL-out the 'next'-pointer of the last array element
+        inclusions_array[incl_counter - 1].next = NULL;
+      }
+
+      // Will return NULL if no inclusions had been read
+      return inclusions_array;
   }
+
+  // Complain of no vaild file pointer received on input
+  fprintf(stderr, fmt_null_ptr, __func__);
+  return NULL;
 }
 
 /*
