@@ -22,6 +22,11 @@ typedef struct
   double L;         // Dimer length (dist. between spheres' centers)
 } DIM3D;
 
+typedef struct{
+  SPH *spheres;     // Pointer to the array with spheres
+  DIM3D *dimers;    // Pointer to the array with dimers
+} PARTICLES;
+
 typedef struct INC
 {
   struct INC *next; // Pointer to next instance of INC (eg., if part of a set)

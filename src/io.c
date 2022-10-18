@@ -123,12 +123,14 @@ void show_particle_stats(MODEL md, CONFIG cfg)
  * Use export_to_GLviewer() and povray_export_spheres() to export sphere data
  * in formats readable to graphic viewers. TODO: add povray_export_dimers()
  */
-int export_structure(CONFIG cf, MODEL md, DIM3D *dim, SPH *sph, int strn)
+int export_structure(CONFIG cf, MODEL md, PARTICLES pts, int strn)
 {
 #ifdef DEBUG_MODE
   extern const char *fmt_dbg_opening_file;
 #endif
   extern const char *fmt_write_notify;
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   FILE *file = NULL;
   char f_out[128];
   const char *fmt_exp_dsc = "s3d0_summary_%05d.ini";

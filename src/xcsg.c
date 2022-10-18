@@ -62,6 +62,10 @@ int main(int argc, char *argv[])
 
   SPH *spheres = NULL;
   DIM3D *dimers = NULL;
+  // Container struct for particles (valid pointers must be assigned
+  // ... when memory has been alocated)
+  PARTICLES particles = {NULL, NULL};
+
   INC *channels = NULL;
   INC *slits = NULL;
 
@@ -159,6 +163,9 @@ int main(int argc, char *argv[])
   on_exit(releace_memory, spheres);
   dimers  = malloc( mdl.Ndim * sizeof(DIM3D));
   on_exit(releace_memory, dimers);
+  // Copy pointers into the container structure
+  particles.spheres = spheres;
+  particles.dimers = dimers;
 
   // Loop over selected set of structures
   for(s=cfg.first; s<=cfg.last; s++){
@@ -197,7 +204,7 @@ int main(int argc, char *argv[])
           channels[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "channel", i);
           if(channels[i].tgt_Nmer == 2) insert_inclusion_dimers = 1;
-          make_channel(mdl, &channels[i], spheres, dimers);
+          make_channel(mdl, &channels[i], particles);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
                   cfg.num_channels);
@@ -212,7 +219,7 @@ int main(int argc, char *argv[])
         if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 || slits[i].nm[2] != 0){
           fprintf(stdout, fmt_inserting_inclusion, "layer", i);
           if(slits[i].tgt_Nmer == 2) insert_inclusion_dimers = 1;
-          make_slit(mdl, &slits[i], spheres, dimers);
+          make_slit(mdl, &slits[i], particles);
         }else{
           fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                   cfg.num_slits);
@@ -221,7 +228,7 @@ int main(int argc, char *argv[])
     }
 
     // Check the number of the respective types of particles
-    if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
+    if(count_particles_by_type(&mdl, particles) == EXIT_FAILURE){
       return EXIT_FAILURE;
     }
 // ############################################################## > CASE 02 ####
@@ -232,10 +239,10 @@ int main(int argc, char *argv[])
     // Create dimers inside the inclusions
     if(insert_inclusion_dimers){
       // Connect spheres in random pairs ...
-      introduce_random_dimers(dimers, spheres, &mdl, TYPE_INCLUSION_SPHERE,
+      introduce_random_dimers(particles, &mdl, TYPE_INCLUSION_SPHERE,
                               TYPE_INCLUSION_DIMER);
       // ... and use zipper to finish the job if need be.
-      introduce_dimers_by_zipper(dimers, spheres, &mdl, TYPE_INCLUSION_BASE);
+      introduce_dimers_by_zipper(particles, &mdl, TYPE_INCLUSION_BASE);
 
       // Display current statistics
       show_particle_stats(mdl,cfg);
@@ -250,7 +257,7 @@ int main(int argc, char *argv[])
       if(mdl.mtrx_sph > 1){
         // Randomly (where possible) connect neighbouring spheres into dimers.
         // In critical cases start with spheres with fewest possible connections.
-        introduce_random_dimers(dimers, spheres, &mdl, TYPE_SPHERE, TYPE_DIMER);
+        introduce_random_dimers(particles, &mdl, TYPE_SPHERE, TYPE_DIMER);
 
         if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE){
           return EXIT_FAILURE;
@@ -263,7 +270,7 @@ int main(int argc, char *argv[])
       // Inserting dimers - Method #2
       if(mdl.mtrx_sph > 1){
         // Eliminate remaining spheres (if necesarry) using zipper
-        introduce_dimers_by_zipper(dimers, spheres, &mdl, TYPE_MATRIX_BASE);
+        introduce_dimers_by_zipper(particles, &mdl, TYPE_MATRIX_BASE);
 
         if(test_dimer_distribution(dimers, Odistrib, mdl.Ndim) == EXIT_FAILURE){
           return EXIT_FAILURE;
@@ -286,7 +293,7 @@ int main(int argc, char *argv[])
         fprintf(stdout, fmt_matrix_dimers_to_low);
       }else{
         // Reorganize molecules to get best possible distribution
-        if(refine_dimer_distribution(dimers, spheres, mdl, Odistrib)
+        if(refine_dimer_distribution(particles, mdl, Odistrib)
             == EXIT_FAILURE){
           return EXIT_FAILURE;
         }
@@ -308,7 +315,7 @@ int main(int argc, char *argv[])
             if(channels[i].nm[0] != 0 || channels[i].nm[1] != 0 ||
               channels[i].nm[2] != 0){
               fprintf(stdout, fmt_inserting_inclusion, "channel", i);
-              make_channel(mdl, &channels[i], spheres, dimers);
+              make_channel(mdl, &channels[i], particles);
             }else{
               fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "channel",
                       cfg.num_channels);
@@ -323,7 +330,7 @@ int main(int argc, char *argv[])
             if(slits[i].nm[0] != 0 || slits[i].nm[1] != 0 ||
               slits[i].nm[2] != 0){
               fprintf(stdout, fmt_inserting_inclusion, "layer", i);
-              make_slit(mdl, &slits[i], spheres, dimers);
+              make_slit(mdl, &slits[i], particles);
             }else{
               fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "layer",
                       cfg.num_slits);
@@ -355,7 +362,7 @@ int main(int argc, char *argv[])
         }
 // ############################################################## > CASE 04 ####
         // Check the number of different spheres
-        if(count_particles_by_type(&mdl, spheres, dimers) == EXIT_FAILURE){
+        if(count_particles_by_type(&mdl, particles) == EXIT_FAILURE){
           return EXIT_FAILURE;
         }
         // Display current statistics
@@ -373,7 +380,7 @@ int main(int argc, char *argv[])
     }
 
     // Generate required output files for structure 's'
-    if(export_structure(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){
+    if(export_structure(cfg, mdl, particles, s) != EXIT_SUCCESS ){
       return EXIT_FAILURE;
     }
   } // End structure loop

@@ -31,19 +31,17 @@ extern const int TYPE_INCLUSION_SPHERE_DIMER;
 extern const char *fmt_internal_call_failed;
 
 static int set_fcc(SPH *sph, int ns, int cells[3]);
-static int chk_dim_config(DIM3D *dim, SPH *sph, double box[3], int d0, int d1);
+static int chk_dim_config(PARTICLES pts, double box[3], int d0, int d1);
 static int validate_distrib(int od[6], int nd1, int step);
-static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
-                  int TYPE);
+static int zipper(MODEL md, PARTICLES pts, int s_id, int workload, int TYPE);
 
 static double shortest_distance_to_line(MODEL md, POINT r, POINT a, POINT b);
 static double p_AB_distance(POINT p, POINT a, POINT b);
 
 static void display_dimer_distribution(int od[6]); //(->i/o ?)
-static void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2]);
-static void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]);
-static void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2,
-                       int type_tgt);
+static void flip_dimers(MODEL md, PARTICLES pts, int od[6], int d_ids[2]);
+static void find_valid_cluster(MODEL md, PARTICLES pts, int vclust[2]);
+static void make_dimer(PARTICLES pts, MODEL md, int s1, int s2, int type_tgt);
 static void update_dimer_type(DIM3D *dim, SPH *sph, int type, double sph_d);
 
 /* # SEC ############## SYMMETRY OF THE STRUCTURE ########################### */
@@ -194,7 +192,9 @@ void find_smallest_coordinates(SPH *sph, MODEL *md){
  * periodic image that is not the nearest to the channel axis)
  *
  */
-void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
+void make_channel(MODEL md, INC *inc, PARTICLES pts){
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   POINT a, b, r;
   int i,k;
   int type_lock = (inc->tgt_Nmer == 1) ? 1 : 0;
@@ -253,10 +253,10 @@ void make_channel(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
  * atoms belong to the plane, are flagged for braking.
  * NOTE: periodic boundaries are not taken into account here
  */
-void make_slit(MODEL md, INC *inc, SPH *sph, DIM3D *dim){
+void make_slit(MODEL md, INC *inc, PARTICLES pts){
+  SPH *sph = pts.spheres, *s = NULL;
+  DIM3D *dim = pts.dimers, *d = NULL;
   POINT p[7];
-  DIM3D *d = NULL;
-  SPH *s = NULL;
   int i, j;
   int type_lock = (inc->tgt_Nmer == 1) ? 1 : 0;
   double n[3] = {inc->nm[0], inc->nm[1], inc->nm[2]};
@@ -419,8 +419,9 @@ static void update_dimer_type(DIM3D *dim, SPH *sph, int type, double sph_d){
  * NOTE: make the function return success or failure code.
  * BUG: infinite loop possible.
  */
-void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
+void introduce_random_dimers(PARTICLES pts, MODEL *md, int type_src,
                              int type_tgt){
+  SPH *sph = pts.spheres;
   int s_id=-1, s_ngb_id=-1, s_ngb_qty=0;
   int nsph = md->Nsph;
   const char *fmt_mk_dimers_at_random =
@@ -445,13 +446,13 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
     }
     // Create a valid dimer from the pair of spheres
     if( s_id != -1 && s_ngb_id != -1){
-      make_dimer(dim, sph, *md, s_id, s_ngb_id, type_tgt);
+      make_dimer(pts, *md, s_id, s_ngb_id, type_tgt);
       // Update free spheres count
       md->mtrx_sph -= 2;
     }
   }while(s_ngb_qty > 0 && md->mtrx_sph > 0);
 
-  if(count_particles_by_type(md, sph, dim) == EXIT_FAILURE){
+  if(count_particles_by_type(md, pts) == EXIT_FAILURE){
     fprintf(stderr, fmt_internal_call_failed, __func__);
   }
 }
@@ -462,8 +463,9 @@ void introduce_random_dimers(DIM3D *dim, SPH *sph, MODEL *md, int type_src,
  * is used to restrict zipper to run on matrix (TYPE_MATRIX_BASE) or inclusion
  * (TYPE_INCLUSION_BASE) particles.
  */
-int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
+int introduce_dimers_by_zipper(PARTICLES pts, MODEL *md, int TYPE){
   extern const int lazy;
+  SPH *sph = pts.spheres;
   // local redefinition of TYPE* variables basen on whether matix or inclusion
   // particles are to be considered
   const int TYPE_sphere = TYPE + TYPE_SPHERE;
@@ -518,7 +520,7 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
 
     // Start zipper from selected sphere
     fprintf(stdout,"  (%d)", zipper_runs);
-    zipper_steps_passed = zipper( *md, dim, sph, zip_init_sph, lazy, TYPE);
+    zipper_steps_passed = zipper( *md, pts, zip_init_sph, lazy, TYPE);
     // Terminate if zipper failed
     if(zipper_steps_passed == EXIT_FAILURE){
       fprintf(stderr, fmt_internal_call_failed, __func__);
@@ -528,7 +530,7 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
     zipper_runs--;
   }
 
-  if(count_particles_by_type(md, sph, dim) == EXIT_FAILURE){
+  if(count_particles_by_type(md, pts) == EXIT_FAILURE){
     fprintf(stderr, fmt_internal_call_failed, __func__);
     return EXIT_FAILURE;
   }
@@ -543,9 +545,11 @@ int introduce_dimers_by_zipper(DIM3D *dim, SPH *sph, MODEL *md, int TYPE){
  * or groups of molecules with high special confinements. Thus, TYPE of
  * particles to run zipper on has been hardcoded as matrix type only.
  */
-int refine_dimer_distribution(DIM3D *dim, SPH *sph, MODEL md, int od[6]){
+int refine_dimer_distribution(PARTICLES pts, MODEL md, int od[6]){
   extern const int diligent;
   extern const int run_zipper;
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
 
   int zip_init_sph = -1, flip_count = 0, flipable_dimers[2] = {-1, -1};
 
@@ -559,10 +563,10 @@ int refine_dimer_distribution(DIM3D *dim, SPH *sph, MODEL md, int od[6]){
   if(!validate_distrib(od, md.mtrx_dim, flip_count)){
     do{
       // Find a valid dimer configuration to flip orientations
-      find_valid_cluster(md, dim, sph, flipable_dimers);
+      find_valid_cluster(md, pts, flipable_dimers);
       // Flip dimers
       if(flipable_dimers[0] != -1 && flipable_dimers[1] != -1){
-        flip_dimers(md, dim, sph, od, flipable_dimers);
+        flip_dimers(md, pts, od, flipable_dimers);
       }
 
       // Run zipper every once in a while (zipper length = (const) diligent)
@@ -574,7 +578,7 @@ int refine_dimer_distribution(DIM3D *dim, SPH *sph, MODEL md, int od[6]){
         }while(sph[zip_init_sph].type != TYPE_SPHERE_DIMER);
 
         fprintf(stdout, fmt_ziper_run, zip_init_sph,
-                zipper(md, dim, sph, zip_init_sph, diligent, TYPE_MATRIX_BASE));
+                zipper(md, pts, zip_init_sph, diligent, TYPE_MATRIX_BASE));
 
         // Display distribution after zipper
         if(test_dimer_distribution(dim,  od, md.Ndim) == EXIT_FAILURE){
@@ -599,11 +603,12 @@ int refine_dimer_distribution(DIM3D *dim, SPH *sph, MODEL md, int od[6]){
  * Run zipper on the structure, starting from sphere sph_ind, and continue
  * untill another free sphere is found.
  */
-static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
-                  int TYPE)
+static int zipper(MODEL md, PARTICLES pts, int s_id, int workload, int TYPE)
 {
   extern const int diligent;
   extern const char *fmt_watchdog_activated;
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   const char *fmt_ziper_failed =
     " [%s] WRN: Unable to close a zipper run."
     " Probably no available spheres left\n";
@@ -721,7 +726,7 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
 
     }else if(sngb_type == TYPE_sphere){
       // Make final dimer
-      make_dimer(dim, sph, md, s_id, sngb_id, TYPE_dimer);
+      make_dimer(pts, md, s_id, sngb_id, TYPE_dimer);
       // Brake the master while loop and finish procedure
       break;
     }
@@ -730,7 +735,7 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
   // Recalculate centers of mass and orientations for type-diemrs
   for(i=0; i<md.Ndim; i++){
     if(dim[i].type == TYPE_dimer){
-      if(update_dimer_parameters(md, dim, sph, i) == EXIT_FAILURE){
+      if(update_dimer_parameters(md, pts, i) == EXIT_FAILURE){
         fprintf(stderr, fmt_internal_call_failed, __func__);
       }
     }
@@ -743,8 +748,9 @@ static int zipper(MODEL md, DIM3D *dim, SPH *sph, int s_id, int workload,
  * Make dimer from s1,s2 spheres, mark it as type_x and update all relevant
  * table data
  */
-static void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2,
-                       int type_tgt){
+static void make_dimer(PARTICLES pts, MODEL md, int s1, int s2, int type_tgt){
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   const char *fmt_no_free_dimer_slots =
     " [%s] ERR: No free dimers slots found in array.\n";
   const char *fmt_failed_to_connect =
@@ -786,7 +792,7 @@ static void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2,
     dim[i].type = type_tgt;
     dim[i].sph_ind[0] = s1;
     dim[i].sph_ind[1] = s2;
-    update_dimer_parameters(md, dim, sph, i);
+    update_dimer_parameters(md, pts, i);
   }else{
     fprintf(stderr, fmt_data_corruption, __func__, s1, s2);
   }
@@ -799,7 +805,9 @@ static void make_dimer(DIM3D *dim, SPH *sph, MODEL md, int s1, int s2,
  * their orientation
  */
 
-static void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]){
+static void find_valid_cluster(MODEL md, PARTICLES pts, int vclust[2]){
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   int rn_id0, rn_id1;   // array indexes generated randomly
   int a0, a1, b0, b1;   // sphere indexes of first and second dimer resp.
   int d0, nd0, nd1;     // selected dimer index and neighboring dimer ids.
@@ -834,13 +842,13 @@ static void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]){
     // Make sure b0 is not the other atom of dimer d0 and it is a dimer sphere
     if(b0 != a1 && sph[b0].type == TYPE_SPHERE_DIMER){
       nd0 = sph[b0].dim_ind;
-      candidate0 = chk_dim_config(dim, sph, md.box, d0, nd0);
+      candidate0 = chk_dim_config(pts, md.box, d0, nd0);
     }
 
     // Make sure b1 is not the other atom of dimer d0 and it is a dimer sphere
     if(b1 != a0 && sph[b1].type == TYPE_SPHERE_DIMER){
       nd1 = sph[b1].dim_ind;
-      candidate1 =  chk_dim_config(dim, sph, md.box, d0, nd1);
+      candidate1 =  chk_dim_config(pts, md.box, d0, nd1);
     }
   }while(candidate0 == 0 && candidate1 == 0);
 
@@ -861,8 +869,10 @@ static void find_valid_cluster(MODEL md, DIM3D *dim, SPH *sph, int vclust[2]){
  * Check the orientation of d0 with relation to d1 and return the index
  * of possible transformation
  */
-static int chk_dim_config(DIM3D *dim, SPH *sph, double box[3], int d0, int d1)
-{
+static int chk_dim_config(PARTICLES pts, double box[3], int d0, int d1){
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
+
   // Sphere ID's
   int d0atom0 = dim[d0].sph_ind[0];
   int d0atom1 = dim[d0].sph_ind[1];
@@ -994,8 +1004,10 @@ static int validate_distrib(int od[6], int Ndim, int flip)
  * Change configuration of two specified dimers d0, d1 and update orientation
  * table
  */
-static void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2])
+static void flip_dimers(MODEL md, PARTICLES pts, int od[6], int d_ids[2])
 {
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   int d0 = d_ids[0];
   int d1 = d_ids[1];
   int rn_id0, rn_id1;   // array indexes generated randomly
@@ -1066,8 +1078,8 @@ static void flip_dimers(MODEL md, DIM3D *dim, SPH *sph, int od[6], int d_ids[2])
   }
 
   // Update orientation and the center of mass for fliped dimers
-  update_dimer_parameters(md, dim, sph, d0);
-  update_dimer_parameters(md, dim, sph, d1);
+  update_dimer_parameters(md, pts, d0);
+  update_dimer_parameters(md, pts, d1);
 
   // Increment appropriate orientation buckets
   o_id0 = check_dimer_direction(dim, d0);

@@ -455,7 +455,9 @@ int check_dimer_direction(DIM3D *dim, int i)
  * Update the orientation and the center of mass coordinates for dimer d,
  * based on the spheres' positions
  */
-int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d){
+int update_dimer_parameters(MODEL md, PARTICLES pts, int d){
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   int atom0 = dim[d].sph_ind[0];
   int atom1 = dim[d].sph_ind[1];
   double O[3] = {zero,zero,zero};
@@ -517,13 +519,15 @@ int count_inclusions(INC *inclusions){
  * count_particles_by_type()
  * Calculate all the different particle types currently in the structure
  */
-int count_particles_by_type(MODEL *md, SPH *sph, DIM3D *dim){
+int count_particles_by_type(MODEL *md, PARTICLES pts){
   extern const int TYPE_SPHERE;
   extern const int TYPE_SPHERE_DIMER;
   extern const int TYPE_DIMER;
   extern const int TYPE_INCLUSION_SPHERE;
   extern const int TYPE_INCLUSION_SPHERE_DIMER;
   extern const int TYPE_INCLUSION_DIMER;
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
   int i;
   int tp_sph = 0, tp_inc_sph = 0, tp_inc_sph_dim = 0;
   int tp_sph_dim = 0, tp_dim = 0, tp_inc_dim = 0;
