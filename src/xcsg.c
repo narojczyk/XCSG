@@ -364,8 +364,16 @@ int main(int argc, char *argv[])
     } // end if(cfg.mk_dimers)
 // ############################################################## > CASE 03 ####
 
+    // Adjust dimer lengths if required
+    if((cfg.mk_dimers + mdl.incl_dim) && !cfg.dimer_L_sigma){
+      for(i=0; i<mdl.incl_dim + mdl.mtrx_dim; i++){
+        adjust_dimer_length(&dimers[i], spheres);
+      }
+
+    }
+
     // Generate required output files for structure 's'
-    if( export_structure(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){
+    if(export_structure(cfg, mdl, dimers, spheres, s) != EXIT_SUCCESS ){
       return EXIT_FAILURE;
     }
   } // End structure loop

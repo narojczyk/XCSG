@@ -389,6 +389,17 @@ static void bouble_sort_double(double *array, int s, int ascending){
 /* # SEC ############## PARTICLES - DIMERS ################################## */
 
 /*
+ * adjust_dimer_length()
+ *
+ * Calculate the length of a dimer based on the diameters of bothe spheres
+ */
+void adjust_dimer_length(DIM3D *dim, SPH *sph)
+{
+  int s0 = (*dim).sph_ind[0], s1 = (*dim).sph_ind[1];
+  (*dim).L = (sph[s0].d + sph[s1].d)/two;
+}
+
+/*
  * check_dimer_direction()
  * Return id 'j' of one of six possible dimer orientations in f.c.c. symmetry
  */
