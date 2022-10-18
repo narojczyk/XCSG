@@ -12,4 +12,6 @@ void generate_template_config(int status);
 INC* parse_inclusions(FILE *file);
 void parse_options(int argc, char *argv[], char **f);
 
+int inclusion_count_sanity_check(int num_inclusions, const char *msg);
+
 #endif

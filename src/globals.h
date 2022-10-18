@@ -43,7 +43,8 @@ const int ngb_list_size = 12; // valid for fcc and hcp
 
 // general purpose global variables
 char *prog_name;
-const char* valid_config_version = "a5d22f901c89e2e86601cbeb06789cc311d0134a";
+const char* valid_config_version = "b735a8bd837d6c2f51b9cde91e338252a34c48ed";
+const char* older_config_version = "a5d22f901c89e2e86601cbeb06789cc311d0134a";
 const int config_version_length = 64;
 
 // message strings

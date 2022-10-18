@@ -123,6 +123,16 @@ int main(int argc, char *argv[])
     f = NULL;
   }
 
+  // Basic inclusion parameters sanity check
+  if(cfg.mk_slit && inclusion_count_sanity_check(
+    cfg.num_channels, "number of channels") == EXIT_FAILURE){
+    return EXIT_FAILURE;
+  }
+  if(cfg.mk_slit && inclusion_count_sanity_check(
+    cfg.num_slits, "number of layers") == EXIT_FAILURE){
+    return EXIT_FAILURE;
+  }
+
   // Initiate generator with 'seed'
   init_RNG(cfg.seed);
 

@@ -23,8 +23,6 @@ extern const double zero;
 
 static void gen_template_confirmation(int ec, const char *desc,
   const char *file);
-static int config_inclusions_sanity_check(
-  int mk_inclusion, int num_inclusions, const char *msg);
 
 static struct option long_opts[] = {
   {"config",   required_argument, NULL, 'c'},
@@ -434,11 +432,14 @@ int parse_config(FILE *file, CONFIG *cfg)
 {
   extern const char *fmt_null_ptr;
   extern const int config_version_length;
+  extern const char* older_config_version;
   const char *fmt_bad_range_values =
     "  [%s] ERR: Incorrect parameters for structure indexes\n";
-  const char *fmt_legacy_config =
-    "  [%s] WARN: Config version not recognized."
-    " Attempting to parse in legacy format\n";
+  const char *fmt_unknown_config_format =
+    "  [%s] ERR: Config version not recognized.\n";
+//   const char *fmt_legacy_config =
+//     "  [%s] WARN: Config version not recognized."
+//     " Attempting to parse in legacy format\n";
   const char *fmt_lu  = "%*26c %lu\n";
   const char *fmt_ddd = "%*26c %d %d %d\n";
   const char *fmt_dsd = "%*26c %d %s %d\n";
@@ -459,23 +460,29 @@ int parse_config(FILE *file, CONFIG *cfg)
       fscanf(file, fmt_ddd, &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
       fscanf(file, fmt_s,    cfg->symmetry);
       fscanf(file, fmt_dd,  &cfg->first, &cfg->last);
+      fscanf(file, fmt_s,    cfg->cfg_channels);
+      fscanf(file, fmt_s,    cfg->cfg_slits);
+      fscanf(file, fmt_d,   &cfg->mk_dimers);
+      fscanf(file, fmt_d,   &cfg->rough_inclusions);
+
+      fclose(file);
+    }else if (!str_validate(cversion, older_config_version)){
+
+      fscanf(file, fmt_lu,  &cfg->seed);
+      fscanf(file, fmt_ddd, &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
+      fscanf(file, fmt_s,    cfg->symmetry);
+      fscanf(file, fmt_dd,  &cfg->first, &cfg->last);
       fscanf(file, fmt_dsd, &cfg->mk_channel, cfg->cfg_channels,
              &cfg->num_channels);
       fscanf(file, fmt_dsd, &cfg->mk_slit, cfg->cfg_slits, &cfg->num_slits);
-      fscanf(file, fmt_d,  &cfg->mk_dimers);
-      fscanf(file, fmt_d,  &cfg->rough_inclusions);
+      fscanf(file, fmt_d,   &cfg->mk_dimers);
+      fscanf(file, fmt_d,   &cfg->rough_inclusions);
 
       fclose(file);
-    // Switch between parsing functions in different formats if required
-//     }else if (){
     }else{
-      // Rewind to the start of the file and parse config in legacy format
-      // (this will be removed when old format is no longer used)
-      fprintf(stderr, fmt_legacy_config, __func__);
-      fseek(file, 0, SEEK_SET);
-      parse_config_legacy(file, cfg); // fclose() inside
-      // assume f.c.c. symmetry when parsing config in legacy format
-      sprintf(cfg->symmetry,"fcc");
+      // Echo unknown config format
+      fprintf(stderr, fmt_unknown_config_format, __func__);
+      return EXIT_FAILURE;
     }
   }else{
     fprintf(stderr, fmt_null_ptr, __func__);
@@ -483,70 +490,12 @@ int parse_config(FILE *file, CONFIG *cfg)
   }
 
   // Parameters sanity check
-  // * main ini file (TODO: move this to a function)
+  // * main ini file (TODO: Extend and move this to a function)
   if(cfg->last < cfg->first || cfg->first < 0 || cfg->last < 0){
     fprintf(stderr, fmt_bad_range_values, __func__);
     exit_code = EXIT_FAILURE;
   }
 
-  // * channels inclusions
-  exit_code = config_inclusions_sanity_check(
-    cfg->mk_channel, cfg->num_channels, "num_channels");
-
-  // * slits inclusions
-  exit_code = config_inclusions_sanity_check(
-    cfg->mk_slit, cfg->num_slits, "num_slits");
-
-  return exit_code;
-}
-
-// Preserve legacy format for a while
-int parse_config_legacy(FILE *file, CONFIG *cfg)
-{
-  extern const char *fmt_null_ptr;
-  const char *fmt_bad_range_values =
-    "  [%s] ERR: Incorrect parameters for structure indexes\n";
-  const char *fmt_lu  = "%*26c %lu\n";
-  const char *fmt_ddd = "%*26c %d %d %d\n";
-  const char *fmt_dd  = "%*26c %d %d\n";
-  const char *fmt_d   = "%*26c %d\n";
-  const char *fmt_s   = "%*26c %s\n";
-  int exit_code = EXIT_SUCCESS;
-
-  if(file != NULL){
-    fscanf(file, fmt_lu, &cfg->seed);
-    fscanf(file, fmt_ddd,
-          &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
-    fscanf(file, fmt_s,   cfg->symmetry);
-    fscanf(file, fmt_dd, &cfg->first, &cfg->last);
-    fscanf(file, fmt_d,  &cfg->mk_channel);
-    fscanf(file, fmt_d,  &cfg->mk_slit);
-    fscanf(file, fmt_d,  &cfg->mk_dimers);
-    fscanf(file, fmt_d,  &cfg->num_channels);
-    fscanf(file, fmt_s,   cfg->cfg_channels);
-    fscanf(file, fmt_d,  &cfg->num_slits);
-    fscanf(file, fmt_s,   cfg->cfg_slits);
-
-		// Setting parameters to comply with the updated standards
-    cfg->rough_inclusions=0;
-
-    // Parameters sanity check
-    if(cfg->last < cfg->first || cfg->first < 0 || cfg->last < 0){
-      fprintf(stderr, fmt_bad_range_values, __func__);
-      exit_code = EXIT_FAILURE;
-    }
-
-    exit_code = config_inclusions_sanity_check(
-      cfg->mk_channel, cfg->num_channels, "num_channels");
-
-    exit_code = config_inclusions_sanity_check(
-      cfg->mk_slit, cfg->num_slits, "num_slits");
-
-    fclose(file);
-  }else{
-    fprintf(stderr, fmt_null_ptr, __func__);
-    return EXIT_FAILURE;
-  }
   return exit_code;
 }
 
@@ -555,12 +504,11 @@ int parse_config_legacy(FILE *file, CONFIG *cfg)
  *
  * Prints error messages for wrong inlcusion parameters
  */
-static int config_inclusions_sanity_check(
-  int mk_inclusion, int num_inclusions, const char *msg)
+int inclusion_count_sanity_check(int num_inclusions, const char *msg)
 {
   const char *fmt_switch_sanity_check =
     "  [%s] ERR: %s must be greater than 0\n";
-  if(mk_inclusion != 0 && num_inclusions < 1){
+  if(num_inclusions < 1){
     fprintf(stderr, fmt_switch_sanity_check, msg, __func__);
     return EXIT_FAILURE;
   }
