@@ -21,7 +21,6 @@ int update_dimer_parameters(MODEL md, DIM3D *dim, SPH *sph, int d);
 void init_RNG(unsigned long int s);
 void memory_clean_spheres(SPH *sph, int nd);
 void memory_clean_dimers(DIM3D *dim, int nd);
-void memory_clean_inclusion(INC *inc, int n);
 INC template_inclusion();
 
 #endif

@@ -682,12 +682,11 @@ void memory_clean_dimers(DIM3D *dim, int nd)
 
 }
 
-void memory_clean_inclusion(INC *inc, int n)
+INC template_inclusion()
 {
   INC template;
-  int i;
 
-  // Default values for an initial (undefined) inclusion
+   // Default values for an initial (undefined) inclusion
   template.next = NULL;
   template.tgt_Nmer = 0;
   template.os[0] = zero;
@@ -699,18 +698,6 @@ void memory_clean_inclusion(INC *inc, int n)
   template.radius = zero;
   template.thickness = zero;
   template.sph_d = one;
-
-  // Copy default values to the array
-  for(i=0; i<n; i++){
-    inc[i] = template;
-  }
-}
-
-INC template_inclusion()
-{
-  INC template;
-
-  memory_clean_inclusion(&template, 1);
 
   // Copy default values to the array
   return template;
