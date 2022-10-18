@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
     .num_channels = 0,
     .num_slits = 0,
     .rough_inclusions = 0,
+    .dimer_L_sigma = 1,
     .cfg_channels = "none",
     .cfg_slits = "none",
     .symmetry = "fcc"

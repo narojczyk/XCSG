@@ -279,10 +279,11 @@ void generate_template_config(int status)
   fprintf(f, "Number of edge fcc cells : INT_x INT_y INT_z\n");
   fprintf(f, "Generated symmetry       : STRING\n");
   fprintf(f, "Structures (start end)   : INT INT\n");
-  fprintf(f, "Channels (bool file qty) : INT STRING INT\n");
-  fprintf(f, "Slits    (bool file qty) : INT STRING INT\n");
-  fprintf(f, "Insert dimers DC  (bool) : INT\n");
+  fprintf(f, "Channels (file name)     : STRING\n");
+  fprintf(f, "Slits    (file name)     : STRING\n");
   fprintf(f, "Rough inclusions (bool)  : INT\n");
+  fprintf(f, "Insert dimers DC (bool)  : INT\n");
+  fprintf(f, "Dimer length at sigma    : INT\n");
 
   gen_template_confirmation(fclose(f), "Main  program", template_cfg);
 
@@ -462,8 +463,9 @@ int parse_config(FILE *file, CONFIG *cfg)
       fscanf(file, fmt_dd,  &cfg->first, &cfg->last);
       fscanf(file, fmt_s,    cfg->cfg_channels);
       fscanf(file, fmt_s,    cfg->cfg_slits);
-      fscanf(file, fmt_d,   &cfg->mk_dimers);
       fscanf(file, fmt_d,   &cfg->rough_inclusions);
+      fscanf(file, fmt_d,   &cfg->mk_dimers);
+      fscanf(file, fmt_d,   &cfg->dimer_L_sigma);
 
       fclose(file);
     }else if (!str_validate(cversion, older_config_version)){

@@ -4,7 +4,7 @@
 typedef struct 
 {
   int type;         // Sphere type
-  int type_locked;  // Bolean [0|1] flag to enable channel inclusion
+  int type_locked;  // Boolean [0|1] flag to enable channel inclusion
   int ngb[12];      // Neighbors list
   int dim_ind;      // Index of dimer the sphere belongs to
   int lattice_ind[3]; //sphere lattice coordinates
@@ -40,15 +40,17 @@ typedef struct
   int cells[3];           // Number of f.c.c. cells on edge of the box
   int first;              // Index of first structures to generate
   int last;               // Index of last structure to generate
-  int mk_channel;         // Bolean [0|1] flag to enable channel inclusion
-  int mk_slit;            // Bolean [0|1] flag to enable slit inclusion
-  int mk_dimers;          // Bolean [0|1] flag to connect free spheres to dimers
-  int mk_inc_dimers;      /* Bolean [0|1] flag to connect inclusion spheres
+  int mk_channel;         // Boolean [0|1] flag to enable channel inclusion
+  int mk_slit;            // Boolean [0|1] flag to enable slit inclusion
+  int mk_dimers;          // Boolean [0|1] flag to connect free spheres to dim.
+  int mk_inc_dimers;      /* Boolean [0|1] flag to connect inclusion spheres
                              to dimers */
   int num_channels;       // Number of channels described in cfg_channels
   int num_slits;          // Number of slits described in cfg_slits
-  int rough_inclusions;   /* Bolean [0|1] flag to allow molecules to extend
+  int rough_inclusions;   /* Boolean [0|1] flag to allow molecules to extend
                              beyond the inclusion boundary */
+  int dimer_L_sigma;      /* Boolean [0|1] flag fix dim. length at sigma, or
+                             adjust to spheres' diameters */
   char cfg_channels[41];  // File name for the channels' parameters
   char cfg_slits[41];     // File name for the slits' parameters
   char symmetry[8];       // Symmetry of the generated structure
