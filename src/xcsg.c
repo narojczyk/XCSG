@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     .num_channels = 0,
     .num_slits = 0,
     .rough_inclusions = 0,
-    .dimer_L_sigma = 1,
+    .dimer_length = zero,
     .cfg_channels = "none",
     .cfg_slits = "none",
     .symmetry = "fcc"
@@ -372,12 +372,8 @@ int main(int argc, char *argv[])
 // ############################################################## > CASE 03 ####
 
     // Adjust dimer lengths if required
-    if((cfg.mk_dimers + mdl.incl_dim) && !cfg.dimer_L_sigma){
-      for(i=0; i<mdl.incl_dim + mdl.mtrx_dim; i++){
-        adjust_dimer_length(&dimers[i], spheres);
-      }
+    update_dimer_lengths(mdl, cfg, particles);
 
-    }
 
     // Generate required output files for structure 's'
     if(export_structure(cfg, mdl, particles, s) != EXIT_SUCCESS ){

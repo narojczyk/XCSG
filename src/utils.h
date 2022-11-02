@@ -18,7 +18,7 @@ int sph_assign_lattice_indexes(SPH *sph, int ns);
 int str_validate(const char *src, const char *tgt);
 int update_dimer_parameters(MODEL md, PARTICLES pts, int d);
 
-void adjust_dimer_length(DIM3D *dim, SPH *sph);
+void update_dimer_lengths(MODEL md, CONFIG cf, PARTICLES pts);
 void init_RNG(unsigned long int s);
 void memory_clean_spheres(SPH *sph, int nd);
 void memory_clean_dimers(DIM3D *dim, int nd);

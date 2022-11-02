@@ -283,7 +283,7 @@ void generate_template_config(int status)
   fprintf(f, "Slits    (file name)     : STRING\n");
   fprintf(f, "Rough inclusions (bool)  : INT\n");
   fprintf(f, "Insert dimers DC (bool)  : INT\n");
-  fprintf(f, "Dimer length at sigma    : INT\n");
+  fprintf(f, "Dimer length (0e0 = auto): DOUBLE\n");
 
   gen_template_confirmation(fclose(f), "Main  program", template_cfg);
 
@@ -446,6 +446,7 @@ int parse_config(FILE *file, CONFIG *cfg)
   const char *fmt_dsd = "%*26c %d %s %d\n";
   const char *fmt_dd  = "%*26c %d %d\n";
   const char *fmt_d   = "%*26c %d\n";
+  const char *fmt_f   = "%*26c %lf\n";
   const char *fmt_s   = "%*26c %s\n";
   char cversion[config_version_length];
   int exit_code = EXIT_SUCCESS;
@@ -465,7 +466,7 @@ int parse_config(FILE *file, CONFIG *cfg)
       fscanf(file, fmt_s,    cfg->cfg_slits);
       fscanf(file, fmt_d,   &cfg->rough_inclusions);
       fscanf(file, fmt_d,   &cfg->mk_dimers);
-      fscanf(file, fmt_d,   &cfg->dimer_L_sigma);
+      fscanf(file, fmt_f,   &cfg->dimer_length);
 
       fclose(file);
     }else if (!str_validate(cversion, older_config_version)){

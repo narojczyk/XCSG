@@ -30,6 +30,7 @@ extern const char *fcc;
 
 static int find_free_ngb_slot(SPH *sph);
 static void bouble_sort_double(double *array, int s, int ascending);
+static void adjust_dimer_length(DIM3D *dim, SPH *sph);
 
 /* # SEC ############## GENERAL STRUCTURE ################################### */
 
@@ -389,11 +390,42 @@ static void bouble_sort_double(double *array, int s, int ascending){
 /* # SEC ############## PARTICLES - DIMERS ################################## */
 
 /*
+ * update_dimer_lengths()
+ *
+ * Based on config setting, set a fixed length for each dimer, or calculate
+ * the length based on diameters of individual spheres for each dimer
+ *
+ */
+void update_dimer_lengths(MODEL md, CONFIG cf, PARTICLES pts)
+{
+  SPH *sph = pts.spheres;
+  DIM3D *dim = pts.dimers;
+  int nDimers = md.incl_dim + md.mtrx_dim;
+
+  if((cf.mk_dimers + nDimers)){
+      if(cf.dimer_length > zero){
+        // If non-zero value provided in the config file, set all
+        // dimer lengths to this value
+        for(int i=0; i < nDimers; i++){
+          dim[i].L = cf.dimer_length;
+        }
+      }else{
+        // If dimer length is set to zero in the config file, set all dimer
+        // lengths automatically, based on the value of sphere diameters.
+        // Negative value in cf.dimer_length will also trigger this block.
+        for(int i=0; i < nDimers; i++){
+          adjust_dimer_length(&dim[i], sph);
+        }
+      }
+    }
+}
+
+/*
  * adjust_dimer_length()
  *
  * Calculate the length of a dimer based on the diameters of bothe spheres
  */
-void adjust_dimer_length(DIM3D *dim, SPH *sph)
+static void adjust_dimer_length(DIM3D *dim, SPH *sph)
 {
   int s0 = (*dim).sph_ind[0], s1 = (*dim).sph_ind[1];
   (*dim).L = (sph[s0].d + sph[s1].d)/two;
