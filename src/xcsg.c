@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
   }
 
   // Basic inclusion parameters sanity check
-  if(cfg.mk_slit && inclusion_count_sanity_check(
+  if(cfg.mk_channel && inclusion_count_sanity_check(
     cfg.num_channels, "number of channels") == EXIT_FAILURE){
     return EXIT_FAILURE;
   }
