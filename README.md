@@ -25,7 +25,7 @@ Project directory should contain:
 - [x] Change sphere types ID's with respect to monomers they form (1 - 8) or
   inclusions (100+).
 - [x] Inclusions may be formed by multimers.
-- [ ] Finite size inclusions. *in progress*
+- [x] Finite size inclusions (clusters)
 - [ ] Add hcp and bcc lattices.
 - [ ] Add 3+ multimer particles.
 

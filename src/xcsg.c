@@ -5,7 +5,7 @@
  *
  * The program generates a crystal structure of f.c.c. spheres. The latter can
  * be connected into multimer molecules. The structure can also include
- * additional modifications like nanochannels, nanolayers or point inclusions.
+ * additional modifications like nanochannels, nanolayers or cluster inclusions.
  *
  */
 
@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
     .num_slits = 0,
     .rough_inclusions = 0,
     .dimer_length = zero,
+    .cfg_clusters = "none",
     .cfg_channels = "none",
     .cfg_slits = "none",
     .symmetry = "fcc"
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
   // ... when memory has been alocated)
   PARTICLES particles = {NULL, NULL};
 
+  INC *clusters = NULL;
   INC *channels = NULL;
   INC *slits = NULL;
 
@@ -106,6 +108,17 @@ int main(int argc, char *argv[])
     f = NULL;
   }
 
+  // Try to open and read cluster inclusions' description data
+  if((f = try_open_to_read(cfg.cfg_clusters)) != NULL){
+    if((clusters = parse_inclusions(f)) != NULL){
+      on_exit(releace_memory, clusters);
+      cfg.mk_clusters = 1;
+      cfg.num_clusters = count_inclusions(clusters);
+    }
+    fclose(f);
+    f = NULL;
+  }
+
   // Try to open and read channel description data
   if((f = try_open_to_read(cfg.cfg_channels)) != NULL){
     if((channels = parse_inclusions(f)) != NULL){
@@ -129,6 +142,10 @@ int main(int argc, char *argv[])
   }
 
   // Basic inclusion parameters sanity check
+  if(cfg.mk_clusters && inclusion_count_sanity_check(
+    cfg.num_clusters, "number of point inclusions") == EXIT_FAILURE){
+    return EXIT_FAILURE;
+  }
   if(cfg.mk_channel && inclusion_count_sanity_check(
     cfg.num_channels, "number of channels") == EXIT_FAILURE){
     return EXIT_FAILURE;
@@ -156,7 +173,7 @@ int main(int argc, char *argv[])
   }
 
   // Summary of configuration variables
-  show_cfg_summary(cfg, mdl, slits, channels);
+  show_cfg_summary(cfg, mdl, slits, channels, clusters);
 
   // Allocate memory for spheres and dimers
   spheres = malloc( mdl.Nsph * sizeof(SPH));
@@ -196,6 +213,21 @@ int main(int argc, char *argv[])
 
 // #### CASE 02 > ##############################################################
     // Insert inclusions into sphere system
+    // Make point inclusions
+    if(cfg.mk_clusters && ! cfg.rough_inclusions){
+      for(i=0; i<cfg.num_clusters; i++){
+        // Test channel data
+        if(clusters[i].radius > 0e0){
+          fprintf(stdout, fmt_inserting_inclusion, "cluster", i);
+          if(clusters[i].tgt_Nmer == 2) insert_inclusion_dimers = 1;
+          make_cluster(mdl, &clusters[i], particles);
+        }else{
+          fprintf(stderr, fmt_missing_inclusion_normal, prog_name, "cluster",
+                  cfg.num_channels);
+        }
+      }
+    }
+
     // Make channel
     if(cfg.mk_channel && ! cfg.rough_inclusions){
       for(i=0; i<cfg.num_channels; i++){

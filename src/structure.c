@@ -185,6 +185,51 @@ void find_smallest_coordinates(SPH *sph, MODEL *md){
 /* # SEC ############## INCLUSIONS ########################################## */
 
 /*
+ * make_cluster()
+ * Calculates the distance of the sphere 'i' from the centre of inclusion
+ * cluster.
+ *
+ */
+void make_cluster(MODEL md, INC *inc, PARTICLES pts){
+  SPH *sph = pts.spheres, *s = NULL;
+  DIM3D *dim = pts.dimers;
+  int i,k;
+  int type_lock = (inc->tgt_Nmer == 1) ? 1 : 0;
+  double centre[3] = {
+    md.lcs[0] + inc->os[0], md.lcs[1] + inc->os[1], md.lcs[2] + inc->os[2]};
+  double radius = inc->radius, sph_diameter = inc->sph_d;
+
+  // Test all sphere positions against channel's axis through 'a' and 'b'
+  for(i = 0; i < md.Nsph; i++){
+    s = &sph[i];
+    // Skip spheres that already belong to any inclusion
+    if((*s).type < TYPE_INCLUSION_BASE){
+      // Check if the distance from the sphere position 'r' to
+      // the cluster centre is less than inclusion radius
+      if(distance((*s).r, centre, md.box) < radius){
+        // Based on the sphere type
+        if((*s).type == TYPE_SPHERE){
+          // ... mark regular spheres as 'inclusion-spheres'
+          (*s).type = TYPE_INCLUSION_SPHERE;
+          // ... and assign the respective inclusion-sphere-diameter
+          (*s).d = sph_diameter;
+          // set type lock flag for this inclusion
+          (*s).type_locked = type_lock;
+        }else if ((*s).type == TYPE_SPHERE_DIMER){
+          // ... mark regular dimers as inclusion dimers only if their
+          // centres of mass are inside the channel
+          k = (*s).dim_ind;
+          if(distance(dim[k].R, centre, md.box) < radius){
+            update_dimer_type(&dim[k], sph, TYPE_INCLUSION_SPHERE_DIMER,
+                              inc->sph_d);
+          }
+        }
+      }
+    } // end if sph.type <TYPE_INCLUSION_BASE condition
+  }
+}
+
+/*
  * make_channel()
  * Calculates the distance of the sphere 'i' from the line given by vector 'c',
  * with respect to two points on the line: lower left corner and center point
@@ -204,7 +249,7 @@ void make_channel(MODEL md, INC *inc, PARTICLES pts){
   // Determine two points on an axis parallel to inc->nm
   for(i=0; i<3; i++){
     // (i) coordinates of the sphere closest to ref (the vertex of the cube
-    // with the lowest coordinates), ofsetted by specified inc->os
+    // with the lowest coordinates), off setted by specified inc->os
     a.c[i] = md.lcs[i] + inc->os[i];
     // (ii) find the coordinates of the channel's second point
     // by translating 'a' by 'L' in the direction of normal vector
@@ -231,7 +276,7 @@ void make_channel(MODEL md, INC *inc, PARTICLES pts){
           sph[i].type_locked = type_lock;
         }else if (sph[i].type == TYPE_SPHERE_DIMER){
           // ... mark regular dimers as inclusion dimers only if their
-          // ceters of mass are inside the channel
+          // centres of mass are inside the channel
           k = sph[i].dim_ind;
           r.c[0] = dim[k].R[0];
           r.c[1] = dim[k].R[1];
@@ -276,7 +321,7 @@ void make_slit(MODEL md, INC *inc, PARTICLES pts){
       p[0].c[1] = (*s).r[1] - inc->os[1];
       p[0].c[2] = (*s).r[2] - inc->os[2];
 
-      // ... and in the six of the sorrounding images
+      // ... and in the six of the surrounding images
       for(j=1; j<7; j++){
         p[j] = p[0];
       }
@@ -309,7 +354,7 @@ void make_slit(MODEL md, INC *inc, PARTICLES pts){
             (*s).type_locked = type_lock;
           }else if ( (*s).type == TYPE_SPHERE_DIMER ){
             // ... mark regular dimers as inclusion dimers only if their
-            // ceters of mass are inside the slit
+            // centres of mass are inside the slit
             d = &dim[(*s).dim_ind];
             if(fabs(zero
                 - n[0] * (*d).R[0] - n[1] * (*d).R[1] - n[2] * (*d).R[2])

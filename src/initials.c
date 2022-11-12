@@ -462,6 +462,7 @@ int parse_config(FILE *file, CONFIG *cfg)
       fscanf(file, fmt_ddd, &cfg->cells[0], &cfg->cells[1], &cfg->cells[2]);
       fscanf(file, fmt_s,    cfg->symmetry);
       fscanf(file, fmt_dd,  &cfg->first, &cfg->last);
+      fscanf(file, fmt_s,    cfg->cfg_clusters);
       fscanf(file, fmt_s,    cfg->cfg_channels);
       fscanf(file, fmt_s,    cfg->cfg_slits);
       fscanf(file, fmt_d,   &cfg->rough_inclusions);

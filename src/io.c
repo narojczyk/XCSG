@@ -27,11 +27,12 @@ static FILE* open_file(const char *file, const char *mode, int strict);
 
 /* # SEC ############## CONSOLE OUTPUT ###################################### */
 
-void show_cfg_summary(CONFIG cfg, MODEL md, INC *slits, INC *channels){
+void show_cfg_summary(CONFIG cfg, MODEL md, INC *slits, INC *channels,
+                      INC *clusters){
+  INC *cl = NULL, *ch = NULL, *la = NULL;
   int i;
   const char *fmt_sees = " %-23s: %.16le %.16le (%1s)\n";
   const char *fmt_ses  = " %-23s: %.16le (%1s)\n";
-  const char *fmt_sd   = " Max number of %-9s: %d\n";
   const char *fmt_ssDat   = " %-10s data from   : %s\n";
   const char *fmt_ss   = " %-23s: %s\n";
   const char *fmt_slu  = " %-23s: %8lu\n";
@@ -47,8 +48,9 @@ void show_cfg_summary(CONFIG cfg, MODEL md, INC *slits, INC *channels){
   fprintf(stdout, fmt_ss, "Symmetry", cfg.symmetry);
   fprintf(stdout," Structure indices      : from %d to %d (%d files total)\n",
           cfg.first, cfg.last, cfg.last-cfg.first+1);
-  fprintf(stdout, fmt_sd, "channels", cfg.num_channels);
-  fprintf(stdout, fmt_sd, "layers", cfg.num_slits);
+  fprintf(stdout, fmt_ss, "Clusters file", cfg.cfg_clusters);
+  fprintf(stdout, fmt_ss, "Channels file", cfg.cfg_channels);
+  fprintf(stdout, fmt_ss, "Layers file", cfg.cfg_slits);
   fprintf(stdout, fmt_slu, "PRNG seed", cfg.seed);
 
   fprintf(stdout,"\n ## Derived parameters\n");
@@ -61,15 +63,30 @@ void show_cfg_summary(CONFIG cfg, MODEL md, INC *slits, INC *channels){
   fprintf(stdout, fmt_ses, "", md.box[2], "z");
 
   fprintf(stdout,"\n ## Inclusions settings\n");
+  if (cfg.mk_clusters){
+    fprintf(stdout, fmt_ssDat, "Cluster inclusions",cfg.cfg_clusters);
+    fprintf(stdout, fmt_inlusion_data_header,
+            "cluster", "(ignored)", "radius", "sp. dia.", "n-mer");
+    for(i=0; i<cfg.num_clusters; i++){
+      cl = &clusters[i];
+      fprintf(stdout, fmt_inclusion_data, i,
+              (*cl).os[0],  (*cl).os[1], (*cl).os[2],
+              (*cl).nm[0],  (*cl).nm[1], (*cl).nm[2],
+              (*cl).radius, (*cl).sph_d, (*cl).tgt_Nmer);
+    }
+    fprintf(stdout,"\n");
+  }
+
   if (cfg.mk_channel){
     fprintf(stdout, fmt_ssDat, "Channels",cfg.cfg_channels);
     fprintf(stdout, fmt_inlusion_data_header,
             "channel", "channel", "radius", "sp. dia.", "n-mer");
     for(i=0; i<cfg.num_channels; i++){
+      ch = &channels[i];
       fprintf(stdout, fmt_inclusion_data, i,
-              channels[i].os[0], channels[i].os[1], channels[i].os[2],
-              channels[i].nm[0], channels[i].nm[1], channels[i].nm[2],
-              channels[i].radius, channels[i].sph_d, channels[i].tgt_Nmer);
+              (*ch).os[0],  (*ch).os[1], (*ch).os[2],
+              (*ch).nm[0],  (*ch).nm[1], (*ch).nm[2],
+              (*ch).radius, (*ch).sph_d, (*ch).tgt_Nmer);
     }
     fprintf(stdout,"\n");
   }
@@ -79,10 +96,11 @@ void show_cfg_summary(CONFIG cfg, MODEL md, INC *slits, INC *channels){
     fprintf(stdout, fmt_inlusion_data_header,
             "layer", "layer", "thick.", "sp. dia.", "n-mer");
     for(i=0; i<cfg.num_slits; i++){
+      la = &slits[i];
       fprintf(stdout, fmt_inclusion_data, i,
-              slits[i].os[0], slits[i].os[1], slits[i].os[2],
-              slits[i].nm[0], slits[i].nm[1], slits[i].nm[2],
-              slits[i].thickness, slits[i].sph_d, slits[i].tgt_Nmer);
+             (*la).os[0],     (*la).os[1],  (*la).os[2],
+             (*la).nm[0],     (*la).nm[1],  (*la).nm[2],
+             (*la).thickness, (*la).sph_d,  (*la).tgt_Nmer);
     }
     fprintf(stdout,"\n");
   }
@@ -106,7 +124,7 @@ void show_particle_stats(MODEL md, CONFIG cfg)
   if(cfg.mk_dimers){
     fprintf(stdout, fmt_sde, "Matrix dimers",      md.mtrx_dim, hdim/fNsph);
   }
-  if(cfg.mk_channel | cfg.mk_slit){
+  if(cfg.mk_clusters | cfg.mk_channel | cfg.mk_slit){
     fprintf(stdout, fmt_sde, "Inclusion spheres", md.incl_sph, hisp/fNsph);
   }
   if(md.incl_dim){
