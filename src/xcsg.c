@@ -12,6 +12,7 @@
 /*
  * TODO:
  * BUG:  Setting rough_inclusions to 1 will make dimer inclusions regardless of *.dat file setting
+ * BUG: reading version string from ini files is unsafe
  *
  */
 

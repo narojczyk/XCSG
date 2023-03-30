@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <math.h>
 
 #include "config.h"
 #include "data.h"
@@ -18,6 +19,7 @@
 
 extern char *prog_name;
 extern const char* valid_config_version;
+extern const char* valid_inclusion_version;
 
 extern const double zero;
 
@@ -332,12 +334,20 @@ static void gen_template_confirmation(int ec, const char *desc,
  */
 INC* parse_inclusions(FILE *file)
 {
+  double sqrt(double);
+
   INC template = template_inclusion();
   INC *inclusions_array = NULL;
   INC *list_of_inclusions = NULL;
   INC *current = NULL, *last = NULL;
+  extern const int config_version_length;
   extern const char *fmt_null_ptr;
+  extern const double two;
+  extern const double one;
+  double latticeConst = one;
   const char *fmt_IO_8f1d = "%lf %lf %lf %lf %lf %lf %lf %lf %d\n";
+  const char *fmt_s   = "%*26c %63s\n";
+  char iversion[config_version_length];
   int i=0, incl_counter=0, n_mer;
   double off[3] = {zero, zero, zero};
   double nor[3] = {zero, zero, zero};
@@ -348,10 +358,28 @@ INC* parse_inclusions(FILE *file)
   if(file != NULL){
     // Skip the header line in file
     // https://stackoverflow.com/questions/2799612/how-to-skip-the-first-line-when-fscanning-a-txt-file
+// TODO: #######################################################################
+// This requires reworking if multiple accepted iversions appear
     do{
       trash = fgetc(file);
     }while (trash != '\n');
 
+    fscanf(file, fmt_s, iversion);
+//     printf("%s\n", iversion);
+    // If inclusion version agrees, read parameters in current format
+    if(!str_validate(iversion, valid_inclusion_version)){
+      latticeConst = sqrt(two);
+//       printf("LC=%.16le\n",latticeConst);
+    }else{
+      // Rewind to the front of the file and skip 1st line again
+      rewind(file);
+
+      do{
+        trash = fgetc(file);
+      }while (trash != '\n');
+//       printf("LC=%.16le (reset file)\n",latticeConst);
+    }
+// printf("reading inclusion\n");
     while(fscanf(file, fmt_IO_8f1d, &off[0], &off[1], &off[2],
       &nor[0], &nor[1], &nor[2], &size, &sd, &n_mer) != EOF){
 
@@ -359,10 +387,10 @@ INC* parse_inclusions(FILE *file)
         (*current) = template;
 
         // Store offset for the inclusion
-        (*current).os[0] = off[0];
-        (*current).os[1] = off[1];
-        (*current).os[2] = off[2];
-
+        (*current).os[0] = off[0] * latticeConst;
+        (*current).os[1] = off[1] * latticeConst;
+        (*current).os[2] = off[2] * latticeConst;
+// ############################################################################
         // Store normal vector for the inclusion
         (*current).nm[0] = nor[0];
         (*current).nm[1] = nor[1];
